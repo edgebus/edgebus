@@ -54,7 +54,7 @@
 	"homepage": "https://github.com/zxteamorg/node.notifier.service",
 	"scripts": {
 		"clean": "zxbuild clean",
-		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/ && cp src/storage/SqliteStorage.sql .dist/lib/storage/",
+		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/",
 		"start": "node src/app.js --config=service.config",
 		"test": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000"
 	},
