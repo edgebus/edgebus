@@ -1,0 +1,156 @@
+variables:
+    BUILD_IMAGE: node:11-alpine
+
+image: ${BUILD_IMAGE}
+
+.scripting: &utils |
+    function verify_package_version() {
+      local PACKAGE_VERSION=$(awk '/version/{gsub(/("|",)/,"",$2);print $2};' package.json)
+      if [ "${PACKAGE_VERSION}" != "${CI_COMMIT_TAG}" ]; then
+        echo "Wrong package version. Tag version '${CI_COMMIT_TAG}' should be equal to package version '${PACKAGE_VERSION}'"
+        exit -255
+      fi
+    }
+
+stages:
+    - building
+    - testing
+    - staging
+    - deploying
+
+before_script:
+    - date
+
+compile:
+    stage: building
+    tags:
+        - docker
+    variables:
+        GIT_STRATEGY: clone
+    script:
+        - *utils
+        - npm install --progress=false
+        - npm run build
+    artifacts:
+        expire_in: 3 days
+        untracked: false
+        paths:
+            - .build/
+            - .dist/
+            - node_modules/
+            - src/
+            - test/
+            - scripts/
+            - .npmrc
+            - Dockerfile
+            - service*.config
+            - log4js*.json
+            - package.json
+        when: on_success
+
+test:
+    stage: testing
+    tags:
+        - docker
+    dependencies:
+        - compile
+    variables:
+        GIT_STRATEGY: none
+    script:
+        - npm run test || true
+
+image:commit:
+    stage: staging
+    dependencies:
+        - compile
+    tags:
+        - docker-builder
+    when: on_success
+    only:
+        - branches
+    variables:
+        GIT_STRATEGY: none
+    script:
+        - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+        - docker build --tag "${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" --build-arg TARGET="${CI_COMMIT_REF_SLUG}" --build-arg IMAGE="${BUILD_IMAGE}" .
+        - echo "Make image tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)"
+        - docker tag "${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)"
+        - echo "Make image tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+        - docker tag "${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+        - echo "Push image ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)"
+        - docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)"
+        - echo "Push image ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+        - docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+        - echo "Image ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8) -> ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG} was staged successfully"
+
+image:release:
+    stage: staging
+    dependencies:
+        - compile
+    tags:
+        - docker-builder
+    when: on_success
+    only:
+        - tags
+    variables:
+        GIT_STRATEGY: none
+    script:
+        - echo "${CI_REGISTRY_PASSWORD}" | docker login --username "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+        - docker build --tag "${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" --build-arg TARGET=release --build-arg IMAGE="${BUILD_IMAGE}" .
+        - echo "Make image tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
+        - docker tag "${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
+        - echo "Make image tag ${CI_REGISTRY_IMAGE}:latest"
+        - docker tag "${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" "${CI_REGISTRY_IMAGE}:latest"
+        - echo "Push image ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
+        - docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
+        - echo "Push image ${CI_REGISTRY_IMAGE}:latest"
+        - docker push "${CI_REGISTRY_IMAGE}:latest"
+        - echo "Image ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} -> ${CI_REGISTRY_IMAGE}:latest was staged successfully"
+
+deploy:evolution:commit:
+    image: docker:latest
+    stage: deploying
+    dependencies:
+        - image:commit
+    tags:
+        - docker-deployer-evolution
+    when: manual
+    only:
+        - branches
+    variables:
+        GIT_STRATEGY: none
+    script:
+        - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        - docker service update --quiet --with-registry-auth --image "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}.$(echo ${CI_COMMIT_SHA} | head -c 8)" orgzxteam-evolution_$(echo ${CI_PROJECT_PATH} | cut -d '/' -f3- | sed 's/[\./]//g')
+
+deploy:evolution:tag:
+    image: docker:latest
+    stage: deploying
+    dependencies:
+        - image:release
+    tags:
+        - docker-deployer-evolution
+    when: manual
+    only:
+        - tags
+    variables:
+        GIT_STRATEGY: none
+    script:
+        - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        - docker service update --quiet --with-registry-auth --image "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}" orgzxteam-evolution_$(echo ${CI_PROJECT_PATH} | cut -d '/' -f3- | sed 's/[\./]//g')
+
+deploy:production:tag:
+    image: docker:latest
+    stage: deploying
+    dependencies:
+        - image:release
+    tags:
+        - docker-deployer-production
+    when: manual
+    only:
+        - tags
+    variables:
+        GIT_STRATEGY: none
+    script:
+        - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        - docker service update --quiet --with-registry-auth --image "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}" orgzxteam-production_$(echo ${CI_PROJECT_PATH} | cut -d '/' -f3- | sed 's/[\./]//g')

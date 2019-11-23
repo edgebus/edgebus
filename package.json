@@ -1,0 +1,62 @@
+{
+	"name": "@zxteam/notifier.service",
+	"version": "0.0.1",
+	"description": "ZXTeam's Notifier Service. Main responsibility is to deliver callback messages via WebHooks, AMQP, JMS, Slack, Telegram and other messaging solutions.",
+	"main": "./src/index.js",
+	"types": "./src/index.d.ts",
+	"author": {
+		"name": "ZXTeam",
+		"email": "pub@zxteam.org",
+		"url": "http://www.zxteam.org"
+	},
+	"contributors": [
+		{
+			"name": "Maxim Anurin",
+			"email": "maxim.anurin@zxteam.org",
+			"url": "http://www.anurin.name"
+		},
+		{
+			"name": "Serhii Zghama",
+			"email": "serhii.zghama@zxteam.org"
+		}
+	],
+	"license": "MIT",
+	"devDependencies": {
+		"@types/lodash": "^4.14.149",
+		"@types/node": "^11.15.2",
+		"@zxnode/build": "^0.0.34"
+	},
+	"dependencies": {
+		"@zxteam/cancellation": "^6.0.25",
+		"@zxteam/configuration": "^6.0.36",
+		"@zxteam/contract": "^6.0.35",
+		"@zxteam/disposable": "^6.0.23",
+		"@zxteam/ensure": "^6.0.23",
+		"@zxteam/errors": "^6.0.33",
+		"@zxteam/hosting": "^6.0.34",
+		"@zxteam/launcher": "^6.0.26",
+		"@zxteam/logger": "^6.0.22",
+		"lodash": "^4.17.15",
+		"moment": "^2.24.0",
+		"uuid": "^3.3.2"
+	},
+	"engines": {
+		"node": ">=11"
+	},
+	"keywords": [],
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:zxteamorg/node.notifier.service.git"
+	},
+	"bugs": {
+		"url": "https://github.com/zxteamorg/node.notifier.service/issues"
+	},
+	"homepage": "https://github.com/zxteamorg/node.notifier.service",
+	"scripts": {
+		"clean": "zxbuild clean",
+		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/ && cp src/storage/SqliteStorage.sql .dist/lib/storage/",
+		"start": "node src/app.js --config=service.config",
+		"test": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000"
+	},
+	"private": true
+}

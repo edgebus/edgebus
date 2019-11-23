@@ -1,0 +1,30 @@
+#node files
+npm-debug.log
+node_modules/
+
+# test's output
+.nyc_output/
+allure-results/
+coverage/
+xunit.xml
+
+# Mac files
+.DS_Store
+
+# Build artifacts
+.dist/
+.package/
+src/**/*.d.ts
+src/**/*.js
+src/**/*.map
+test/**/*.d.ts
+test/**/*.js
+test/**/*.map
+
+# Dev files
+temp/
+tmp/
+.env
+config-dev.json
+*.log
+res/
