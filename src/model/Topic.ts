@@ -6,6 +6,10 @@ export namespace Topic {
 
 	export interface Data {
 		/**
+ 		* Human readable name defines a `Topic`'s purpose
+ 		*/
+		readonly topicName: string;
+		/**
 		 * Human readable description defines a `Topic`'s purpose
 		 */
 		readonly topicDescription: string;

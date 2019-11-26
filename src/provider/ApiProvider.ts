@@ -30,7 +30,7 @@ class ApiProviderImpl extends ApiProvider {
 		super();
 
 		const apiLog = logger.getLogger("ManagementApi");
-		this._managementApi = new ManagementApi(apiLog);
+		this._managementApi = new ManagementApi(this._storageProvider, apiLog);
 	}
 
 	public get managementApi() { return this._managementApi; }

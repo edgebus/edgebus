@@ -7,14 +7,21 @@ import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
 import { RecipientUser } from "../model/RecipientUser";
 
+import { StorageProvider } from "../provider/StorageProvider";
+import { PersistentStorage } from "../data/PersistentStorage";
+
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
  */
 export class ManagementApi extends Initable {
+	private readonly _storageProvider!: StorageProvider;
 	private readonly _logger: Logger;
 
-	constructor(log: Logger) {
+	private _persistentStorage: PersistentStorage | null = null;
+
+	constructor(storageProvider: StorageProvider, log: Logger) {
 		super();
+		this._storageProvider = storageProvider;
 		this._logger = log;
 	}
 
@@ -26,21 +33,27 @@ export class ManagementApi extends Initable {
 		}
 
 		const hardCodedMap = new Map();
-
-		const hardCodedTopic: Topic = {
-			topicId: "orderStateChanged",
-			topicDescription: "The topic produces events about order execution state"
-		};
-
-		hardCodedMap.set(hardCodedTopic.topicId, hardCodedTopic);
+		const storage = this.getPersistentStorage();
+		const topics = await storage.getAvailableTopics(cancellationToken, recipientUserId);
+		topics.map((topic) => {
+			hardCodedMap.set(topic.topicName, topic);
+		});
 
 		return hardCodedMap;
 	}
 
 	public async subscribeWebhook(
 		cancellationToken: CancellationToken, recipientUserId: RecipientUser.Id, opts: Webhook.Data
-	): Promise<ManagementApi.TopicMap> {
-		throw new InvalidOperationError("Method does not have implementation yet");
+	): Promise<Webhook.Id> {
+		if (this._logger.isTraceEnabled) {
+			this._logger.trace(`Enter: subscribeWebhook(recipientUserId="${recipientUserId}", opts="${opts}")`);
+		}
+
+		const storage = this.getPersistentStorage();
+
+		const webhookId: Webhook.Id = await storage.addSubscribeWebhook(cancellationToken, recipientUserId, opts);
+
+		return webhookId;
 	}
 
 	public async unsubscribeWebhook(
@@ -55,6 +68,15 @@ export class ManagementApi extends Initable {
 	}
 	protected async onDispose() {
 		// nop
+	}
+
+	private getPersistentStorage(): PersistentStorage {
+		if (this._persistentStorage) {
+			return this._persistentStorage;
+		} else {
+			this._persistentStorage = this._storageProvider.persistentStorage;
+			return this._persistentStorage;
+		}
 	}
 }
 

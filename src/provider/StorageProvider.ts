@@ -6,6 +6,8 @@ import { logger } from "@zxteam/logger";
 import * as _ from "lodash";
 
 import { ConfigurationProvider } from "./ConfigurationProvider";
+import { PersistentStorage } from "../data/PersistentStorage";
+import { SQLPersistentStorage } from "../data/SQLPersistentStorage";
 
 export abstract class StorageProvider extends Initable {
 	protected readonly log: Logger;
@@ -19,7 +21,7 @@ export abstract class StorageProvider extends Initable {
 	}
 
 	public abstract get cacheStorage(): any;
-	public abstract get persistentStorage(): any;
+	public abstract get persistentStorage(): PersistentStorage;
 }
 
 @Provides(StorageProvider)
@@ -28,12 +30,12 @@ class StorageProviderImpl extends StorageProvider {
 	private readonly configProvider!: ConfigurationProvider;
 
 	private readonly _cacheStorage: StorageProvider["cacheStorage"];
-	private readonly _persistentStorage: StorageProvider["persistentStorage"];
+	private readonly _persistentStorage: PersistentStorage;
 
 	public constructor() {
 		super();
 		this._cacheStorage = null; //storageFactory(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
-		this._persistentStorage = null; //storageFactory(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
+		this._persistentStorage = new SQLPersistentStorage(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
 	}
 
 	public get cacheStorage() { return this._cacheStorage; }
@@ -41,7 +43,7 @@ class StorageProviderImpl extends StorageProvider {
 
 	protected async onInit(cancellationToken: CancellationToken) {
 		// await this._cacheStorage.init(cancellationToken);
-		// await this._persistentStorage.init(cancellationToken);
+		await this._persistentStorage.init(cancellationToken);
 	}
 
 	protected async onDispose() {

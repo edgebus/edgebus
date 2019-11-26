@@ -7,6 +7,7 @@ import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
 import { InvalidOperationError } from "@zxteam/errors";
+import { Webhook } from "../model/Webhook";
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private readonly _api: ManagementApi;
@@ -55,26 +56,26 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 	private async getTopics(req: express.Request, res: express.Response): Promise<void> {
 		try {
-			const argKey = req.header("NS-ACCESS-KEY");
-			const argSign = req.header("NS-ACCESS-SIGN");
-			const argTimestamp = req.header("NS-ACCESS-TIMESTAMP");
-			const argPassphrase = req.header("NS-ACCESS-PASSPHRASE");
+			// TODO check signature
+			const isValidSignature = helper.checkSignature(req);
+			if (!isValidSignature) {
+				// Forbidden Error 404
+				res.status(404).end();
+			}
 
 			// TODO resolve recipientUserId
-			const recipientUserId = "HARD_CODED_USER";
-
-			// TODO check signature
+			const recipientUserId = helper.getRecipientUserId(req);
 
 			const topis: ManagementApi.TopicMap = await this._api.getAvailableTopics(DUMMY_CANCELLATION_TOKEN, recipientUserId);
 
 			const response: {
-				[topicId: string]: {
+				[topicName: string]: {
 					description: string;
 				};
 			} = {};
 
 			topis.forEach(function (topic) {
-				response[topic.topicId] = {
+				response[topic.topicName] = {
 					description: topic.topicDescription
 				};
 			});
@@ -87,10 +88,58 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	}
 
 	private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
-		throw new InvalidOperationError("Method does not have implementation yet");
+		try {
+			// TODO check signature
+			const isValidSignature = helper.checkSignature(req);
+			if (!isValidSignature) {
+				// Forbidden Error 404
+				res.status(404).end("Forbidden Error, invalid access permission");
+			}
+
+			// TODO resolve recipientUserId
+			const recipientUserId = helper.getRecipientUserId(req);
+
+			const opts = helper.getOptionsForWebHook(req);
+
+			const isSubscribe: Webhook.Id = await this._api.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, recipientUserId, opts);
+
+			if (isSubscribe) {
+				res.status(200).end("Successfully" + "\n");
+			}
+			res.status(400).end();
+
+		} catch (e) {
+			this._log.error("subscribeWebhook fault", e);
+			res.status(500).end();
+		}
 	}
 
 	private async unsubscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 		throw new InvalidOperationError("Method does not have implementation yet");
+	}
+}
+
+export namespace helper {
+	export function getRecipientUserId(req: express.Request) {
+		// TODO resolve recipientUserId
+		return "HARD_CODED_USER";
+	}
+
+	export function checkSignature(req: express.Request): boolean {
+		const argKey = req.header("NS-ACCESS-KEY");
+		const argSign = req.header("NS-ACCESS-SIGN");
+		const argTimestamp = req.header("NS-ACCESS-TIMESTAMP");
+		const argPassphrase = req.header("NS-ACCESS-PASSPHRASE");
+
+		return true;
+	}
+
+	export function getOptionsForWebHook(req: express.Request): Webhook.Data {
+		const opts: Webhook.Data = {
+			url: new URL("www.google.com/1"),
+			topicId: "1001-1001"
+		};
+
+		return opts;
 	}
 }
