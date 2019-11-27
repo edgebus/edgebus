@@ -34,10 +34,11 @@ export class ManagementApi extends Initable {
 
 		const hardCodedMap = new Map();
 		const storage = this.getPersistentStorage();
-		const topics = await storage.getAvailableTopics(cancellationToken, recipientUserId);
-		topics.map((topic) => {
-			hardCodedMap.set(topic.topicName, topic);
-		});
+		const topics: Topic[] = await storage.getAvailableTopics(cancellationToken, recipientUserId);
+
+		for (const topic of topics) {
+			hardCodedMap.set(topic.topicId, topic);
+		}
 
 		return hardCodedMap;
 	}

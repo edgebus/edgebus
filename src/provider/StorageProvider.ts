@@ -47,7 +47,7 @@ class StorageProviderImpl extends StorageProvider {
 	}
 
 	protected async onDispose() {
-		// await this._persistentStorage.dispose();
 		// await this._cacheStorage.dispose();
+		await this._persistentStorage.dispose();
 	}
 }

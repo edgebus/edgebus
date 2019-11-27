@@ -4,9 +4,6 @@ export class Topics extends Model {
 	public id!: number;
 	public name!: string;
 	public description!: string;
-
-	public readonly createdAt!: Date;
-	public readonly updatedAt!: Date;
 }
 
 export const topicsRows = {

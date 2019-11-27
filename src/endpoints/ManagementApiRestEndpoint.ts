@@ -3,7 +3,6 @@ import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
-import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
 import { InvalidOperationError } from "@zxteam/errors";
@@ -66,7 +65,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 			// TODO resolve recipientUserId
 			const recipientUserId = helper.getRecipientUserId(req);
 
-			const topis: ManagementApi.TopicMap = await this._api.getAvailableTopics(DUMMY_CANCELLATION_TOKEN, recipientUserId);
+			const topics: ManagementApi.TopicMap = await this._api.getAvailableTopics(DUMMY_CANCELLATION_TOKEN, recipientUserId);
 
 			const response: {
 				[topicName: string]: {
@@ -74,11 +73,11 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				};
 			} = {};
 
-			topis.forEach(function (topic) {
-				response[topic.topicName] = {
-					description: topic.topicDescription
+			for (const topic of topics) {
+				response[topic[1].topicName] = {
+					description: topic[1].topicDescription
 				};
-			});
+			}
 
 			res.end(JSON.stringify(response, null, "\t") + "\n");
 		} catch (e) {
