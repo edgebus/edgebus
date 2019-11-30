@@ -5,7 +5,7 @@ import { URL } from "url";
 import { Router } from "express-serve-static-core";
 
 import { NotifierService } from "./service/NotifierService";
-import { InnerError } from "@zxteam/errors";
+import { InnerError, InvalidOperationError } from "@zxteam/errors";
 
 export interface Configuration {
 	/**
@@ -25,13 +25,17 @@ export interface Configuration {
 }
 
 export namespace Configuration {
-	export type Endpoint = RestManagementEndpoint | RestPublisherEndpoint | ExpressRouterManagementEndpoint | ExpressRouterPublisherEndpoint;
+	export type Endpoint = RestManagementEndpoint | RestPublisherEndpoint | RestSubscriberEndpoint
+		| ExpressRouterManagementEndpoint | ExpressRouterPublisherEndpoint;
 
 	export interface RestManagementEndpoint extends HostingConfiguration.ServerEndpoint, HostingConfiguration.BindEndpoint {
 		readonly type: "rest-management";
 	}
 	export interface RestPublisherEndpoint extends HostingConfiguration.ServerEndpoint, HostingConfiguration.BindEndpoint {
 		readonly type: "rest-publisher";
+	}
+	export interface RestSubscriberEndpoint extends HostingConfiguration.ServerEndpoint, HostingConfiguration.BindEndpoint {
+		readonly type: "rest-subscriber";
 	}
 	export interface ExpressRouterManagementEndpoint extends HostingConfiguration.BindEndpoint {
 		readonly type: "express-router-management";
@@ -40,6 +44,14 @@ export namespace Configuration {
 	export interface ExpressRouterPublisherEndpoint extends HostingConfiguration.BindEndpoint {
 		readonly type: "express-router-publisher";
 		readonly router: Router;
+	}
+
+	export interface SSL {
+		readonly caCert?: Buffer;
+		readonly clientCert?: {
+			readonly cert: Buffer;
+			readonly key: Buffer;
+		};
 	}
 }
 
@@ -73,17 +85,42 @@ export class ConfigurationError extends InnerError { }
 
 function parseEndpoint(configuration: RawConfiguration, endpointIndex: string): Configuration.Endpoint {
 	const endpointConfiguration: RawConfiguration = configuration.getConfiguration(`endpoint.${endpointIndex}`);
-	const endpointType = endpointConfiguration.getString("type");
+	const endpointType: Configuration.Endpoint["type"] = endpointConfiguration.getString("type") as Configuration.Endpoint["type"];
 	switch (endpointType) {
 		case "rest-management": {
 			const httpEndpoint: Configuration.RestManagementEndpoint = Object.freeze({
-				type: "rest-management",
+				type: endpointType,
 				servers: endpointConfiguration.getString("servers").split(" "),
 				bindPath: endpointConfiguration.getString("bindPath", "/")
 			});
 			return httpEndpoint;
 		}
+		case "rest-publisher": {
+			const httpEndpoint: Configuration.RestPublisherEndpoint = Object.freeze({
+				type: endpointType,
+				servers: endpointConfiguration.getString("servers").split(" "),
+				bindPath: endpointConfiguration.getString("bindPath", "/")
+			});
+			return httpEndpoint;
+		}
+		case "rest-subscriber": {
+			const httpEndpoint: Configuration.RestSubscriberEndpoint = Object.freeze({
+				type: endpointType,
+				servers: endpointConfiguration.getString("servers").split(" "),
+				bindPath: endpointConfiguration.getString("bindPath", "/")
+			});
+			return httpEndpoint;
+		}
+		case "express-router-management":
+		case "express-router-publisher":
+			throw new InvalidOperationError(`Endpoint type '${endpointType}' may not be parsed as config item.`);
 		default:
-			throw new Error(`Non supported endpont type: ${endpointType}`);
+			throw new UnreachableNotSupportedEndpointError(endpointType);
+	}
+}
+
+class UnreachableNotSupportedEndpointError extends Error {
+	public constructor(endpointType: never) {
+		super(`Non supported endpoint type: ${endpointType}`);
 	}
 }

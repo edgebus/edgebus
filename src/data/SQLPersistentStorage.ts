@@ -10,6 +10,7 @@ import { Webhook } from "../model/Webhook";
 import { RecipientUser } from "../model/RecipientUser";
 
 export class SQLPersistentStorage implements PersistentStorage {
+
 	private readonly _logger: Logger;
 	private readonly _url: URL;
 
@@ -18,7 +19,7 @@ export class SQLPersistentStorage implements PersistentStorage {
 		this._logger = log;
 	}
 
-	public async getAvailableTopics(cancellationToken: CancellationToken, recipientUserId: RecipientUser.Id): Promise<Topic[]> {
+	public async getAvailableTopics(cancellationToken: CancellationToken): Promise<Topic[]> {
 		const topics: Topics[] = await helper.findAll(Topics);
 
 		const friendlyTopics = [];
@@ -29,8 +30,10 @@ export class SQLPersistentStorage implements PersistentStorage {
 
 			const friendlyTopic: Topic = {
 				topicId: topic.id.toString(),
-				topicName: topic.name,
-				topicDescription: topic.description
+				name: topic.name,
+				description: topic.description,
+				securityKind: "TOKEN",
+				securityToken: "Ololo123:" + topic.id.toString()
 			};
 			friendlyTopics.push(friendlyTopic);
 		}
@@ -38,18 +41,22 @@ export class SQLPersistentStorage implements PersistentStorage {
 		return friendlyTopics;
 	}
 
-	public addSubscribeWebhook(
+	public addSubscriberWebhook(
 		cancellationToken: CancellationToken,
-		recipientUserId: RecipientUser.Id,
-		opts: Webhook.Data
+		webhookData: Webhook.Data
 	): Promise<Webhook.Id> {
 		throw new Error("");
 	}
 
-	public removeSubscribeWebhook(
-		cancellationToken: CancellationToken,
-		recipientUserId: RecipientUser.Id,
-		webhookId: Webhook.Id): Promise<void> {
+	public getSubscriberWebhook(
+		webhook: Webhook.Id["webhookId"]
+	): Promise<Webhook> {
+		throw new Error("Method not implemented.");
+	}
+
+	public removeSubscriberWebhook(
+		cancellationToken: CancellationToken, webhook: Webhook.Id["webhookId"]
+	): Promise<void> {
 		throw new Error("");
 	}
 
@@ -72,16 +79,21 @@ export class SQLPersistentStorage implements PersistentStorage {
 
 
 export namespace helper {
+	// export async function findAll(model: any): Promise<any[]> {
+	// 	return new Promise(async (resolve, reject) => {
+	// 		await model.findAll()
+	// 			.catch((e: any) => {
+	// 				reject(e);
+	// 			})
+	// 			.then((result: any) => {
+	// 				resolve(result);
+	// 			});
+	// 	});
+	// }
+
+	// Same behavior as commented above
 	export async function findAll(model: any): Promise<any[]> {
-		return new Promise(async (resolve, reject) => {
-			await model.findAll()
-				.catch((e: any) => {
-					reject(e);
-				})
-				.then((result: any) => {
-					resolve(result);
-				});
-		});
+		return model.findAll();
 	}
 
 

@@ -26,6 +26,7 @@ Release from tag
 | Self-hosted docs                            | https://notifier.pub.zxteam.org/docs                    |
 | Managment API                               | https://notifier.pub.zxteam.org/management              |
 | Publisher API                               | https://notifier.pub.zxteam.org/publisher               |
+| Subscriber API                              | https://notifier.pub.zxteam.org/subscriber              |
 
 ### Presentation
 Usually latest tag (sometimes `master` branch)
@@ -35,6 +36,7 @@ Usually latest tag (sometimes `master` branch)
 | Self-hosted docs                            | https://notifier.pub.zxteam.org:10443/docs              |
 | Managment API                               | https://notifier.pub.zxteam.org:10443/management        |
 | Publisher API                               | https://notifier.pub.zxteam.org:10443/publisher         |
+| Subscriber API                              | https://notifier.pub.zxteam.org:10443/subscriber        |
 
 ### Evolution
 Usually `master` branch (sometimes `dev` branch)
@@ -44,6 +46,7 @@ Usually `master` branch (sometimes `dev` branch)
 | Self-hosted docs                            | https://notifier.pub.zxteam.org:20443/docs              |
 | Managment API                               | https://notifier.pub.zxteam.org:20443/management        |
 | Publisher API                               | https://notifier.pub.zxteam.org:20443/publisher         |
+| Subscriber API                              | https://notifier.pub.zxteam.org:20443/subscriber        |
 
 
 ## General information
@@ -157,3 +160,14 @@ SSL Verification enables automatically for URL scheme `https:`. No additional co
 
 #### Secret token
 If you setup a `secret token` (via Management API), it will be sent with the hook request in the **NF-TOKEN** HTTP header.
+
+## Message life-cycle
+```mermaid
+graph TD
+    NEW --> ON_THE_WAY
+    ON_THE_WAY --> ON_THE_WAY
+    NEW --> CANCELLED
+    ON_THE_WAY --> CANCELLED
+    ON_THE_WAY --> DELIVERED
+    ON_THE_WAY --> REJECTED
+```

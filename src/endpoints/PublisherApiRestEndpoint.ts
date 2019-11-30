@@ -1,20 +1,17 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
-import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
 import * as bodyParser from "body-parser";
 
-import { ManagementApi } from "../api/ManagementApi";
-import { InvalidOperationError } from "@zxteam/errors";
-import { Webhook } from "../model/Webhook";
+import { PublisherApi } from "../api/PublisherApi";
 
-export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
-	private readonly _api: ManagementApi;
+export class PublisherApiRestEndpoint extends hosting.ServersBindEndpoint {
+	private readonly _api: PublisherApi;
 
 	public constructor(
 		servers: ReadonlyArray<hosting.WebServer>,
-		api: ManagementApi,
+		api: PublisherApi,
 		opts: hosting.Configuration.BindEndpoint,
 		log: Logger
 	) {
@@ -54,8 +51,9 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				return handler;
 			}
 
-			router.post("/topic", safeBinder(this.createTopic.bind(this)));
-			router.delete("/topic/:webhookId", safeBinder(this.destroyTopic.bind(this)));
+			router.post("/", safeBinder(this.publishMessage.bind(this)));
+			router.get("/:messageId", safeBinder(this.getMessage.bind(this)));
+			router.delete("/:messageId", safeBinder(this.cancelMessage.bind(this)));
 		}
 	}
 
@@ -63,11 +61,19 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 		//
 	}
 
-	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
-		throw new InvalidOperationError("Method does not have implementation yet");
-	}
+	private async cancelMessage(req: express.Request, res: express.Response): Promise<void> {
+		//this._api.cancelMessage(....);
 
-	private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {
-		throw new InvalidOperationError("Method does not have implementation yet");
+		return res.writeHead(500, "Not implemented yet").end();
+	}
+	private async getMessage(req: express.Request, res: express.Response): Promise<void> {
+		//this._api.getMessage(....);
+
+		return res.writeHead(500, "Not implemented yet").end();
+	}
+	private async publishMessage(req: express.Request, res: express.Response): Promise<void> {
+		//this._api.publishMessage(....);
+
+		return res.writeHead(500, "Not implemented yet").end();
 	}
 }

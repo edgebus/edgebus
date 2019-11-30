@@ -4,21 +4,28 @@ export namespace Webhook {
 	/**
 	 * The ID of the Webhook
 	 */
-	export type Id = string;
+	export interface Id {
+		readonly webhookId: string;
+	}
 
 	export interface Data {
 		/**
 		 * The hook URL
 		 */
 		readonly url: URL;
+	}
 
+	export interface Instance {
 		/**
-		 * Name of attached topic for the Webhook
+		 * ID of attached topic for the Webhook
 		 */
 		readonly topicId: Topic["topicId"];
 	}
+
+	export interface Security {
+		readonly securityKind: "TOKEN";
+		readonly securityToken: string;
+	}
 }
 
-export interface Webhook extends Webhook.Data {
-	readonly webhookId: Webhook.Id;
-}
+export type Webhook = Webhook.Id & Webhook.Data & Webhook.Instance & Webhook.Security;

@@ -3,24 +3,21 @@ import { Disposable, Initable } from "@zxteam/contract";
 
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
-import { RecipientUser } from "../model/RecipientUser";
-
 
 export interface PersistentStorage extends Initable {
 	getAvailableTopics(
-		cancellationToken: CancellationToken,
-		recipientUserId: RecipientUser.Id
+		cancellationToken: CancellationToken
 	): Promise<Topic[]>;
 
-	addSubscribeWebhook(
+	addSubscriberWebhook(
 		cancellationToken: CancellationToken,
-		recipientUserId: RecipientUser.Id,
-		opts: Webhook.Data
+		webhookData: Webhook.Data
 	): Promise<Webhook.Id>;
 
-	removeSubscribeWebhook(
+	getSubscriberWebhook(webhook: Webhook.Id["webhookId"]): Promise<Webhook>;
+
+	removeSubscriberWebhook(
 		cancellationToken: CancellationToken,
-		recipientUserId: RecipientUser.Id,
-		webhookId: Webhook.Id
+		webhookId: Webhook.Id["webhookId"]
 	): Promise<void>;
 }

@@ -6,17 +6,17 @@ import * as hosting from "@zxteam/hosting";
 
 import * as _ from "lodash";
 
+import { Configuration, ConfigurationError } from "../Configuration";
+
 // Providers
 import { ConfigurationProvider } from "./ConfigurationProvider";
 import { HostingProvider } from "./HostingProvider";
 import { ApiProvider } from "./ApiProvider";
 
-// APIs
-import { ManagementApi } from "../api/ManagementApi";
-
 // Endpoints
 import { ManagementApiRestEndpoint } from "../endpoints/ManagementApiRestEndpoint";
-import { Configuration, ConfigurationError } from "../Configuration";
+import { PublisherApiRestEndpoint } from "../endpoints/PublisherApiRestEndpoint";
+import { SubscriberApiRestEndpoint } from "../endpoints/SubscriberApiRestEndpoint";
 
 @Singleton
 export abstract class EndpointsProvider extends Initable {
@@ -72,16 +72,31 @@ class EndpointsProviderImpl extends EndpointsProvider {
 			switch (endpoint.type) {
 				case "rest-management": {
 					const friendlyEndpoint: Configuration.RestManagementEndpoint = endpoint;
-					const managementApi: ManagementApi = this._apiProvider.managementApi;
 					const endpointInstance = new ManagementApiRestEndpoint(
-						endpointServers, managementApi, endpoint,
+						endpointServers, this._apiProvider.managementApi, endpoint,
 						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
 					break;
 				}
-				case "rest-publisher":
-					throw new Error("Not supported yet");
+				case "rest-publisher": {
+					const friendlyEndpoint: Configuration.RestPublisherEndpoint = endpoint;
+					const endpointInstance = new PublisherApiRestEndpoint(
+						endpointServers, this._apiProvider.publisherApi, endpoint,
+						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+					);
+					this._endpointInstances.push(endpointInstance);
+					break;
+				}
+				case "rest-subscriber": {
+					const friendlyEndpoint: Configuration.RestSubscriberEndpoint = endpoint;
+					const endpointInstance = new SubscriberApiRestEndpoint(
+						endpointServers, this._apiProvider.subscriberApi, endpoint,
+						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+					);
+					this._endpointInstances.push(endpointInstance);
+					break;
+				}
 				default:
 					throw new UnreachableEndpointError(endpoint);
 			}
