@@ -1,13 +1,15 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
+import { InvalidOperationError } from "@zxteam/errors";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
+import * as http from "http";
 import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
-import { InvalidOperationError } from "@zxteam/errors";
-import { Webhook } from "../model/Webhook";
+
+import { Topic } from "../model/Topic";
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private readonly _api: ManagementApi;
@@ -64,7 +66,28 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	}
 
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
-		throw new InvalidOperationError("Method does not have implementation yet");
+
+		const topicData: Topic.Data = {
+			name: "My secret topic",
+			description: "My secret topic description"
+		};
+
+		const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
+
+		return res
+			.writeHead(201, "Created")
+			.header("Content-Type", "application/json")
+			.end(Buffer.from(JSON.stringify({
+				topicId: topic.topicId,
+				name: topic.name,
+				description: topic.description,
+				topicSecurityKind: topic.topicSecurityKind,
+				topicSecurityToken: topic.topicSecurityToken,
+				publisherSecurityKind: topic.publisherSecurityKind,
+				publisherSecurityToken: topic.publisherSecurityToken,
+				subscriberSecurityKind: topic.subscriberSecurityKind,
+				subscriberSecurityToken: topic.subscriberSecurityToken
+			}), "utf-8"));
 	}
 
 	private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {

@@ -17,10 +17,20 @@ export namespace Topic {
 		readonly description: string;
 	}
 
-	export interface Security {
-		readonly securityKind: "TOKEN";
-		readonly securityToken: string;
+	export interface TopicSecurity {
+		readonly topicSecurityKind: "TOKEN";
+		readonly topicSecurityToken: string;
+	}
+
+	export interface PublisherSecurity {
+		readonly publisherSecurityKind: "TOKEN";
+		readonly publisherSecurityToken: string;
+	}
+
+	export interface SubscriberSecurity {
+		readonly subscriberSecurityKind: "TOKEN";
+		readonly subscriberSecurityToken: string;
 	}
 }
 
-export type Topic = Topic.Id & Topic.Data & Topic.Security;
+export type Topic = Topic.Id & Topic.Data & Topic.TopicSecurity & Topic.PublisherSecurity & Topic.SubscriberSecurity;

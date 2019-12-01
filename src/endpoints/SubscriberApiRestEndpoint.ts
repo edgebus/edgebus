@@ -2,11 +2,14 @@ import { CancellationToken, Logger } from "@zxteam/contract";
 import { InvalidOperationError } from "@zxteam/errors";
 import * as hosting from "@zxteam/hosting";
 
+import * as crypto from "crypto";
 import * as express from "express";
 import * as bodyParser from "body-parser";
 
 import { SubscriberApi } from "../api/SubscriberApi";
 import { Webhook } from "../model/Webhook";
+
+import { TOKEN_BYTES_LEN } from "../constants";
 
 // TO REMOVE
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
@@ -102,26 +105,26 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 	}
 
 	private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
-		try {
-			const webhookData = helper.parseOptionsForWebHook(req);
+		const webhookData: Webhook.Data = helper.parseOptionsForWebHook(req);
 
-			const topicInfo: Topic.Id & Topic.Security = {
-				topicId: "My secret topic",
-				securityKind: "TOKEN",
-				securityToken: "da+pribudet+s+nami+sila"
-			};
+		const topicInfo: Topic.Id & Topic.SubscriberSecurity = {
+			topicId: "My secret topic",
+			subscriberSecurityKind: "TOKEN",
+			subscriberSecurityToken: "??? my secret token ???"
+		};
 
-			const isSubscribe: Webhook.Id = await this._api.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicInfo, webhookData);
+		const webhook: Webhook = await this._api.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicInfo, webhookData);
 
-			if (isSubscribe) {
-				res.status(200).end("Successfully" + "\n");
-			}
-			res.status(400).end();
-
-		} catch (e) {
-			this._log.error("subscribeWebhook fault", e);
-			res.status(500).end();
-		}
+		return res
+			.writeHead(201, "Created")
+			.header("Content-Type", "application/json")
+			.end(Buffer.from(JSON.stringify({
+				webhookId: webhook.webhookId,
+				url: webhook.url,
+				topicId: webhook.topicId,
+				securityKind: webhook.securityKind,
+				securityToken: webhook.securityToken
+			}), "utf-8"));
 	}
 
 	private async unsubscribeWebhook(req: express.Request, res: express.Response): Promise<void> {

@@ -32,8 +32,12 @@ export class SQLPersistentStorage implements PersistentStorage {
 				topicId: topic.id.toString(),
 				name: topic.name,
 				description: topic.description,
-				securityKind: "TOKEN",
-				securityToken: "Ololo123:" + topic.id.toString()
+				topicSecurityKind: "TOKEN",
+				topicSecurityToken: "Ololo123:" + topic.id.toString(),
+				subscriberSecurityKind: "TOKEN",
+				subscriberSecurityToken: "Ololo123:" + topic.id.toString(),
+				publisherSecurityKind: "TOKEN",
+				publisherSecurityToken: "Ololo123:" + topic.id.toString()
 			};
 			friendlyTopics.push(friendlyTopic);
 		}

@@ -46,8 +46,8 @@ export class SubscriberApi extends Initable {
 	 * @param opts Webhook specific options
 	 */
 	public async subscribeWebhook(
-		cancellationToken: CancellationToken, topic: Topic.Id & Topic.Security, webhookData: Webhook.Data
-	): Promise<Webhook.Id & Webhook.Security> {
+		cancellationToken: CancellationToken, topic: Topic.Id & Topic.SubscriberSecurity, webhookData: Webhook.Data
+	): Promise<Webhook> {
 		const storage = this.getPersistentStorage();
 
 		// const webhookId: Webhook.Id = await storage.addSubscribeWebhook(cancellationToken, recipientUserId, opts);
