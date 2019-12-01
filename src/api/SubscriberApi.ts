@@ -5,23 +5,20 @@ import { InvalidOperationError } from "@zxteam/errors";
 // Models
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
-import { RecipientUser } from "../model/RecipientUser";
 
-import { StorageProvider } from "../provider/StorageProvider";
 import { PersistentStorage } from "../data/PersistentStorage";
 
 /**
  * Subscriber API allows subscribe/unsibscribe for events via webhooks and other subscriber's type
  */
 export class SubscriberApi extends Initable {
-	private readonly _storageProvider!: StorageProvider;
+	// private readonly _storageProvider!: StorageProvider;
 	private readonly _logger: Logger;
+	private readonly _storage: PersistentStorage;
 
-	private _persistentStorage: PersistentStorage | null = null;
-
-	constructor(storageProvider: StorageProvider, log: Logger) {
+	constructor(_storage: PersistentStorage, log: Logger) {
 		super();
-		this._storageProvider = storageProvider;
+		this._storage = _storage;
 		this._logger = log;
 	}
 
@@ -29,8 +26,7 @@ export class SubscriberApi extends Initable {
 		cancellationToken: CancellationToken
 	): Promise<SubscriberApi.TopicMap> {
 		const hardCodedMap = new Map();
-		const storage = this.getPersistentStorage();
-		const topics: Topic[] = await storage.getAvailableTopics(cancellationToken);
+		const topics: Topic[] = await this._storage.getAvailableTopics(cancellationToken);
 
 		for (const topic of topics) {
 			hardCodedMap.set(topic.topicId, topic);
@@ -48,9 +44,8 @@ export class SubscriberApi extends Initable {
 	public async subscribeWebhook(
 		cancellationToken: CancellationToken, topic: Topic.Id & Topic.SubscriberSecurity, webhookData: Webhook.Data
 	): Promise<Webhook> {
-		const storage = this.getPersistentStorage();
 
-		// const webhookId: Webhook.Id = await storage.addSubscribeWebhook(cancellationToken, recipientUserId, opts);
+		// const webhookId: Webhook.Id = await this._storage.addSubscribeWebhook(cancellationToken, recipientUserId, opts);
 
 		// return webhookId;
 
@@ -74,15 +69,6 @@ export class SubscriberApi extends Initable {
 	}
 	protected async onDispose() {
 		// nop
-	}
-
-	private getPersistentStorage(): PersistentStorage {
-		if (this._persistentStorage) {
-			return this._persistentStorage;
-		} else {
-			this._persistentStorage = this._storageProvider.persistentStorage;
-			return this._persistentStorage;
-		}
 	}
 }
 

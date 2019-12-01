@@ -7,19 +7,19 @@ import * as crypto from "crypto";
 // Models
 import { Topic } from "../model/Topic";
 
-import { StorageProvider } from "../provider/StorageProvider";
 import { TOKEN_BYTES_LEN } from "../constants";
+import { PersistentStorage } from "../data/PersistentStorage";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
  */
 export class ManagementApi extends Initable {
-	private readonly _storageProvider: StorageProvider;
+	private readonly _storage: PersistentStorage;
 	private readonly _log: Logger;
 
-	constructor(storageProvider: StorageProvider, log: Logger) {
+	constructor(storage: PersistentStorage, log: Logger) {
 		super();
-		this._storageProvider = storageProvider;
+		this._storage = storage;
 		this._log = log;
 	}
 

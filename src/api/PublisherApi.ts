@@ -4,25 +4,23 @@ import { InvalidOperationError } from "@zxteam/errors";
 
 // Models
 import { Topic } from "../model/Topic";
-import { Webhook } from "../model/Webhook";
-import { RecipientUser } from "../model/RecipientUser";
 
-import { StorageProvider } from "../provider/StorageProvider";
 import { MessageBusProvider } from "../provider/MessageBusProvider";
 
 import { Message } from "../model/Message";
+import { PersistentStorage } from "../data/PersistentStorage";
 
 /**
  * Publisher API allows to send messages to the topics
  */
 export class PublisherApi extends Initable {
-	private readonly _storageProvider: StorageProvider;
+	private readonly _storage: PersistentStorage;
 	private readonly _messageBusProvider: MessageBusProvider;
 	private readonly _log: Logger;
 
-	public constructor(storageProvider: StorageProvider, messageBusProvider: MessageBusProvider, log: Logger) {
+	public constructor(storage: PersistentStorage, messageBusProvider: MessageBusProvider, log: Logger) {
 		super();
-		this._storageProvider = storageProvider;
+		this._storage = storage;
 		this._messageBusProvider = messageBusProvider;
 		this._log = log;
 	}

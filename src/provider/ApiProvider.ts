@@ -33,9 +33,12 @@ class ApiProviderImpl extends ApiProvider {
 	public constructor() {
 		super();
 
-		this._managementApi = new ManagementApi(this._storageProvider, logger.getLogger("ManagementApi"));
-		this._publisherApi = new PublisherApi(this._storageProvider, this._messageBusProvider, logger.getLogger("PublisherApi"));
-		this._subscriberApi = new SubscriberApi(this._storageProvider, logger.getLogger("SubscriberApi"));
+		this._managementApi
+			= new ManagementApi(this._storageProvider.persistentStorage, logger.getLogger("ManagementApi"));
+		this._publisherApi
+			= new PublisherApi(this._storageProvider.persistentStorage, this._messageBusProvider, logger.getLogger("PublisherApi"));
+		this._subscriberApi
+			= new SubscriberApi(this._storageProvider.persistentStorage, logger.getLogger("SubscriberApi"));
 	}
 
 	public get managementApi() { return this._managementApi; }

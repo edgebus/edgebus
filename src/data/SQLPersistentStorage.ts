@@ -1,48 +1,68 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
+import { Initable, Disposable } from "@zxteam/disposable";
 
-import { Sequelize, Model, DataTypes } from "sequelize";
-import { Topics, topicsRows, topicsOpts } from "./model/Topics";
+import { PostgresProviderFactory } from "@zxteam/sql-postgres";
+
 import { PersistentStorage } from "./PersistentStorage";
 import * as _ from "lodash";
 
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
-import { RecipientUser } from "../model/RecipientUser";
 
-export class SQLPersistentStorage implements PersistentStorage {
-
-	private readonly _logger: Logger;
+export class SQLPersistentStorage extends Initable implements PersistentStorage {
+	private readonly _sqlProviderFactory: PostgresProviderFactory;
+	private readonly _log: Logger;
 	private readonly _url: URL;
 
 	public constructor(url: URL, log: Logger) {
+		super();
 		this._url = url;
-		this._logger = log;
+		this._log = log;
+
+		this._sqlProviderFactory = new PostgresProviderFactory({
+			url: this._url,
+			log: this._log,
+			applicationName: "notifier.service"
+		});
 	}
 
 	public async getAvailableTopics(cancellationToken: CancellationToken): Promise<Topic[]> {
-		const topics: Topics[] = await helper.findAll(Topics);
+		this.verifyInitializedAndNotDisposed();
 
-		const friendlyTopics = [];
-		for (const topic of topics) {
-			helper.ensureString(topic, "id");
-			helper.ensureString(topic, "name");
-			helper.ensureString(topic, "description");
+		const sqlProvider = await this._sqlProviderFactory.create(cancellationToken);
 
-			const friendlyTopic: Topic = {
-				topicId: topic.id.toString(),
-				name: topic.name,
-				description: topic.description,
-				topicSecurityKind: "TOKEN",
-				topicSecurityToken: "Ololo123:" + topic.id.toString(),
-				subscriberSecurityKind: "TOKEN",
-				subscriberSecurityToken: "Ololo123:" + topic.id.toString(),
-				publisherSecurityKind: "TOKEN",
-				publisherSecurityToken: "Ololo123:" + topic.id.toString()
-			};
-			friendlyTopics.push(friendlyTopic);
+		try {
+			const friendlyTopics: any[] = [];
+
+			const topics = await sqlProvider
+				.statement(`SELECT "id", "name", "description" FROM ${this.dbPublicName}topics;`)
+				.executeQuery(cancellationToken);
+
+			return friendlyTopics;
+		} finally {
+			await sqlProvider.dispose();
 		}
 
-		return friendlyTopics;
+		// const friendlyTopics = [];
+		// for (const topic of topics) {
+		// 	helper.ensureString(topic, "id");
+		// 	helper.ensureString(topic, "name");
+		// 	helper.ensureString(topic, "description");
+
+		// 	const friendlyTopic: Topic = {
+		// 		topicId: topic.id.toString(),
+		// 		name: topic.name,
+		// 		description: topic.description,
+		// 		topicSecurityKind: "TOKEN",
+		// 		topicSecurityToken: "Ololo123:" + topic.id.toString(),
+		// 		subscriberSecurityKind: "TOKEN",
+		// 		subscriberSecurityToken: "Ololo123:" + topic.id.toString(),
+		// 		publisherSecurityKind: "TOKEN",
+		// 		publisherSecurityToken: "Ololo123:" + topic.id.toString()
+		// 	};
+		// 	friendlyTopics.push(friendlyTopic);
+
+
 	}
 
 	public addSubscriberWebhook(
@@ -64,42 +84,21 @@ export class SQLPersistentStorage implements PersistentStorage {
 		throw new Error("");
 	}
 
-	public async dispose(): Promise<void> {
-		//
+	protected async onInit(cancellationToken: CancellationToken): Promise<void> {
+		await this._sqlProviderFactory.init(cancellationToken);
 	}
 
-	public async init(cancellationToken: CancellationToken): Promise<this> {
-		const sequelize = new Sequelize(this._url.href);
-		Topics.init(topicsRows,
-			{
-				sequelize,
-				tableName: topicsOpts.tableName,
-				timestamps: topicsOpts.timestamps
-			});
-
-		return this;
+	protected async onDispose(): Promise<void> {
+		await this._sqlProviderFactory.dispose();
 	}
+
+	private get dbPublicName() {
+		return this._url.pathname.substr(1) + ".public.";
+	}
+
 }
 
-
 export namespace helper {
-	// export async function findAll(model: any): Promise<any[]> {
-	// 	return new Promise(async (resolve, reject) => {
-	// 		await model.findAll()
-	// 			.catch((e: any) => {
-	// 				reject(e);
-	// 			})
-	// 			.then((result: any) => {
-	// 				resolve(result);
-	// 			});
-	// 	});
-	// }
-
-	// Same behavior as commented above
-	export async function findAll(model: any): Promise<any[]> {
-		return model.findAll();
-	}
-
 
 	export function ensureType<T, TKey extends keyof T>(target: T, key: TKey, checker: (v: T[TKey]) => boolean, typeMsg: string) {
 		if (!checker(target[key])) {

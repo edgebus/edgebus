@@ -27,7 +27,6 @@
 		"@zxnode/build": "^0.0.34"
 	},
 	"dependencies": {
-		"@types/sequelize": "^4.27.33",
 		"@zxteam/cancellation": "^6.0.25",
 		"@zxteam/configuration": "^6.0.36",
 		"@zxteam/contract": "^6.0.35",
@@ -37,11 +36,9 @@
 		"@zxteam/hosting": "^6.0.34",
 		"@zxteam/launcher": "^6.0.26",
 		"@zxteam/logger": "^6.0.22",
+		"@zxteam/sql-postgres": "^6.0.35",
 		"lodash": "^4.17.15",
 		"moment": "^2.24.0",
-		"pg": "^7.14.0",
-		"pg-hstore": "^2.3.3",
-		"sequelize": "^5.21.2",
 		"uuid": "^3.3.2"
 	},
 	"engines": {

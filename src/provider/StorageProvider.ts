@@ -1,6 +1,6 @@
 import { Logger, CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
-import { Inject, Provides } from "@zxteam/launcher";
+import { Inject, Provides, Singleton } from "@zxteam/launcher";
 import { logger } from "@zxteam/logger";
 
 import * as _ from "lodash";
@@ -9,6 +9,7 @@ import { ConfigurationProvider } from "./ConfigurationProvider";
 import { PersistentStorage } from "../data/PersistentStorage";
 import { SQLPersistentStorage } from "../data/SQLPersistentStorage";
 
+@Singleton
 export abstract class StorageProvider extends Initable {
 	protected readonly log: Logger;
 
