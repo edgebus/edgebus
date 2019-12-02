@@ -37,8 +37,7 @@ export class ManagementApi extends Initable {
 			subscriberSecurityToken: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex")
 		};
 
-		//await this._storageProvider.persistentStorage.addTopic(....);
-		throw new InvalidOperationError("Method does not have implementation yet");
+		return await this._storage.addTopic(cancellationToken, fullTopicData);
 	}
 
 	public async destroyTopic(

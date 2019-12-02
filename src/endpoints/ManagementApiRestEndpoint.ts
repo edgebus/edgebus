@@ -68,8 +68,8 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
 
 		const topicData: Topic.Data = {
-			name: "My secret topic",
-			description: "My secret topic description"
+			name: req.query.name,
+			description: req.query.description
 		};
 
 		const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);

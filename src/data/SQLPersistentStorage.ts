@@ -3,11 +3,12 @@ import { Initable, Disposable } from "@zxteam/disposable";
 
 import { PostgresProviderFactory } from "@zxteam/sql-postgres";
 
-import { PersistentStorage } from "./PersistentStorage";
+import { PersistentStorage, Table } from "./PersistentStorage";
 import * as _ from "lodash";
 
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
+import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
 
 export class SQLPersistentStorage extends Initable implements PersistentStorage {
 	private readonly _sqlProviderFactory: PostgresProviderFactory;
@@ -26,6 +27,60 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 		});
 	}
 
+	public async addTopic(
+		cancellationToken: CancellationToken,
+		topicData: Topic.Data & Topic.TopicSecurity & Topic.PublisherSecurity & Topic.SubscriberSecurity
+	): Promise<Topic> {
+		this.verifyInitializedAndNotDisposed();
+		try {
+			const pathToTable = this.fullPathToTable(Table.TOPIC);
+
+			const topicSecurity = JSON.stringify({
+				topicSecurityKind: topicData.topicSecurityKind,
+				topicSecurityToken: topicData.topicSecurityToken
+			});
+			const publisherSecurity = JSON.stringify({
+				publisherSecurityKind: topicData.publisherSecurityKind,
+				publisherSecurityToken: topicData.publisherSecurityToken
+			});
+			const subscriberSecurity = JSON.stringify({
+				subscriberSecurityKind: topicData.subscriberSecurityKind,
+				subscriberSecurityToken: topicData.subscriberSecurityToken
+			});
+
+			const sqlInsert = `INSERT INTO ${pathToTable} (`
+				+ "name, description, topic_security, publisher_security, subscriber_security) VALUES ("
+				+ `'${topicData.name}', '${topicData.description}', '${topicSecurity}', '${publisherSecurity}', '${subscriberSecurity}');`;
+
+			const sqlSelect = "SELECT id, name, description, topic_security, publisher_security, subscriber_security "
+				+ `FROM ${pathToTable} WHERE name='${topicData.name}'`;
+
+			const topicResult: ReadonlyArray<SqlResultRecord>
+				= await this._sqlProviderFactory.usingProviderWithTransaction(cancellationToken, async (sqlProvider: SqlProvider) => {
+					await sqlProvider.statement(sqlInsert).execute(cancellationToken);
+					return await sqlProvider.statement(sqlSelect).executeQuery(cancellationToken);
+				});
+
+			const topic = topicResult[0];
+			const friendlyTopic: Topic = {
+				topicId: topic.get("id").asNumber.toString(),
+				name: topic.get("name").asString,
+				description: topic.get("description").asString,
+				topicSecurityKind: JSON.parse(topic.get("topic_security").asString).topicSecurityKind,
+				topicSecurityToken: JSON.parse(topic.get("topic_security").asString).topicSecurityToken,
+				publisherSecurityToken: JSON.parse(topic.get("publisher_security").asString).publisherSecurityToken,
+				publisherSecurityKind: JSON.parse(topic.get("publisher_security").asString).publisherSecurityKind,
+				subscriberSecurityKind: JSON.parse(topic.get("subscriber_security").asString).subscriberSecurityKind,
+				subscriberSecurityToken: JSON.parse(topic.get("subscriber_security").asString).subscriberSecurityToken
+			};
+
+			return friendlyTopic;
+		} catch (error) {
+			this._log.error(error.message);
+			throw error;
+		}
+	}
+
 	public async getAvailableTopics(cancellationToken: CancellationToken): Promise<Topic[]> {
 		this.verifyInitializedAndNotDisposed();
 
@@ -35,7 +90,7 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 			const friendlyTopics: any[] = [];
 
 			const topics = await sqlProvider
-				.statement(`SELECT "id", "name", "description" FROM ${this.dbPublicName}topics;`)
+				.statement(`SELECT "id", "name", "description" FROM ${this.fullPathToTable}topics;`)
 				.executeQuery(cancellationToken);
 
 			return friendlyTopics;
@@ -92,32 +147,8 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 		await this._sqlProviderFactory.dispose();
 	}
 
-	private get dbPublicName() {
-		return this._url.pathname.substr(1) + ".public.";
+	private fullPathToTable(table: Table) {
+		return this._url.pathname.substr(1) + ".public." + table;
 	}
 
-}
-
-export namespace helper {
-
-	export function ensureType<T, TKey extends keyof T>(target: T, key: TKey, checker: (v: T[TKey]) => boolean, typeMsg: string) {
-		if (!checker(target[key])) {
-			throw new TypeError(`Expected '${key}' to be ${typeMsg} `);
-		}
-	}
-	export function ensureNullableType<T, TKey extends keyof T>(target: T, key: TKey, checker: (v: T[TKey]) => boolean, typeMsg: string) {
-		if (target[key] !== null && !checker(target[key])) {
-			throw new TypeError(`Expected '${key}' to be ${typeMsg} or null`);
-		}
-	}
-	export function ensureInteger<T, TKey extends keyof T>(target: T, key: TKey) { ensureType(target, key, _.isInteger, "integer"); }
-	export function ensureNumber<T, TKey extends keyof T>(target: T, key: TKey) { ensureType(target, key, _.isNumber, "number"); }
-	export function ensureString<T, TKey extends keyof T>(target: T, key: TKey) { ensureType(target, key, _.isString, "string"); }
-	export function ensureNullableInteger<T, TKey extends keyof T>(target: T, key: TKey) { ensureNullableType(target, key, _.isInteger, "integer"); }
-	export function ensureNullableNumber<T, TKey extends keyof T>(target: T, key: TKey) {
-		ensureNullableType(target, key, _.isNumber, "number");
-	}
-	export function ensureNullableString<T, TKey extends keyof T>(target: T, key: TKey) {
-		ensureNullableType(target, key, _.isString, "string");
-	}
 }
