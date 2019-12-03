@@ -27,10 +27,11 @@ export class ManagementApi extends Initable {
 	}
 
 	public async createTopic(
-		cancellationToken: CancellationToken, topic: Topic.Name & Topic.Data
+		cancellationToken: CancellationToken, topic: Topic.Name & Topic.Description
 	): Promise<Topic> {
-		const fullTopicData: Topic.Name & Topic.Security & Publisher.Security & Subscriber.Security = {
+		const fullTopicData: Topic.Name & Topic.Description & Topic.Security & Publisher.Security & Subscriber.Security = {
 			topicName: topic.topicName,
+			topicDescription: topic.topicDescription,
 			topicSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
 			publisherSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
 			subscriberSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") }
@@ -42,10 +43,8 @@ export class ManagementApi extends Initable {
 	public async destroyTopic(
 		cancellationToken: CancellationToken, topic: Topic.Name & { readonly topicSecurity: Security }
 	): Promise<void> {
-		//await this._storageProvider.persistentStorage.deleteTopic(....);
-		throw new InvalidOperationError("Method does not have implementation yet");
+		return await this._storage.deleteTopic(cancellationToken, topic);
 	}
-
 
 	protected async onInit() {
 		// nop

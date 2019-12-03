@@ -74,16 +74,6 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 	private async getTopics(req: express.Request, res: express.Response): Promise<void> {
 		try {
-			// TODO check signature
-			const isValidSignature = helper.checkSignature(req);
-			if (!isValidSignature) {
-				// Forbidden Error 404
-				res.status(404).end();
-			}
-
-			// TODO resolve recipientUserId
-			const recipientUserId = helper.getRecipientUserId(req);
-
 			const topics: SubscriberApi.TopicMap = await this._api.getAvailableTopics(DUMMY_CANCELLATION_TOKEN);
 
 			const response: {
@@ -108,18 +98,12 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 		const webhookData: Webhook.Data = helper.parseOptionsForWebHook(req);
 
-		const topicInfo: Topic.Name & Subscriber.Security = {
-			topicName: "My secret topic",
-			subscriberSecurity: {
-				kind: "TOKEN",
-				token: "??? my secret token ???"
-			}
-		};
+		const topicInfo: Topic.Name & Subscriber.Security = helper.parseTopicInfo(req);
 
-		const webhook: Webhook = await this._api.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicInfo, webhookData);
+		const webhook: Webhook = await this._api.subscriberWebhook(DUMMY_CANCELLATION_TOKEN, topicInfo, webhookData);
 
 		return res
-			.writeHead(201, "Created")
+			.status(201)
 			.header("Content-Type", "application/json")
 			.end(Buffer.from(JSON.stringify({
 				webhookId: webhook.webhookId,
@@ -151,25 +135,23 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 
 namespace helper {
-	export function getRecipientUserId(req: express.Request) {
-		// TODO resolve recipientUserId
-		return "HARD_CODED_USER";
-	}
-
-	export function checkSignature(req: express.Request): boolean {
-		const argKey = req.header("NS-ACCESS-KEY");
-		const argSign = req.header("NS-ACCESS-SIGN");
-		const argTimestamp = req.header("NS-ACCESS-TIMESTAMP");
-		const argPassphrase = req.header("NS-ACCESS-PASSPHRASE");
-
-		return true;
-	}
-
 	export function parseOptionsForWebHook(req: express.Request): Webhook.Data {
 		const opts: Webhook.Data = {
-			url: new URL("www.google.com/1")
+			url: new URL(req.body.url)
 		};
 
 		return opts;
+	}
+
+	export function parseTopicInfo(req: express.Request): Topic.Name & Subscriber.Security {
+		const topic: Topic.Name & Subscriber.Security = {
+			topicName: req.body.name,
+			subscriberSecurity: {
+				kind: req.body.subscriberSecurityKind,
+				token: req.body.subscriberSecurityToken
+			}
+		};
+
+		return topic;
 	}
 }

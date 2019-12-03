@@ -3,12 +3,19 @@ import { Disposable, Initable } from "@zxteam/contract";
 
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
+import { Publisher } from "../model/Publisher";
+import { Subscriber } from "../model/Subscriber";
 
 export interface PersistentStorage extends Initable {
 	addTopic(
 		cancellationToken: CancellationToken,
-		topicData: Topic.Data & Topic.TopicSecurity & Topic.PublisherSecurity & Topic.SubscriberSecurity
+		topicData: Topic.Name & Topic.Security & Publisher.Security & Subscriber.Security
 	): Promise<Topic>;
+
+	deleteTopic(cancellationToken: CancellationToken,
+		topicData: Topic.Name & Topic.Security
+	): Promise<void>;
+
 
 	getAvailableTopics(
 		cancellationToken: CancellationToken
@@ -16,8 +23,9 @@ export interface PersistentStorage extends Initable {
 
 	addSubscriberWebhook(
 		cancellationToken: CancellationToken,
+		topic: Topic.Name & Subscriber.Security,
 		webhookData: Webhook.Data
-	): Promise<Webhook.Id>;
+	): Promise<Webhook>;
 
 	getSubscriberWebhook(webhook: Webhook.Id["webhookId"]): Promise<Webhook>;
 
@@ -27,7 +35,15 @@ export interface PersistentStorage extends Initable {
 	): Promise<void>;
 }
 
-export const enum Table {
-	TOPIC = "topic",
-	SUBCRIBER_WEBHOOK = "subscriber_webhook"
+export class NoRecordPersistentStorageError extends Error {
+	public readonly name = "NoRecordPersistentStorageError";
 }
+
+export class ForbiddenPersistentStorageError extends Error {
+	public readonly name = "ForbiddenPersistentStorageError";
+}
+
+export class BadRequestPersistentStorageError extends Error {
+	public readonly name = "BadRequestPersistentStorageError";
+}
+

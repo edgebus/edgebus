@@ -12,14 +12,13 @@ export namespace Topic {
  		*/
 		readonly topicName: string;
 	}
-
-	export interface Data {
-
+	export interface Description {
 		/**
 		 * Human readable (long) description defines a `Topic`'s purpose
 		 */
 		readonly topicDescription: string;
-
+	}
+	export interface MediaType {
 		/**
 		 * Message media type
 		 * https://en.wikipedia.org/wiki/Media_type
@@ -30,6 +29,8 @@ export namespace Topic {
 	export interface Security {
 		readonly topicSecurity: SecurityModel;
 	}
+
+	export type Data = Name & Description & MediaType;
 }
 
 export type Topic = Topic.Name & Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security;

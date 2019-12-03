@@ -43,15 +43,13 @@ export class SubscriberApi extends Initable {
 	 * @param topic Describes message source topic (includes topic security)
 	 * @param opts Webhook specific options
 	 */
-	public async subscribeWebhook(
+	public async subscriberWebhook(
 		cancellationToken: CancellationToken, topic: Topic.Name & Subscriber.Security, webhookData: Webhook.Data
 	): Promise<Webhook> {
 
-		// const webhookId: Webhook.Id = await this._storage.addSubscribeWebhook(cancellationToken, recipientUserId, opts);
+		const webhookId: Webhook = await this._storage.addSubscriberWebhook(cancellationToken, topic, webhookData);
 
-		// return webhookId;
-
-		throw new InvalidOperationError("Method does not have implementation yet");
+		return webhookId;
 	}
 
 	/**

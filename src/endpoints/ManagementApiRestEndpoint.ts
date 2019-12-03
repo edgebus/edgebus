@@ -10,6 +10,11 @@ import * as bodyParser from "body-parser";
 import { ManagementApi } from "../api/ManagementApi";
 
 import { Topic } from "../model/Topic";
+import {
+	ForbiddenPersistentStorageError,
+	NoRecordPersistentStorageError,
+	BadRequestPersistentStorageError
+} from "../data/PersistentStorage";
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private readonly _api: ManagementApi;
@@ -57,7 +62,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 			}
 
 			router.post("/topic", safeBinder(this.createTopic.bind(this)));
-			router.delete("/topic/:webhookId", safeBinder(this.destroyTopic.bind(this)));
+			router.delete("/topic/:name", safeBinder(this.destroyTopic.bind(this)));
 		}
 	}
 
@@ -67,16 +72,29 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
 
-		const topicData: Topic.Name & Topic.Data = {
-			topicName: req.body.name,
-			topicDescription: req.body.description,
-			mediaType: req.body.mediaType
-		};
+		const topicName = req.body.name;
+		const topicDescription = req.body.description;
+		const mediaType = "";
+
+		if (!topicName || !topicDescription) {
+
+			const message = {
+				error: "required parameters",
+				message: "[name, description] is missing"
+			};
+
+			return res
+				.status(400)
+				.header("Content-Type", "application/json")
+				.end(JSON.stringify(message));
+		}
+
+		const topicData: Topic.Name & Topic.Description = { topicName, topicDescription };
 
 		const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
 
 		return res
-			.writeHead(201, "Created")
+			.status(201)
 			.header("Content-Type", "application/json")
 			.end(Buffer.from(JSON.stringify({
 				name: topic.topicName,
@@ -100,6 +118,54 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	}
 
 	private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {
-		throw new InvalidOperationError("Method does not have implementation yet");
+
+		const topicName = req.params.name;
+		const kind = req.body.topicSecurityKind;
+		const token = req.body.topicSecurityToken;
+
+		if (!topicName || !kind || !token) {
+
+			const message = {
+				error: "required parameters",
+				message: "[name, topicSecurityKind, topicSecurityToken] is missing"
+			};
+
+			return res
+				.status(400)
+				.header("Content-Type", "application/json")
+				.end(JSON.stringify(message));
+		}
+
+		const topic: Topic.Name & Topic.Security = {
+			topicName,
+			topicSecurity: { kind, token }
+		};
+
+		try {
+
+			await this._api.destroyTopic(DUMMY_CANCELLATION_TOKEN, topic);
+
+			return res.writeHead(200, "Delete").end();
+
+		} catch (error) {
+			return helper.handledException(res, error);
+		}
+	}
+}
+
+export namespace helper {
+	export function handledException(res: express.Response, error: any) {
+
+		if (error instanceof BadRequestPersistentStorageError) {
+			return res.writeHead(400, "Bad request").end();
+		}
+		if (error instanceof ForbiddenPersistentStorageError) {
+			return res.writeHead(403, "Forbidden").end();
+		}
+		if (error instanceof NoRecordPersistentStorageError) {
+			return res.writeHead(404, "No data").end();
+		}
+
+		return res.writeHead(500, "Unhandled exception").end();
 	}
 }
