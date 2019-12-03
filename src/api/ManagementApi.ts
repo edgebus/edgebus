@@ -6,9 +6,12 @@ import * as crypto from "crypto";
 
 // Models
 import { Topic } from "../model/Topic";
+import { Security } from "../model/Security";
 
 import { TOKEN_BYTES_LEN } from "../constants";
 import { PersistentStorage } from "../data/PersistentStorage";
+import { Publisher } from "../model/Publisher";
+import { Subscriber } from "../model/Subscriber";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
@@ -24,24 +27,20 @@ export class ManagementApi extends Initable {
 	}
 
 	public async createTopic(
-		cancellationToken: CancellationToken, topicData: Topic.Data
+		cancellationToken: CancellationToken, topic: Topic.Name & Topic.Data
 	): Promise<Topic> {
-		const fullTopicData: Topic.Data & Topic.TopicSecurity & Topic.PublisherSecurity & Topic.SubscriberSecurity = {
-			name: topicData.name,
-			description: topicData.description,
-			topicSecurityKind: "TOKEN",
-			topicSecurityToken: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex"),
-			publisherSecurityKind: "TOKEN",
-			publisherSecurityToken: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex"),
-			subscriberSecurityKind: "TOKEN",
-			subscriberSecurityToken: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex")
+		const fullTopicData: Topic.Name & Topic.Security & Publisher.Security & Subscriber.Security = {
+			topicName: topic.topicName,
+			topicSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
+			publisherSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
+			subscriberSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") }
 		};
 
 		return await this._storage.addTopic(cancellationToken, fullTopicData);
 	}
 
 	public async destroyTopic(
-		cancellationToken: CancellationToken, topic: Topic.Id & Topic.TopicSecurity
+		cancellationToken: CancellationToken, topic: Topic.Name & { readonly topicSecurity: Security }
 	): Promise<void> {
 		//await this._storageProvider.persistentStorage.deleteTopic(....);
 		throw new InvalidOperationError("Method does not have implementation yet");

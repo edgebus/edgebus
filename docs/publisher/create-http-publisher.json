@@ -1,0 +1,15 @@
+{
+	"topic": "MyTopic",
+	"publisherSecurityKind": "TOKEN",
+	"publisherSecurityToken": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	"ssl": {
+		"clientTrustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----",
+		"clientCommonName": "CN-MyPublisherSystem"
+	},
+	"transformers": [
+		{
+			"kind": "javascript",
+			"code": "your transformer code"
+		}
+	]
+}

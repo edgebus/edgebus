@@ -1,36 +1,35 @@
+import { Security as SecurityModel } from "./Security";
+import { Publisher } from "./Publisher";
+import { Subscriber } from "./Subscriber";
+
 export namespace Topic {
 	/**
 	 * The ID of the `Topic`
 	 */
-	export interface Id {
-		readonly topicId: string;
-	}
-
-	export interface Data {
+	export interface Name {
 		/**
  		* Human readable name defines a `Topic`'s purpose
  		*/
-		readonly name: string;
+		readonly topicName: string;
+	}
+
+	export interface Data {
+
 		/**
 		 * Human readable (long) description defines a `Topic`'s purpose
 		 */
-		readonly description: string;
+		readonly topicDescription: string;
+
+		/**
+		 * Message media type
+		 * https://en.wikipedia.org/wiki/Media_type
+		 */
+		readonly mediaType: string;
 	}
 
-	export interface TopicSecurity {
-		readonly topicSecurityKind: "TOKEN";
-		readonly topicSecurityToken: string;
-	}
-
-	export interface PublisherSecurity {
-		readonly publisherSecurityKind: "TOKEN";
-		readonly publisherSecurityToken: string;
-	}
-
-	export interface SubscriberSecurity {
-		readonly subscriberSecurityKind: "TOKEN";
-		readonly subscriberSecurityToken: string;
+	export interface Security {
+		readonly topicSecurity: SecurityModel;
 	}
 }
 
-export type Topic = Topic.Id & Topic.Data & Topic.TopicSecurity & Topic.PublisherSecurity & Topic.SubscriberSecurity;
+export type Topic = Topic.Name & Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security;

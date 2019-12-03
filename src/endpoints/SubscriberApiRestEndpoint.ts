@@ -14,6 +14,7 @@ import { TOKEN_BYTES_LEN } from "../constants";
 // TO REMOVE
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { Topic } from "../model/Topic";
+import { Subscriber } from "../model/Subscriber";
 
 
 export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
@@ -92,8 +93,8 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 			} = {};
 
 			for (const topic of topics) {
-				response[topic[1].name] = {
-					description: topic[1].description
+				response[topic[1].topicName] = {
+					description: topic[1].topicDescription
 				};
 			}
 
@@ -107,10 +108,12 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 		const webhookData: Webhook.Data = helper.parseOptionsForWebHook(req);
 
-		const topicInfo: Topic.Id & Topic.SubscriberSecurity = {
-			topicId: "My secret topic",
-			subscriberSecurityKind: "TOKEN",
-			subscriberSecurityToken: "??? my secret token ???"
+		const topicInfo: Topic.Name & Subscriber.Security = {
+			topicName: "My secret topic",
+			subscriberSecurity: {
+				kind: "TOKEN",
+				token: "??? my secret token ???"
+			}
 		};
 
 		const webhook: Webhook = await this._api.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicInfo, webhookData);
@@ -121,9 +124,7 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 			.end(Buffer.from(JSON.stringify({
 				webhookId: webhook.webhookId,
 				url: webhook.url,
-				topicId: webhook.topicId,
-				securityKind: webhook.securityKind,
-				securityToken: webhook.securityToken
+				topicName: webhook.topicName
 			}), "utf-8"));
 	}
 

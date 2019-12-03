@@ -5,8 +5,10 @@ import { InvalidOperationError } from "@zxteam/errors";
 // Models
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
+import { Security } from "../model/Security";
 
 import { PersistentStorage } from "../data/PersistentStorage";
+import { Subscriber } from "../model/Subscriber";
 
 /**
  * Subscriber API allows subscribe/unsibscribe for events via webhooks and other subscriber's type
@@ -29,7 +31,7 @@ export class SubscriberApi extends Initable {
 		const topics: Topic[] = await this._storage.getAvailableTopics(cancellationToken);
 
 		for (const topic of topics) {
-			hardCodedMap.set(topic.topicId, topic);
+			hardCodedMap.set(topic.topicName, topic);
 		}
 
 		return hardCodedMap;
@@ -42,7 +44,7 @@ export class SubscriberApi extends Initable {
 	 * @param opts Webhook specific options
 	 */
 	public async subscribeWebhook(
-		cancellationToken: CancellationToken, topic: Topic.Id & Topic.SubscriberSecurity, webhookData: Webhook.Data
+		cancellationToken: CancellationToken, topic: Topic.Name & Subscriber.Security, webhookData: Webhook.Data
 	): Promise<Webhook> {
 
 		// const webhookId: Webhook.Id = await this._storage.addSubscribeWebhook(cancellationToken, recipientUserId, opts);
@@ -58,7 +60,7 @@ export class SubscriberApi extends Initable {
 	 * @param webhook Webhook identifier and security
 	 */
 	public async unsubscribeWebhook(
-		cancellationToken: CancellationToken, webhook: Webhook.Id & Webhook.Security
+		cancellationToken: CancellationToken, webhook: Webhook.Id & Subscriber.Security
 	): Promise<SubscriberApi.TopicMap> {
 		throw new InvalidOperationError("Method does not have implementation yet");
 	}
@@ -73,5 +75,5 @@ export class SubscriberApi extends Initable {
 }
 
 export namespace SubscriberApi {
-	export type TopicMap = Map<Topic["topicId"], Topic>;
+	export type TopicMap = Map<Topic["topicName"], Topic>;
 }

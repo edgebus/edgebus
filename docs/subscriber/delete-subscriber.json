@@ -1,0 +1,6 @@
+{
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}

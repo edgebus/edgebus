@@ -19,13 +19,8 @@ export namespace Webhook {
 		/**
 		 * ID of attached topic for the Webhook
 		 */
-		readonly topicId: Topic["topicId"];
-	}
-
-	export interface Security {
-		readonly securityKind: "TOKEN";
-		readonly securityToken: string;
+		readonly topicName: Topic.Name["topicName"];
 	}
 }
 
-export type Webhook = Webhook.Id & Webhook.Data & Webhook.Instance & Webhook.Security;
+export type Webhook = Webhook.Id & Webhook.Data & Webhook.Instance;

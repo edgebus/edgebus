@@ -67,9 +67,10 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
 
-		const topicData: Topic.Data = {
-			name: req.body.name,
-			description: req.body.description
+		const topicData: Topic.Name & Topic.Data = {
+			topicName: req.body.name,
+			topicDescription: req.body.description,
+			mediaType: req.body.mediaType
 		};
 
 		const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
@@ -78,15 +79,23 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 			.writeHead(201, "Created")
 			.header("Content-Type", "application/json")
 			.end(Buffer.from(JSON.stringify({
-				topicId: topic.topicId,
-				name: topic.name,
-				description: topic.description,
-				topicSecurityKind: topic.topicSecurityKind,
-				topicSecurityToken: topic.topicSecurityToken,
-				publisherSecurityKind: topic.publisherSecurityKind,
-				publisherSecurityToken: topic.publisherSecurityToken,
-				subscriberSecurityKind: topic.subscriberSecurityKind,
-				subscriberSecurityToken: topic.subscriberSecurityToken
+				name: topic.topicName,
+				description: topic.topicDescription,
+				topicSecurity: {
+					kind: topic.topicSecurity.kind,
+					token: topic.topicSecurity.token
+
+				},
+				publisherSecurity: {
+					kind: topic.publisherSecurity.kind,
+					token: topic.publisherSecurity.token
+
+				},
+				subscriberSecurity: {
+					kind: topic.subscriberSecurity.kind,
+					token: topic.subscriberSecurity.token
+
+				}
 			}), "utf-8"));
 	}
 

@@ -16,7 +16,7 @@ In general, any notifications system by design may delay messages. Good practice
 ## Our instances
 We are hosting sereval public instances. You can use its for dry-run, integration development, etc...
 
-Currently **PRODUCATION** instance does not provide any guarantees and may be shut-down, wipe-data, etc... Use it just for testing.
+Currently **PRODUCTION** instance does not provide any guarantees and may be shut-down, wipe-data, etc... Use it just for testing.
 
 ### Production
 Release from tag
@@ -99,7 +99,7 @@ For example powers of two scale will retry delivery until the period does not ex
 
 Notification server performs attempts to deliver a message within 3 days.
 
-### Selecting message format
+### Selecting delivery format
 Along with setup your notification endpoint, you may choose message format.
 
 #### [JSON-RPC](https://www.jsonrpc.org/specification)
@@ -113,28 +113,203 @@ Using JSON-RPC in notification manner
 Using Protocol Buffers for message serialization. See definition .proto file for details.
 
 ### Message security
-`Notifier` provides Signing and Encrypt methods to verify that the request is legitimate.
+`Notifier` does tranfer messages as-is. There is `Publisher`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
 
-#### Signing message
-Message signature provides by a `Publisher` service. `Notifier` does not modify provided signature, just deliver it along with message. See for details in events documentation of the `Publisher` service.
+However implementation of **subscribers** may provide additional security. For example Webhook provides a token header and SSL validation. See a subscriber documentation for details.
 
-#### Encrypt message (Optional)
-Optionally (along with signing), you may setup(via Management API) an `encrypt password`, messages will be encrypted.
-
-```Bash tab="Bash + OpenSSL"
-TBD
+## Administration flow
+```mermaid
+sequenceDiagram
+	participant Admin
+	participant Publisher
+	participant Notifier
+	participant Subscriber
+	opt Setup topic
+		Admin->>Notifier: Create topic "my-topic"
+		Notifier-->>Admin: Create topic "my-topic"
+	end
+	opt Security
+		Admin->>Subscriber: Subscribe Token: XXXX
+		Subscriber-->>Admin: Thanks
+	end
+	opt Security
+		Admin->>Publisher: Publish Token: XXXX
+		Publisher-->>Admin: Thanks
+	end
+	opt Setup
+	Subscriber->>Notifier: Setup subscriber
+	Notifier-->>Subscriber: Subscription details
+	end
+	opt Setup
+	Publisher->>Notifier: Setup publisher
+	Notifier-->>Publisher: Publication details
+	end
+	opt General use
+		Publisher->>Notifier: Publish a message
+		Notifier->>Subscriber: Deliver the message
+	end
 ```
 
-```JavaScript tab="NodeJS"
-TBD
+
+## Messages
+### Life-cycle
+```mermaid
+graph TD
+    NEW --> ON_THE_WAY
+    ON_THE_WAY --> ON_THE_WAY
+    NEW --> CANCELLED
+    ON_THE_WAY --> CANCELLED
+    ON_THE_WAY --> DELIVERED
+    ON_THE_WAY --> REJECTED
 ```
 
-```PHP tab=
-TBD
+## Topics
+
+### Life-cycle
+```mermaid
+graph TD
+	CREARETOPIC(Create) --> TOPIC
+	TOPIC --> TOPIC
+	TOPIC --> DELETEDTOPIC(Destroy)
+```
+
+### Setup
+
+#### Create Topic
+```bash
+$ cat docs/topic/create-topic.json
+```
+```json
+{
+	"name": "MyGitLabPushTopic",
+	"description": "My first topic to handle GitLab's push events. See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events",
+	"schema": {
+		"$schema": "http://json-schema.org/draft-07/schema",
+		...
+	}
+}
+```
+```bash
+$ curl --verbose --key ./admin-key.pem --cert ./admin-cert.pem --method POST --header 'Content-Type: application/json'  https://notifier.pub.zxteam.org/management/topic --data @docs/topic/create-topic.json
+```
+```json
+{
+	"name": "MyGitLabPushTopic.yourdomain.ltd",
+	"topicSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
+	"publisherSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}
+```
+NOTE: `yourdomain.ltd` is comming from your SSL certificate `admin-cert.pem` (field: CN)
+
+#### Delete Topic
+```bash
+$ cat docs/topic/delete-topic.json
+```
+```json
+{
+	"topicSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}
+```
+```bash
+$ curl --verbose --method DELETE --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/management/MyGitLabPushTopic.yourdomain.ltd --data @docs/topic/delete-topic.json
+```
+```json
+{
+	"deleteDate": "2019-10-10T12:00:01.223Z",
+	"pendingMessages": 342,
+	"totalMessages": 444321
+}
 ```
 
 
-## Webhooks
+## Publishers
+Any publisher may be deleted by following request
+```bash
+$ cat docs/publisher/delete-publisher.json
+```
+```json
+{
+	"publisherSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}
+```
+```bash
+$ curl --verbose --method DELETE --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
+```
+```json
+{
+	"deleteDate": "2019-10-10T12:00:01.223Z"
+}
+```
+
+### HTTP Endpoint
+HTTP Publisher allows to publish messages via HTTP protocol.
+
+#### Create publisher endpoint
+```bash
+$ cat docs/publisher/create-http-publisher.json
+```
+```json
+{
+	"topic": "MyGitLabPushTopic.yourdomain.ltd",
+	"publisherSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
+	"ssl": {
+		... optional
+	}
+}
+```
+```bash
+$ curl --verbose --method POST --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/publisher/http --data @docs/publisher/create-http-publisher.json
+```
+```json
+{
+	"publisherId": "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"url": "https://notifier.pub.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+}
+```
+
+## Subscribers
+Any subscriber may be deleted by following request
+```bash
+$ cat docs/subscriber/delete-subscriber.json
+```
+```json
+{
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}
+```
+```bash
+$ curl --verbose --method DELETE --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
+```
+```json
+{
+	"deleteDate": "2019-10-10T12:00:01.223Z"
+}
+```
+
+
+### Webhook
 [Webhooks](https://en.wikipedia.org/wiki/Webhook) are "user-defined HTTP
 callbacks".
 When an event occurs, `Notifier` makes an HTTP request to the URI configured for the webhook.
@@ -142,14 +317,6 @@ When an event occurs, `Notifier` makes an HTTP request to the URI configured for
 >>>
 **Warning:** Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then Notifier will think the hook failed and [retry](#delivery) it.
 >>>
-
-### Headers
-Notification server will include following headers to each request:
-
-* **NF-TIMESTAMP** - A timestamp that was used in [signature](#signing-message) calculation
-* **NF-SIGN** - The base64-encoded [signature](#signing-message)
-
-### Security
 
 #### SSL verification
 SSL Verification enables automatically for URL scheme `https:`. No additional configuration required.
@@ -161,13 +328,31 @@ SSL Verification enables automatically for URL scheme `https:`. No additional co
 #### Secret token
 If you setup a `secret token` (via Management API), it will be sent with the hook request in the **NF-TOKEN** HTTP header.
 
-## Message life-cycle
-```mermaid
-graph TD
-    NEW --> ON_THE_WAY
-    ON_THE_WAY --> ON_THE_WAY
-    NEW --> CANCELLED
-    ON_THE_WAY --> CANCELLED
-    ON_THE_WAY --> DELIVERED
-    ON_THE_WAY --> REJECTED
+### WebSocket (Host Mode)
+This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `Notifier` as client.
+
+#### Create subscriber endpoint
+```bash
+$ cat docs/subscriber/create-websocker-host-subscriber.json
+```
+```json
+{
+	"topic": "MyGitLabPushTopic.yourdomain.ltd",
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
+	"ssl": {
+		... optional
+	}
+}
+```
+```bash
+$ curl --verbose --method POST --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/subscriber/websockethost --data @docs/subscriber/create-websocker-host-subscriber.json
+```
+```json
+{
+	"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"url": "wss://notifier.pub.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+}
 ```

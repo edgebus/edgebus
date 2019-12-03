@@ -14,11 +14,7 @@ export namespace Message {
 		/**
 		 * Binary data of the message
 		 */
-		readonly body: Buffer;
-		/**
-		 * Publisher's signature over body
-		 */
-		readonly signature: Buffer;
+		readonly messageBody: Buffer;
 	}
 
 	export interface StatusBase {

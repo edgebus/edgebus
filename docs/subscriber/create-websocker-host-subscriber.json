@@ -1,0 +1,7 @@
+{
+	"topic": "MyGitLabPushTopic.yourdomain.ltd",
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}

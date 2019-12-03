@@ -1,14 +1,18 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { Initable, Disposable } from "@zxteam/disposable";
-
+import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
 import { PostgresProviderFactory } from "@zxteam/sql-postgres";
 
-import { PersistentStorage, Table } from "./PersistentStorage";
 import * as _ from "lodash";
+
+import { PersistentStorage, Table } from "./PersistentStorage";
 
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
-import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
+import { Subscriber } from "../model/Subscriber";
+import { Publisher } from "../model/Publisher";
+
+//export class SQLPersistentStorage implements PersistentStorage {
 
 export class SQLPersistentStorage extends Initable implements PersistentStorage {
 	private readonly _sqlProviderFactory: PostgresProviderFactory;
@@ -29,31 +33,22 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 
 	public async addTopic(
 		cancellationToken: CancellationToken,
-		topicData: Topic.Data & Topic.TopicSecurity & Topic.PublisherSecurity & Topic.SubscriberSecurity
+		topicData: Topic & Publisher.Security & Subscriber.Security
 	): Promise<Topic> {
 		this.verifyInitializedAndNotDisposed();
 		try {
 			const pathToTable = this.fullPathToTable(Table.TOPIC);
 
-			const topicSecurity = JSON.stringify({
-				topicSecurityKind: topicData.topicSecurityKind,
-				topicSecurityToken: topicData.topicSecurityToken
-			});
-			const publisherSecurity = JSON.stringify({
-				publisherSecurityKind: topicData.publisherSecurityKind,
-				publisherSecurityToken: topicData.publisherSecurityToken
-			});
-			const subscriberSecurity = JSON.stringify({
-				subscriberSecurityKind: topicData.subscriberSecurityKind,
-				subscriberSecurityToken: topicData.subscriberSecurityToken
-			});
+			const topicSecurity = JSON.stringify(topicData.topicSecurity);
+			const publisherSecurity = JSON.stringify(topicData.publisherSecurity);
+			const subscriberSecurity = JSON.stringify(topicData.subscriberSecurity);
 
 			const sqlInsert = `INSERT INTO ${pathToTable} (`
-				+ "name, description, topic_security, publisher_security, subscriber_security) VALUES ("
-				+ `'${topicData.name}', '${topicData.description}', '${topicSecurity}', '${publisherSecurity}', '${subscriberSecurity}');`;
+				+ "name, description, media_type, topic_security, publisher_security, subscriber_security) VALUES ("
+				+ `'${topicData.topicName}', '${topicData.mediaType}', '${topicData.topicDescription}', '${topicSecurity}', '${publisherSecurity}', '${subscriberSecurity}');`;
 
 			const sqlSelect = "SELECT id, name, description, topic_security, publisher_security, subscriber_security "
-				+ `FROM ${pathToTable} WHERE name='${topicData.name}'`;
+				+ `FROM ${pathToTable} WHERE name='${topicData.topicName}'`;
 
 			const topicResult: ReadonlyArray<SqlResultRecord>
 				= await this._sqlProviderFactory.usingProviderWithTransaction(cancellationToken, async (sqlProvider: SqlProvider) => {
@@ -63,15 +58,21 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 
 			const topic = topicResult[0];
 			const friendlyTopic: Topic = {
-				topicId: topic.get("id").asNumber.toString(),
-				name: topic.get("name").asString,
-				description: topic.get("description").asString,
-				topicSecurityKind: JSON.parse(topic.get("topic_security").asString).topicSecurityKind,
-				topicSecurityToken: JSON.parse(topic.get("topic_security").asString).topicSecurityToken,
-				publisherSecurityToken: JSON.parse(topic.get("publisher_security").asString).publisherSecurityToken,
-				publisherSecurityKind: JSON.parse(topic.get("publisher_security").asString).publisherSecurityKind,
-				subscriberSecurityKind: JSON.parse(topic.get("subscriber_security").asString).subscriberSecurityKind,
-				subscriberSecurityToken: JSON.parse(topic.get("subscriber_security").asString).subscriberSecurityToken
+				topicName: topic.get("name").asString,
+				topicDescription: topic.get("description").asString,
+				mediaType: topic.get("media_type").asString,
+				topicSecurity: {
+					kind: JSON.parse(topic.get("topic_security").asString).topicSecurity.kind,
+					token: JSON.parse(topic.get("topic_security").asString).topicSecurity.token
+				},
+				subscriberSecurity: {
+					kind: JSON.parse(topic.get("publisher_security").asString).topicSecurity.kind,
+					token:  JSON.parse(topic.get("publisher_security").asString).topicSecurity.token
+				},
+				publisherSecurity: {
+					kind: JSON.parse(topic.get("subscriber_security").asString).topicSecurity.kind,
+					token:  JSON.parse(topic.get("subscriber_security").asString).topicSecurity.token
+				}
 			};
 
 			return friendlyTopic;
