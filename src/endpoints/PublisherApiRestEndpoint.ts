@@ -1,5 +1,5 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
-import { InvalidOperationError, wrapErrorIfNeeded } from "@zxteam/errors";
+import { InvalidOperationError, wrapErrorIfNeeded, ArgumentError } from "@zxteam/errors";
 import { Ensure, ensureFactory } from "@zxteam/ensure";
 import * as hosting from "@zxteam/hosting";
 
@@ -47,7 +47,7 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 			return handler;
 		}
 
-		this._router.use("/push/:publisherId", this.pushMessage.bind(this));
+		this._router.use("/http/:httpPublisherUUID", this.pushMessage.bind(this));
 		this._router.get("/:publisherId", safeBinder(this.getPublisher.bind(this)));
 		this._router.delete("/:publisherId", safeBinder(this.deletePublisher.bind(this)));
 	}
@@ -76,7 +76,12 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 		req: express.Request, res: express.Response, next: express.NextFunction
 	): Promise<void> {
 		try {
-			const publisherId = ensure.string(req.params.publisherId);
+			const id = ensure.string(req.params.httpPublisherUUID);
+
+			// TODO validate "id" for UUID
+
+			const publisherId = `publisher.http.${id}`;
+
 			const httpPublisher: HttpPublisher | undefined = this._httpPublishersMap.get(publisherId);
 			if (httpPublisher === undefined) {
 				this._log.info(`Wrong push publisherId: ${publisherId}`);
@@ -85,6 +90,10 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 			const result = httpPublisher.router(req, res, next);
 			return;
 		} catch (e) {
+			if (e instanceof ArgumentError) {
+				res.writeHead(400, `Bad request. ${e.message}`).end();
+				return;
+			}
 			this._log.debug("Failed to push message.", e);
 			const err = wrapErrorIfNeeded(e);
 			this._log.warn(`Failed to push message. Error: ${err.message}`);

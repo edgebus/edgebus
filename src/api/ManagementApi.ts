@@ -28,7 +28,7 @@ export class ManagementApi extends Initable {
 
 	public async createTopic(
 		cancellationToken: CancellationToken, topic: Topic.Name & Topic.Data
-	): Promise<Topic> {
+	): Promise<Topic.Name & Topic.Security & Publisher.Security & Subscriber.Security> {
 		const fullTopicData: Topic.Name & Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security = {
 			topicName: topic.topicName, topicDescription: topic.topicDescription, mediaType: topic.mediaType,
 			topicSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },

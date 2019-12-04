@@ -43,25 +43,25 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				topicName: "GITLAB",
 				topicDescription: "GITLAB Webhooks test topic",
 				publisherId: "publisher.http.5034c67f-f1cb-4fab-aed3-d2cd3b3d50ad",
-				subscriberId: "subscriber.websockethost.41dd9c66-09ae-473d-a694-1dcfe347e8af"
+				subscriberIds: ["subscriber.websockethost.41dd9c66-09ae-473d-a694-1dcfe347e8af"]
 			},
 			{
 				topicName: "WTF1_WALLET_CREATE_TX",
 				topicDescription: "WALLET_CREATE_TX уведомление о создании транзакции, либо подписи существующей (происходит при вызове таких методов как sendtoaddress, signtx)",
 				publisherId: "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-				subscriberId: "subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3"
+				subscriberIds: ["subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3", "subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889"]
 			},
 			{
 				topicName: "WTF1_WALLET_TX",
 				topicDescription: "WALLET_TX уведомление о поступлении транзакции, на которую мы подписаны, имеется возможность подписаться только на приходящие(receive) или исходящие(send) транзакции.",
 				publisherId: "publisher.http.991b9ba2-7a76-4de9-8149-3489412a1288",
-				subscriberId: "subscriber.websockethost.a775004a-9ae3-4cc8-a439-8540ef89c7a5"
+				subscriberIds: ["subscriber.websockethost.a775004a-9ae3-4cc8-a439-8540ef89c7a5", "subscriber.websockethost.vova60e8-5206-42d0-9fc6-02e0abe6dc69"]
 			},
 			{
 				topicName: "WTF2",
 				topicDescription: "WTF2 PSS Provider's callbacks",
 				publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
-				subscriberId: "subscriber.websockethost.9d65ce07-b8d5-4704-ba42-965c140df5e0"
+				subscriberIds: ["subscriber.websockethost.9d65ce07-b8d5-4704-ba42-965c140df5e0", "subscriber.websockethost.vova2bb0-a620-47ea-bca3-54c3aad16969"]
 			}
 		];
 
@@ -69,12 +69,6 @@ export default async function (cancellationToken: CancellationToken, config: Con
 		const messageBusProvider: MessageBusProvider = Container.get(MessageBusProvider);
 
 		for (const hardcodedConfiguration of hardcodedConfigurations) {
-
-			const channel = await messageBusProvider.messageBus.retainChannel(
-				cancellationToken, hardcodedConfiguration.topicName, hardcodedConfiguration.subscriberId
-			);
-			harcodedItemsToDispose.push(channel);
-
 			// Setup HTTP publisher
 			const httpPublisherInstance: HttpPublisher = new HttpPublisher(
 				{
@@ -91,16 +85,24 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				publisherApiRestEndpoint.addHttpPublisher(httpPublisherInstance);
 			}
 
+
 			// Setup WebSocketHost subscriber
-			for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
-				const webSocketHostSubscriber = new WebSocketHostSubscriber(channel, {
-					baseBindPath: subscriberApiRestEndpoint.bindPath,
-					bindServers: subscriberApiRestEndpoint.servers,
-					log,
-					subscriberId: hardcodedConfiguration.subscriberId
-				});
-				await webSocketHostSubscriber.init(cancellationToken);
-				harcodedItemsToDispose.push(webSocketHostSubscriber);
+			for (const subscriberId of hardcodedConfiguration.subscriberIds) {
+				const channel = await messageBusProvider.messageBus.retainChannel(
+					cancellationToken, hardcodedConfiguration.topicName, subscriberId
+				);
+				harcodedItemsToDispose.push(channel);
+
+				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
+					const webSocketHostSubscriber = new WebSocketHostSubscriber(channel, {
+						baseBindPath: subscriberApiRestEndpoint.bindPath,
+						bindServers: subscriberApiRestEndpoint.servers,
+						log,
+						subscriberId: subscriberId
+					});
+					await webSocketHostSubscriber.init(cancellationToken);
+					harcodedItemsToDispose.push(webSocketHostSubscriber);
+				}
 			}
 		}
 	} catch (e) {

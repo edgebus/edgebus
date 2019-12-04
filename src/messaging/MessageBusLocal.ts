@@ -66,7 +66,7 @@ export class MessageBusLocal extends Initable implements MessageBus {
 			topicQueuesMap.set(subscriberId, queue);
 		}
 
-		const channel = new MessageBusLocalChannel(subscriberId, queue);
+		const channel = new MessageBusLocalChannel(topicName, subscriberId, queue);
 		this._channels.set(subscriberId, channel);
 
 		return channel;
@@ -90,12 +90,14 @@ export namespace MessageBusLocal {
 
 class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.Data> implements MessageBus.Channel {
 	private readonly _queue: Array<Message>;
+	private readonly _topicName: Topic["topicName"];
 	private readonly _subscriberId: Subscriber["subscriberId"];
 	private _tickInterval: NodeJS.Timeout | null;
 	private _insideTick: boolean;
 
-	public constructor(subscriberId: Subscriber["subscriberId"], queue: Array<Message>) {
+	public constructor(topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"], queue: Array<Message>) {
 		super();
+		this._topicName = topicName;
 		this._subscriberId = subscriberId;
 		this._insideTick = false;
 		this._queue = queue;
@@ -105,6 +107,8 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 			this._tickInterval = null;
 		}
 	}
+
+	public get topicName(): Topic["topicName"] { return this._topicName; }
 
 	public wakeUp(): void {
 		if (this._tickInterval === null && this._queue.length > 0) {
@@ -120,7 +124,7 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 		if (this._insideTick === true) { return; }
 		this._insideTick = true;
 		try {
-			if (this._queue.length === 0) {
+			if (!this.hasSubscribers || this._queue.length === 0) {
 				if (this._tickInterval !== null) {
 					clearInterval(this._tickInterval);
 					this._tickInterval = null;
@@ -130,8 +134,13 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 
 			const message: Message = this._queue[0];
 			try {
-				await this.notify({ data: message });
-				this._queue.pop(); // OK, going to next message
+				const event: MessageBus.Channel.Event = {
+					data: message
+				};
+				await this.notify(event);
+				if (event.delivered === true) {
+					this._queue.pop(); // OK, going to next message
+				}
 			} catch (e) {
 				console.error(`Cannot deliver message '${message.messageId}' to subscriber '${this._subscriberId}'`);
 			}

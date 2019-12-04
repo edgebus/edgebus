@@ -79,14 +79,13 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 			const topicData: Topic.Data = { topicName, topicDescription, mediaType };
 
-			const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
+			const topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
 
 			return res
 				.status(201)
 				.header("Content-Type", "application/json")
 				.end(Buffer.from(JSON.stringify({
 					name: topic.topicName,
-					description: topic.topicDescription,
 					topicSecurity: {
 						kind: topic.topicSecurity.kind,
 						token: topic.topicSecurity.token

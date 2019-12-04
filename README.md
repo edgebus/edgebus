@@ -288,7 +288,7 @@ $ curl --verbose --method POST --header 'Content-Type: application/json' https:/
 	"url": "https://notifier.pub.zxteam.org/publisher/push/publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
-http://127.0.0.1:8080/publisher/push/publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6
+http://127.0.0.1:8080/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6
 
 
 ## Subscribers

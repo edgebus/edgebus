@@ -39,6 +39,7 @@ export class WebSocketHostSubscriber extends Initable {
 		const bindPath = `${baseBindPath}/websockethost/${id}`;
 
 		this._webSocketHostSubscriberEndpoint = new WebSocketHostSubscriberEndpoint(
+			messagesChannel.topicName,
 			opts.bindServers,
 			{
 				allowedProtocols: ["json-rpc"],
@@ -47,12 +48,21 @@ export class WebSocketHostSubscriber extends Initable {
 			},
 			opts.log
 		);
+
+		const onMessageBound = this._onMessage.bind(this);
+
+		this._webSocketHostSubscriberEndpoint.on("consumersCountChanged", () => {
+			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
+				this._messagesChannel.removeHandler(onMessageBound);
+			} else if (this._webSocketHostSubscriberEndpoint.consumersCount === 1) {
+				this._messagesChannel.addHandler(onMessageBound);
+				this._messagesChannel.wakeUp();
+			}
+		});
 	}
 
 	protected async onInit(cancellationToken: CancellationToken): Promise<void> {
 		await this._webSocketHostSubscriberEndpoint.init(cancellationToken);
-
-		this._messagesChannel.addHandler(this._onMessage.bind(this));
 	}
 	protected async onDispose(): Promise<void> {
 		await this._webSocketHostSubscriberEndpoint.dispose();
@@ -66,7 +76,18 @@ export class WebSocketHostSubscriber extends Initable {
 			return;
 		}
 
-		this._webSocketHostSubscriberEndpoint.delivery(DUMMY_CANCELLATION_TOKEN, event.data).catch(console.error);
+		if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
+			event.delivered = false;
+			return;
+		}
+
+		try {
+			await this._webSocketHostSubscriberEndpoint.delivery(DUMMY_CANCELLATION_TOKEN, event.data);
+			event.delivered = true;
+		} catch (e) {
+			event.delivered = false;
+			console.error(e);
+		}
 	}
 }
 

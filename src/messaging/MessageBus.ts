@@ -24,9 +24,13 @@ export interface MessageBus {
 
 export namespace MessageBus {
 	export interface Channel extends DisposableLike, SubscriberChannel<Message.Id & Message.Data> {
+		readonly topicName: Topic["topicName"];
+		wakeUp(): void;
 	}
 	export namespace Channel {
 		export type Callback = SubscriberChannel.Callback<Message.Id & Message.Data, Event>;
-		export type Event = SubscriberChannel.Event<Message.Id & Message.Data>;
+		export interface Event extends SubscriberChannel.Event<Message.Id & Message.Data> {
+			delivered?: boolean;
+		}
 	}
 }
