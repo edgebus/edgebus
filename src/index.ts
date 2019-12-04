@@ -86,7 +86,7 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				subscriberIds: ["subscriber.websockethost.a775004a-9ae3-4cc8-a439-8540ef89c7a5", "subscriber.websockethost.vova60e8-5206-42d0-9fc6-02e0abe6dc69"]
 			},
 			{
-				topicName: "WTF2",
+				topicName: "WTF2PSS_EVENTS",
 				topicDescription: "WTF2 PSS Provider's callbacks",
 				publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
 				subscriberIds: ["subscriber.websockethost.9d65ce07-b8d5-4704-ba42-965c140df5e0", "subscriber.websockethost.vova2bb0-a620-47ea-bca3-54c3aad16969"]
