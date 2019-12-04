@@ -17,6 +17,7 @@ import { ApiProvider } from "./ApiProvider";
 import { ManagementApiRestEndpoint } from "../endpoints/ManagementApiRestEndpoint";
 import { PublisherApiRestEndpoint } from "../endpoints/PublisherApiRestEndpoint";
 import { SubscriberApiRestEndpoint } from "../endpoints/SubscriberApiRestEndpoint";
+import { WebSocketHostSubscriberEndpoint } from "../endpoints/WebSocketHostSubscriberEndpoint";
 
 @Singleton
 export abstract class EndpointsProvider extends Initable {
@@ -29,6 +30,9 @@ export abstract class EndpointsProvider extends Initable {
 			this.log.debug(`Implementation: ${this.constructor.name}`);
 		}
 	}
+
+	public abstract get publisherApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint>;
+	public abstract get subscriberApiRestEndpoints(): ReadonlyArray<SubscriberApiRestEndpoint>;
 }
 
 @Provides(EndpointsProvider)
@@ -44,12 +48,18 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 	private readonly _endpointInstances: Array<Initable>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
+	private readonly _publisherApiRestEndpoints: ReadonlyArray<PublisherApiRestEndpoint>;
+	private readonly _subscriberApiRestEndpoints: ReadonlyArray<SubscriberApiRestEndpoint>;
 
 	public constructor() {
 		super();
 
 		this.log.info("Constructing endpoints...");
 		this._endpointInstances = [];
+
+		const publisherApiRestEndpoints: Array<PublisherApiRestEndpoint> = [];
+		const subscriberApiRestEndpoints: Array<SubscriberApiRestEndpoint> = [];
+
 		for (const endpoint of this.configProvider.endpoints) {
 
 			if (endpoint.type === "express-router-management" || endpoint.type === "express-router-publisher") {
@@ -58,7 +68,6 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 			const serversMap: Map<HostingProvider.ServerInstance["name"], HostingProvider.ServerInstance> = new Map();
 			this._hostingProvider.serverInstances.forEach(s => serversMap.set(s.name, s));
-
 
 			const endpointServers: Array<hosting.WebServer> = [];
 			for (const bindServer of endpoint.servers) {
@@ -86,6 +95,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
+					publisherApiRestEndpoints.push(endpointInstance);
 					break;
 				}
 				case "rest-subscriber": {
@@ -95,6 +105,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
+					subscriberApiRestEndpoints.push(endpointInstance);
 					break;
 				}
 				default:
@@ -103,6 +114,17 @@ class EndpointsProviderImpl extends EndpointsProvider {
 		}
 
 		this._destroyHandlers = [];
+
+		this._publisherApiRestEndpoints = Object.freeze(publisherApiRestEndpoints);
+		this._subscriberApiRestEndpoints = Object.freeze(subscriberApiRestEndpoints);
+	}
+
+	public get publisherApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint> {
+		return this._publisherApiRestEndpoints;
+	}
+
+	public get subscriberApiRestEndpoints(): ReadonlyArray<SubscriberApiRestEndpoint> {
+		return this._subscriberApiRestEndpoints;
 	}
 
 	protected async onInit(cancellationToken: CancellationToken): Promise<void> {

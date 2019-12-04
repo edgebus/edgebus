@@ -10,8 +10,12 @@ import { Configuration } from "../Configuration";
 import { ConfigurationProvider } from "./ConfigurationProvider";
 import { MessageBus } from "../messaging/MessageBus";
 import { MessageBusRabbitMQ } from "../messaging/MessageBusRabbitMQ";
+import { Topic } from "../model/Topic";
+import { Message } from "../model/Message";
+import { MessageBusLocal } from "../messaging/MessageBusLocal";
 
 export abstract class MessageBusProvider extends Initable implements MessageBus {
+
 	protected readonly log: Logger;
 
 	public constructor() {
@@ -24,7 +28,20 @@ export abstract class MessageBusProvider extends Initable implements MessageBus 
 
 	public abstract get messageBus(): MessageBus;
 
-	public publish(data: any): Promise<void> { return this.messageBus.publish(data); }
+	public markChannelForDestory(cancellationToken: CancellationToken, topicName: string, subscriberId: string): Promise<void> {
+		return this.messageBus.markChannelForDestory(cancellationToken, topicName, subscriberId);
+	}
+
+	public publish(
+		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
+	): Promise<void> {
+		return this.messageBus.publish(cancellationToken, topicName, message);
+	}
+
+	public retainChannel(cancellationToken: CancellationToken, topicName: string, subscriberId: string): Promise<MessageBus.Channel> {
+		return this.messageBus.retainChannel(cancellationToken, topicName, subscriberId);
+	}
+
 }
 
 @Provides(MessageBusProvider)
@@ -32,7 +49,7 @@ class MessageBusProviderImpl extends MessageBusProvider {
 	@Inject
 	private readonly configProvider!: ConfigurationProvider;
 
-	private readonly _messageBus: MessageBusRabbitMQ;
+	private readonly _messageBus: MessageBusLocal;
 
 	public constructor() {
 		super();
@@ -40,7 +57,7 @@ class MessageBusProviderImpl extends MessageBusProvider {
 		//const rabbitUrl: URL = this.configProvider.rabbit.url;
 		//const rabbitSsl: Configuration.SSL = this.configProvider.rabbit.ssl;
 
-		this._messageBus = new MessageBusRabbitMQ({
+		this._messageBus = new MessageBusLocal({
 			// url: rabbitUrl,
 			// ssl: rabbitSsl
 		});

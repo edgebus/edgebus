@@ -1,10 +1,10 @@
 import { CancellationToken } from "@zxteam/contract";
 import { Disposable, Initable } from "@zxteam/contract";
 
-import { Topic } from "../model/Topic";
-import { Webhook } from "../model/Webhook";
 import { Publisher } from "../model/Publisher";
 import { Subscriber } from "../model/Subscriber";
+import { Topic } from "../model/Topic";
+import { Webhook } from "../model/Webhook";
 
 export interface PersistentStorage extends Initable {
 	addTopic(

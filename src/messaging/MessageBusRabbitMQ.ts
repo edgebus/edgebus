@@ -1,8 +1,12 @@
-import { Initable } from "@zxteam/disposable";
 import { CancellationToken } from "@zxteam/contract";
+import { Initable } from "@zxteam/disposable";
+import { InvalidOperationError } from "@zxteam/errors";
 
 import { MessageBus } from "./MessageBus";
-import { InvalidOperationError } from "@zxteam/errors";
+
+import { Message } from "../model/Message";
+import { Topic } from "../model/Topic";
+import { Subscriber } from "../model/Subscriber";
 
 export class MessageBusRabbitMQ extends Initable implements MessageBus {
 	public constructor(opts: MessageBusRabbitMQ.Opts) {
@@ -10,8 +14,21 @@ export class MessageBusRabbitMQ extends Initable implements MessageBus {
 
 		// TODO
 	}
+	public async  markChannelForDestory(
+		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
+	): Promise<void> {
+		throw new InvalidOperationError("Not implemented yet");
+	}
 
-	public async publish(data: any): Promise<void> {
+	public async publish(
+		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
+	): Promise<void> {
+		throw new InvalidOperationError("Not implemented yet");
+	}
+
+	public async retainChannel(
+		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
+	): Promise<MessageBus.Channel> {
 		throw new InvalidOperationError("Not implemented yet");
 	}
 

@@ -245,6 +245,9 @@ $ cat docs/publisher/delete-publisher.json
 	"publisherSecurity": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
+	"ssl": {
+		... optional
 	}
 }
 ```
@@ -282,9 +285,11 @@ $ curl --verbose --method POST --header 'Content-Type: application/json' https:/
 ```json
 {
 	"publisherId": "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "https://notifier.pub.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"url": "https://notifier.pub.zxteam.org/publisher/push/publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
+http://127.0.0.1:8080/publisher/push/publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6
+
 
 ## Subscribers
 Any subscriber may be deleted by following request
@@ -356,3 +361,6 @@ $ curl --verbose --method POST --header 'Content-Type: application/json' https:/
 	"url": "wss://notifier.pub.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
+
+
+wscat --connect ws://127.0.0.1:8080/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6

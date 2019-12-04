@@ -30,6 +30,9 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 		this._api = api;
 	}
 
+	public get bindPath(): string { return this._bindPath; }
+	public get servers(): ReadonlyArray<hosting.WebServer> { return this._servers; }
+
 	protected onInit(): void {
 		for (const server of this._servers) {
 			const app: express.Application = server.rootExpressApplication;
