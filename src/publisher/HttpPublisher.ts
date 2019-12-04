@@ -19,6 +19,7 @@ _supportedMediaTypes.add("application/json");
 
 export class HttpPublisher extends PublisherBase {
 	public readonly router: Router;
+	public readonly bindPath: string | null;
 	private readonly _messageBus: MessageBus;
 	private readonly _transformers: HttpPublisher.Opts["transformers"] | null;
 
@@ -33,10 +34,13 @@ export class HttpPublisher extends PublisherBase {
 	) {
 		super(topic, publisherId);
 		this._messageBus = messageBus;
+		this.bindPath = null;
+		this._transformers = null;
 		if (opts !== undefined) {
 			this._transformers = opts.transformers;
-		} else {
-			this._transformers = null;
+			if (opts.bindPath !== undefined) {
+				this.bindPath = opts.bindPath;
+			}
 		}
 		this.router = Router({ strict: true });
 		//this.router.get("/", ())
@@ -84,7 +88,7 @@ export class HttpPublisher extends PublisherBase {
 				DUMMY_CANCELLATION_TOKEN, this.topicName, message
 			);
 
-			res.header("NF-MESSAGE-ID",  message.messageId).writeHead(200).end();
+			res.header("NF-MESSAGE-ID", message.messageId).writeHead(200).end();
 		} catch (e) {
 			res.writeHead(500, "Internal error").end();
 		}
@@ -101,7 +105,8 @@ export class HttpPublisher extends PublisherBase {
 
 export namespace HttpPublisher {
 	export interface Opts {
-		ssl?: {
+		readonly bindPath?: string;
+		readonly ssl?: {
 			readonly clientTrustedCA: string;
 			readonly clientCommonName?: string;
 		};

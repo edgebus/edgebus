@@ -57,6 +57,25 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 			throw new InvalidOperationError("Twice add same publisher is not allowed.");
 		}
 		this._httpPublishersMap.set(publisher.publisherId, publisher);
+		if (publisher.bindPath !== null) {
+			// Temporary hard-code
+			this._rootRouter.use(publisher.bindPath, (req, res, next) => {
+				try {
+					const result = publisher.router(req, res, next);
+					return;
+				} catch (e) {
+					if (e instanceof ArgumentError) {
+						res.writeHead(400, `Bad request. ${e.message}`).end();
+						return;
+					}
+					this._log.debug("Failed to push message.", e);
+					const err = wrapErrorIfNeeded(e);
+					this._log.warn(`Failed to push message. Error: ${err.message}`);
+					res.writeHead(500, "Internal Error").end();
+				}
+			});
+
+		}
 	}
 	public removeHttpPublisher(publisherId: HttpPublisher["publisherId"]): boolean {
 		return this._httpPublishersMap.delete(publisherId);
