@@ -102,9 +102,11 @@ export class HttpPublisher extends PublisherBase {
 				}
 				res.writeHead(successData.status, successData.statusDescription)
 					.end(successData.body);
+			} else {
+				res.header("NF-MESSAGE-ID", message.messageId)
+					.writeHead(200)
+					.end();
 			}
-
-			res.header("NF-MESSAGE-ID", message.messageId).writeHead(200).end();
 		} catch (e) {
 			res.writeHead(500, "Internal error").end();
 		}
