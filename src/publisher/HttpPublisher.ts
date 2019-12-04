@@ -3,6 +3,7 @@ import { ArgumentError, InvalidOperationError } from "@zxteam/errors";
 import * as bodyParser from "body-parser";
 import { Request, Response, Router } from "express";
 import { v4 as uuid } from "uuid";
+import * as  _ from "lodash";
 
 import { MessageBus } from "../messaging/MessageBus";
 
@@ -20,6 +21,12 @@ _supportedMediaTypes.add("application/json");
 export class HttpPublisher extends PublisherBase {
 	public readonly router: Router;
 	public readonly bindPath: string | null;
+	private readonly _successResponseGenerator: (() => {
+		headers: { [header: string]: string },
+		readonly body: Buffer,
+		readonly status: number,
+		readonly statusDescription: string
+	}) | null;
 	private readonly _messageBus: MessageBus;
 	private readonly _transformers: HttpPublisher.Opts["transformers"] | null;
 
@@ -35,12 +42,12 @@ export class HttpPublisher extends PublisherBase {
 		super(topic, publisherId);
 		this._messageBus = messageBus;
 		this.bindPath = null;
+		this._successResponseGenerator = null;
 		this._transformers = null;
 		if (opts !== undefined) {
 			this._transformers = opts.transformers;
-			if (opts.bindPath !== undefined) {
-				this.bindPath = opts.bindPath;
-			}
+			if (opts.bindPath !== undefined) { this.bindPath = opts.bindPath; }
+			if (opts.successResponseGenerator !== undefined) { this._successResponseGenerator = opts.successResponseGenerator; }
 		}
 		this.router = Router({ strict: true });
 		//this.router.get("/", ())
@@ -88,6 +95,15 @@ export class HttpPublisher extends PublisherBase {
 				DUMMY_CANCELLATION_TOKEN, this.topicName, message
 			);
 
+			if (this._successResponseGenerator !== null) {
+				const successData = this._successResponseGenerator();
+				for (const [header, value] of _.entries(successData.headers)) {
+					res.header(header, value);
+				}
+				res.writeHead(successData.status, successData.statusDescription)
+					.end(successData.body);
+			}
+
 			res.header("NF-MESSAGE-ID", message.messageId).writeHead(200).end();
 		} catch (e) {
 			res.writeHead(500, "Internal error").end();
@@ -106,6 +122,12 @@ export class HttpPublisher extends PublisherBase {
 export namespace HttpPublisher {
 	export interface Opts {
 		readonly bindPath?: string;
+		readonly successResponseGenerator?: () => {
+			headers: { [header: string]: string },
+			readonly body: Buffer,
+			readonly status: number,
+			readonly statusDescription: string
+		};
 		readonly ssl?: {
 			readonly clientTrustedCA: string;
 			readonly clientCommonName?: string;

@@ -50,6 +50,19 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				topicDescription: "WALLET_CREATE_TX уведомление о создании транзакции, либо подписи существующей (происходит при вызове таких методов как sendtoaddress, signtx)",
 				publisherId: "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
 				publisherPath: "/v1/notifications/wallet_create_tx",
+				publisherSuccessResponseGenerator: function () {
+					return {
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: Buffer.from(JSON.stringify({
+							success: true,
+							timestamp: Date.now()
+						})),
+						status: 200,
+						statusDescription: "OK"
+					};
+				},
 				subscriberIds: ["subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3", "subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889"]
 			},
 			{
@@ -57,6 +70,19 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				topicDescription: "WALLET_TX уведомление о поступлении транзакции, на которую мы подписаны, имеется возможность подписаться только на приходящие(receive) или исходящие(send) транзакции.",
 				publisherId: "publisher.http.991b9ba2-7a76-4de9-8149-3489412a1288",
 				publisherPath: "/v1/notifications/wallet_tx",
+				publisherSuccessResponseGenerator: function () {
+					return {
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: Buffer.from(JSON.stringify({
+							success: true,
+							timestamp: Date.now()
+						})),
+						status: 200,
+						statusDescription: "OK"
+					};
+				},
 				subscriberIds: ["subscriber.websockethost.a775004a-9ae3-4cc8-a439-8540ef89c7a5", "subscriber.websockethost.vova60e8-5206-42d0-9fc6-02e0abe6dc69"]
 			},
 			{
@@ -66,6 +92,7 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				subscriberIds: ["subscriber.websockethost.9d65ce07-b8d5-4704-ba42-965c140df5e0", "subscriber.websockethost.vova2bb0-a620-47ea-bca3-54c3aad16969"]
 			}
 		];
+
 
 		const endpointsProvider: EndpointsProvider = Container.get(EndpointsProvider);
 		const messageBusProvider: MessageBusProvider = Container.get(MessageBusProvider);
@@ -80,7 +107,11 @@ export default async function (cancellationToken: CancellationToken, config: Con
 				},
 				hardcodedConfiguration.publisherId,
 				messageBusProvider.messageBus,
-				{ transformers: [], bindPath: hardcodedConfiguration.publisherPath }
+				{
+					transformers: [],
+					bindPath: hardcodedConfiguration.publisherPath,
+					successResponseGenerator: hardcodedConfiguration.publisherSuccessResponseGenerator
+				}
 			);
 			//harcodedItemsToDispose.push(httpPublisherInstance);
 			for (const publisherApiRestEndpoint of endpointsProvider.publisherApiRestEndpoints) {
