@@ -1,10 +1,9 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
-import { InvalidOperationError } from "@zxteam/errors";
+import { ensureFactory, Ensure, EnsureError } from "@zxteam/ensure";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
-import * as http from "http";
 import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
@@ -15,6 +14,8 @@ import {
 	NoRecordPersistentStorageError,
 	BadRequestPersistentStorageError
 } from "../data/PersistentStorage";
+
+const ensure: Ensure = ensureFactory();
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private readonly _api: ManagementApi;
@@ -71,50 +72,47 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 	}
 
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
+		try {
+			const topicName = ensure.string(req.body.name, "Create topic, request.body.name field is not a string");
+			const topicDescription = ensure.string(req.body.description, "Create topic, request.body.description field is not a string");
+			const mediaType = ensure.string(req.body.mediaType, "Create topic, request.body.mediaType field is not a string");
 
-		const topicName = req.body.name;
-		const topicDescription = req.body.description;
-		const mediaType = "";
+			const topicData: Topic.Data = { topicName, topicDescription, mediaType };
 
-		if (!topicName || !topicDescription) {
-
-			const message = {
-				error: "required parameters",
-				message: "[name, description] is missing"
-			};
+			const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
 
 			return res
-				.status(400)
+				.status(201)
 				.header("Content-Type", "application/json")
-				.end(JSON.stringify(message));
+				.end(Buffer.from(JSON.stringify({
+					name: topic.topicName,
+					description: topic.topicDescription,
+					topicSecurity: {
+						kind: topic.topicSecurity.kind,
+						token: topic.topicSecurity.token
+
+					},
+					publisherSecurity: {
+						kind: topic.publisherSecurity.kind,
+						token: topic.publisherSecurity.token
+
+					},
+					subscriberSecurity: {
+						kind: topic.subscriberSecurity.kind,
+						token: topic.subscriberSecurity.token
+
+					}
+				}), "utf-8"));
+
+		} catch (error) {
+			if (error instanceof EnsureError) {
+				res.writeHead(400, "Bad Request").end();
+				return;
+			}
+			res.status(500).end();
+			return;
 		}
 
-		const topicData: Topic.Name & Topic.Description = { topicName, topicDescription };
-
-		const topic: Topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
-
-		return res
-			.status(201)
-			.header("Content-Type", "application/json")
-			.end(Buffer.from(JSON.stringify({
-				name: topic.topicName,
-				description: topic.topicDescription,
-				topicSecurity: {
-					kind: topic.topicSecurity.kind,
-					token: topic.topicSecurity.token
-
-				},
-				publisherSecurity: {
-					kind: topic.publisherSecurity.kind,
-					token: topic.publisherSecurity.token
-
-				},
-				subscriberSecurity: {
-					kind: topic.subscriberSecurity.kind,
-					token: topic.subscriberSecurity.token
-
-				}
-			}), "utf-8"));
 	}
 
 	private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {

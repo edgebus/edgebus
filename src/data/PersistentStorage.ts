@@ -9,7 +9,7 @@ import { Subscriber } from "../model/Subscriber";
 export interface PersistentStorage extends Initable {
 	addTopic(
 		cancellationToken: CancellationToken,
-		topicData: Topic.Name & Topic.Security & Publisher.Security & Subscriber.Security
+		topicData: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security
 	): Promise<Topic>;
 
 	deleteTopic(cancellationToken: CancellationToken,

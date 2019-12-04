@@ -16,8 +16,6 @@ import { Webhook } from "../model/Webhook";
 import { Subscriber } from "../model/Subscriber";
 import { Publisher } from "../model/Publisher";
 
-//export class SQLPersistentStorage implements PersistentStorage {
-
 export class SQLPersistentStorage extends Initable implements PersistentStorage {
 	private readonly _sqlProviderFactory: PostgresProviderFactory;
 	private readonly _log: Logger;
@@ -37,29 +35,36 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 
 	public async addTopic(
 		cancellationToken: CancellationToken,
-		topicData: Topic & Publisher.Security & Subscriber.Security
+		topicData: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security
 	): Promise<Topic> {
 		this.verifyInitializedAndNotDisposed();
 		try {
 			const topicSecurity = JSON.stringify({
-				topicSecurityKind: topicData.topicSecurity.kind,
-				topicSecurityToken: topicData.topicSecurity.token
+				kind: topicData.topicSecurity.kind,
+				token: topicData.topicSecurity.token
 			});
 			const publisherSecurity = JSON.stringify({
-				publisherSecurityKind: topicData.publisherSecurity.kind,
-				publisherSecurityToken: topicData.publisherSecurity.token
+				kind: topicData.publisherSecurity.kind,
+				token: topicData.publisherSecurity.token
 			});
 			const subscriberSecurity = JSON.stringify({
-				subscriberSecurityKind: topicData.subscriberSecurity.kind,
-				subscriberSecurityToken: topicData.subscriberSecurity.token
+				kind: topicData.subscriberSecurity.kind,
+				token: topicData.subscriberSecurity.token
 			});
 
 			const sqlInsert
-				= "INSERT INTO topic (name, description, topic_security, publisher_security, subscriber_security) VALUES ($1, $2, $3, $4, $5);";
-			const sqlInsertValue = [topicData.topicName, topicData.topicDescription, topicSecurity, publisherSecurity, subscriberSecurity];
+				= "INSERT INTO topic (name, description, media_type, topic_security, publisher_security, subscriber_security) VALUES ($1, $2, $3, $4, $5, $6);";
+			const sqlInsertValue = [
+				topicData.topicName,
+				topicData.topicDescription,
+				topicData.mediaType,
+				topicSecurity,
+				publisherSecurity,
+				subscriberSecurity
+			];
 
 			const sqlSelect
-				= "SELECT id, name, description, topic_security, publisher_security, subscriber_security FROM topic WHERE name=$1";
+				= "SELECT id, name, description, media_type, topic_security, publisher_security, subscriber_security FROM topic WHERE name=$1";
 			const sqlSelectValue = [topicData.topicName];
 
 			const topicResult: ReadonlyArray<SqlResultRecord>
@@ -74,16 +79,16 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 				topicDescription: topic.get("description").asString,
 				mediaType: topic.get("media_type").asString,
 				topicSecurity: {
-					kind: JSON.parse(topic.get("topic_security").asString).topicSecurity.kind,
-					token: JSON.parse(topic.get("topic_security").asString).topicSecurity.token
+					kind: JSON.parse(topic.get("topic_security").asString).kind,
+					token: JSON.parse(topic.get("topic_security").asString).token
 				},
 				publisherSecurity: {
-					kind: JSON.parse(topic.get("publisher_security").asString).publisherSecurity.kind,
-					token: JSON.parse(topic.get("publisher_security").asString).publisherSecurity.token
+					kind: JSON.parse(topic.get("publisher_security").asString).kind,
+					token: JSON.parse(topic.get("publisher_security").asString).token
 				},
 				subscriberSecurity: {
-					kind: JSON.parse(topic.get("subscriber_security").asString).subscriberSecurity.kind,
-					token: JSON.parse(topic.get("subscriber_security").asString).subscriberSecurity.token
+					kind: JSON.parse(topic.get("subscriber_security").asString).kind,
+					token: JSON.parse(topic.get("subscriber_security").asString).token
 				}
 			};
 

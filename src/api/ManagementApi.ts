@@ -27,11 +27,11 @@ export class ManagementApi extends Initable {
 	}
 
 	public async createTopic(
-		cancellationToken: CancellationToken, topic: Topic.Name & Topic.Description
-	): Promise<Topic> {
-		const fullTopicData: Topic.Name & Topic.Description & Topic.Security & Publisher.Security & Subscriber.Security = {
+		cancellationToken: CancellationToken, topic: Topic.Data): Promise<Topic> {
+		const fullTopicData: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security = {
 			topicName: topic.topicName,
 			topicDescription: topic.topicDescription,
+			mediaType: topic.mediaType,
 			topicSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
 			publisherSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
 			subscriberSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") }

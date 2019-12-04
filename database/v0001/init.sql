@@ -6,6 +6,7 @@ CREATE TABLE "topic"
 	"id" SERIAL NOT NULL PRIMARY KEY,
 	"name" VARCHAR(256) NOT NULL,
 	"description" VARCHAR(1028) NOT NULL,
+	"media_type" VARCHAR(1028) NOT NULL,
 	"topic_security" VARCHAR(1028) NOT NULL,
 	"publisher_security" VARCHAR(1028) NOT NULL,
 	"subscriber_security" VARCHAR(1028) NOT NULL,
@@ -25,5 +26,5 @@ CREATE TABLE "subscriber_webhook"
 	"utc_delete_date" TIMESTAMP WITHOUT TIME ZONE NULL
 );
 
-INSERT INTO "topic" ("id", "name", "description", "topic_security", "publisher_security", "subscriber_security", "utc_delete_date")
-VALUES (1, 'market', 'Market currency', 's', 'd', 'as', (NOW() AT TIME ZONE 'utc'));
+INSERT INTO "topic" ("id", "name", "description", "media_type", "topic_security", "publisher_security", "subscriber_security", "utc_delete_date")
+VALUES (1, 'market', 'Market currency', 's', 's', 'd', 'as', (NOW() AT TIME ZONE 'utc'));
