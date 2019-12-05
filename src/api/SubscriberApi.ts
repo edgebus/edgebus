@@ -28,11 +28,11 @@ export class SubscriberApi extends Initable {
 		cancellationToken: CancellationToken
 	): Promise<SubscriberApi.TopicMap> {
 		const hardCodedMap = new Map();
-		const topics: Topic[] = await this._storage.getAvailableTopics(cancellationToken);
+		// const topics: Topic[] = await this._storage.getAvailableTopics(cancellationToken);
 
-		for (const topic of topics) {
-			hardCodedMap.set(topic.topicName, topic);
-		}
+		// for (const topic of topics) {
+		// 	hardCodedMap.set(topic.topicName, topic);
+		// }
 
 		return hardCodedMap;
 	}

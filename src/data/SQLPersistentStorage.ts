@@ -1,6 +1,6 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { Initable, Disposable } from "@zxteam/disposable";
-import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
+import { SqlProvider, SqlResultRecord, SqlConstraintError } from "@zxteam/sql";
 import { PostgresProviderFactory } from "@zxteam/sql-postgres";
 
 import {
@@ -11,10 +11,12 @@ import {
 } from "./PersistentStorage";
 import * as _ from "lodash";
 
+import { TopicStorage, ITopicStorage } from "./model/TopicStorage";
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
 import { Subscriber } from "../model/Subscriber";
 import { Publisher } from "../model/Publisher";
+import { WebHookStorage, IWebHookStorage } from "./model/WebhookStorage";
 
 export class SQLPersistentStorage extends Initable implements PersistentStorage {
 	private readonly _sqlProviderFactory: PostgresProviderFactory;
@@ -39,61 +41,26 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 	): Promise<Topic> {
 		this.verifyInitializedAndNotDisposed();
 		try {
-			const topicSecurity = JSON.stringify({
-				kind: topicData.topicSecurity.kind,
-				token: topicData.topicSecurity.token
-			});
-			const publisherSecurity = JSON.stringify({
-				kind: topicData.publisherSecurity.kind,
-				token: topicData.publisherSecurity.token
-			});
-			const subscriberSecurity = JSON.stringify({
-				kind: topicData.subscriberSecurity.kind,
-				token: topicData.subscriberSecurity.token
+			const topic: ITopicStorage = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+				return await TopicStorage.save(cancellationToken, sqlProvider, topicData);
 			});
 
-			const sqlInsert
-				= "INSERT INTO topic (name, description, media_type, topic_security, publisher_security, subscriber_security) VALUES ($1, $2, $3, $4, $5, $6);";
-			const sqlInsertValue = [
-				topicData.topicName,
-				topicData.topicDescription,
-				topicData.mediaType,
-				topicSecurity,
-				publisherSecurity,
-				subscriberSecurity
-			];
-
-			const sqlSelect
-				= "SELECT id, name, description, media_type, topic_security, publisher_security, subscriber_security FROM topic WHERE name=$1";
-			const sqlSelectValue = [topicData.topicName];
-
-			const topicResult: ReadonlyArray<SqlResultRecord>
-				= await this._sqlProviderFactory.usingProviderWithTransaction(cancellationToken, async (sqlProvider: SqlProvider) => {
-					await sqlProvider.statement(sqlInsert).execute(cancellationToken, ...sqlInsertValue);
-					return await sqlProvider.statement(sqlSelect).executeQuery(cancellationToken, ...sqlSelectValue);
-				});
-
-			const topic = topicResult[0];
 			const friendlyTopic: Topic = {
-				topicName: topic.get("name").asString,
-				topicDescription: topic.get("description").asString,
-				mediaType: topic.get("media_type").asString,
-				topicSecurity: {
-					kind: JSON.parse(topic.get("topic_security").asString).kind,
-					token: JSON.parse(topic.get("topic_security").asString).token
-				},
-				publisherSecurity: {
-					kind: JSON.parse(topic.get("publisher_security").asString).kind,
-					token: JSON.parse(topic.get("publisher_security").asString).token
-				},
-				subscriberSecurity: {
-					kind: JSON.parse(topic.get("subscriber_security").asString).kind,
-					token: JSON.parse(topic.get("subscriber_security").asString).token
-				}
+				topicName: topic.name,
+				topicDescription: topic.description,
+				mediaType: topic.mediaType,
+				topicSecurity: topic.topicSecurity,
+				publisherSecurity: topic.publisherSecurity,
+				subscriberSecurity: topic.subscriberSecurity
 			};
 
 			return friendlyTopic;
 		} catch (error) {
+			if (error instanceof SqlConstraintError && error.innerError) {
+				// if (error.innerError.code === 23505) {
+				throw new BadRequestPersistentStorageError(error.innerError.message);
+				// }
+			}
 			this._log.error(error.message);
 			throw error;
 		}
@@ -145,45 +112,6 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 		}
 	}
 
-	public async getAvailableTopics(cancellationToken: CancellationToken): Promise<Topic[]> {
-		this.verifyInitializedAndNotDisposed();
-
-		const sqlProvider = await this._sqlProviderFactory.create(cancellationToken);
-
-		try {
-			const friendlyTopics: any[] = [];
-
-			const topics = await sqlProvider
-				.statement(`SELECT "id", "name", "description" FROM topic;`)
-				.executeQuery(cancellationToken);
-
-			return friendlyTopics;
-		} finally {
-			await sqlProvider.dispose();
-		}
-
-		// const friendlyTopics = [];
-		// for (const topic of topics) {
-		// 	helper.ensureString(topic, "id");
-		// 	helper.ensureString(topic, "name");
-		// 	helper.ensureString(topic, "description");
-
-		// 	const friendlyTopic: Topic = {
-		// 		topicId: topic.id.toString(),
-		// 		name: topic.name,
-		// 		description: topic.description,
-		// 		topicSecurityKind: "TOKEN",
-		// 		topicSecurityToken: "Ololo123:" + topic.id.toString(),
-		// 		subscriberSecurityKind: "TOKEN",
-		// 		subscriberSecurityToken: "Ololo123:" + topic.id.toString(),
-		// 		publisherSecurityKind: "TOKEN",
-		// 		publisherSecurityToken: "Ololo123:" + topic.id.toString()
-		// 	};
-		// 	friendlyTopics.push(friendlyTopic);
-
-
-	}
-
 	public async addSubscriberWebhook(
 		cancellationToken: CancellationToken,
 		topicData: Topic.Name & Subscriber.Security,
@@ -192,43 +120,50 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 		this.verifyInitializedAndNotDisposed();
 		try {
 
-			const sqlCheck = "SELECT id, utc_delete_date, subscriber_security FROM "
-				+ `topic WHERE name='${topicData.topicName}';`;
-
-			const topicSelect = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-				return await sqlProvider.statement(sqlCheck).executeQuery(cancellationToken);
+			const isExistTopic: boolean = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+				return TopicStorage.isExsistByName(cancellationToken, topicData.topicName, sqlProvider);
 			});
-			if (topicSelect.length === 1) {
 
-				const topicSecurity = topicSelect[0].get("subscriber_security").asString;
-
-				const subscriberSecurityKind = JSON.parse(topicSecurity).subscriberSecurityKind;
-				const subscriberSecurityToken = JSON.parse(topicSecurity).subscriberSecurityToken;
-
-				if (topicData.subscriberSecurity.kind !== subscriberSecurityKind
-					|| topicData.subscriberSecurity.token !== subscriberSecurityToken) {
-					throw new ForbiddenPersistentStorageError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
-				}
-
-				const deleteDate = topicSelect[0].get("utc_delete_date").asNullableDate;
-				if (deleteDate) {
-					// Topic already deleted
-					throw new BadRequestPersistentStorageError(`Topic ${topicData.topicName} already deleted`);
-				}
-
-			} else {
-				// Topic does not exist
-				throw new BadRequestPersistentStorageError(`Topic with this name '${topicData.topicName}' does not exist`);
+			if (!isExistTopic) {
+				const message = `Don't find topic is name ${topicData.topicName}`;
+				throw new BadRequestPersistentStorageError(message);
 			}
-			// const sqlAddWebHook = "INSERT INTO";
 
-			// const sqlInsert = `INSERT INTO ${tablename} (`
-			// 	+ "topic_id, url, connection_details) VALUES ("
-			// 	+ `'${topic.name}', '${topic.description}', '${topicSecurity}', '${publisherSecurity}', '${subscriberSecurity}');`;
+			const topicSelect: ITopicStorage = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+				return await TopicStorage.getByName(cancellationToken, topicData.topicName, sqlProvider);
+			});
 
-			return {} as any;
+			const subscriberSecurityKind = topicSelect.subscriberSecurity.kind;
+			const subscriberSecurityToken = topicSelect.subscriberSecurity.token;
+
+			if (topicData.subscriberSecurity.kind !== subscriberSecurityKind
+				|| topicData.subscriberSecurity.token !== subscriberSecurityToken) {
+				throw new ForbiddenPersistentStorageError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
+			}
+
+			const deleteDate = topicSelect.deleteAt;
+			if (deleteDate) {
+				// Topic already deleted
+				throw new BadRequestPersistentStorageError(`Topic ${topicData.topicName} already deleted, can't subscribe`);
+			}
+
+			const webhookStorage: IWebHookStorage
+				= await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+					return await WebHookStorage.save(cancellationToken, sqlProvider, topicSelect, webhookData);
+				});
+
+			const webhook: Webhook = {
+				webhookId: webhookStorage.webHookId.toString(),
+				topicName: topicData.topicName,
+				url: webhookStorage.url,
+				trustedCaCertificate: webhookStorage.trustedCaCertificate,
+				headerToken: webhookStorage.headerToken
+			};
+
+			return webhook;
 		} catch (e) {
-			return {} as any;
+			this._log.error(e);
+			throw e;
 		}
 	}
 

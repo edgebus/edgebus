@@ -1,20 +1,14 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
-import { ensureFactory, Ensure, EnsureError } from "@zxteam/ensure";
+import { ensureFactory, Ensure } from "@zxteam/ensure";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
 import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
-
+import { handledException } from "./helper";
 import { Topic } from "../model/Topic";
-import {
-	ForbiddenPersistentStorageError,
-	NoRecordPersistentStorageError,
-	BadRequestPersistentStorageError
-} from "../data/PersistentStorage";
-
 const ensure: Ensure = ensureFactory();
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
@@ -104,12 +98,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				}), "utf-8"));
 
 		} catch (error) {
-			if (error instanceof EnsureError) {
-				res.writeHead(400, "Bad Request").end();
-				return;
-			}
-			res.status(500).end();
-			return;
+			return handledException(res, error);
 		}
 
 	}
@@ -145,24 +134,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 			return res.writeHead(200, "Delete").end();
 
 		} catch (error) {
-			return helper.handledException(res, error);
+			return handledException(res, error);
 		}
-	}
-}
-
-export namespace helper {
-	export function handledException(res: express.Response, error: any) {
-
-		if (error instanceof BadRequestPersistentStorageError) {
-			return res.writeHead(400, "Bad request").end();
-		}
-		if (error instanceof ForbiddenPersistentStorageError) {
-			return res.writeHead(403, "Forbidden").end();
-		}
-		if (error instanceof NoRecordPersistentStorageError) {
-			return res.writeHead(404, "No data").end();
-		}
-
-		return res.writeHead(500, "Unhandled exception").end();
 	}
 }

@@ -13,6 +13,16 @@ export namespace Webhook {
 		 * The hook URL
 		 */
 		readonly url: URL;
+
+		/**
+		 * Trusted ca certificate from client
+		 */
+		readonly trustedCaCertificate: string;
+
+		/**
+		 * Header Token from client
+		 */
+		readonly headerToken: string;
 	}
 
 	export interface Instance {

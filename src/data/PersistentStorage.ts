@@ -16,11 +16,6 @@ export interface PersistentStorage extends Initable {
 		topicData: Topic.Name & Topic.Security
 	): Promise<void>;
 
-
-	getAvailableTopics(
-		cancellationToken: CancellationToken
-	): Promise<Topic[]>;
-
 	addSubscriberWebhook(
 		cancellationToken: CancellationToken,
 		topic: Topic.Name & Subscriber.Security,
