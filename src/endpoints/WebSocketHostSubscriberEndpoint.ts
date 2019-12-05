@@ -70,14 +70,23 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 	public async delivery(
 		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message.Id & Message.Data
 	): Promise<void> {
+		const mediaType: string = message.mediaType;
+		const messageBody: Buffer = message.messageBody;
+		let data: any;
+		switch (mediaType) {
+			case "application/json":
+				data = JSON.parse(messageBody.toString("utf8"));
+				break;
+			default:
+				data = messageBody.toString("base64");
+				break;
+		}
+
 		const messageStr = JSON.stringify({
 			jsonrpc: "2.0",
 			method: topicName,
 			id: message.messageId,
-			params: {
-				mediaType: message.mediaType,
-				data: message.messageBody.toString("base64")
-			}
+			params: { mediaType, data }
 		});
 		for (const textChannel of this._textChannels) {
 			await textChannel.rpcDelivery(cancellationToken, messageStr);
