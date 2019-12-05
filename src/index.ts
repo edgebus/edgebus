@@ -14,6 +14,7 @@ import { HostingProvider } from "./provider/HostingProvider";
 import { MessageBusProvider } from "./provider/MessageBusProvider";
 import { HttpPublisher } from "./publisher/HttpPublisher";
 import { WebSocketHostSubscriber } from "./subscriber/WebSocketHostSubscriber";
+import { MessageBus } from "./messaging/MessageBus";
 
 const { name: serviceName, version: serviceVersion } = require("../package.json");
 
@@ -38,12 +39,11 @@ export default async function (cancellationToken: CancellationToken, config: Con
 	/* ---------HARDCODE--------------- */
 	const harcodedItemsToDispose: Array<DisposableLike> = [];
 	try {
-		const hardcodedConfigurations = [
+		const hardcodedPublisherConfigurations = [
 			{
 				topicName: "GITLAB",
 				topicDescription: "GITLAB Webhooks test topic",
-				publisherId: "publisher.http.5034c67f-f1cb-4fab-aed3-d2cd3b3d50ad",
-				subscriberIds: ["subscriber.websockethost.41dd9c66-09ae-473d-a694-1dcfe347e8af"]
+				publisherId: "publisher.http.5034c67f-f1cb-4fab-aed3-d2cd3b3d50ad"
 			},
 			{
 				topicName: "WTF1_WALLET_CREATE_TX",
@@ -62,8 +62,7 @@ export default async function (cancellationToken: CancellationToken, config: Con
 						status: 200,
 						statusDescription: "OK"
 					};
-				},
-				subscriberIds: ["subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3", "subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889"]
+				}
 			},
 			{
 				topicName: "WTF1_WALLET_TX",
@@ -82,14 +81,28 @@ export default async function (cancellationToken: CancellationToken, config: Con
 						status: 200,
 						statusDescription: "OK"
 					};
-				},
-				subscriberIds: ["subscriber.websockethost.a775004a-9ae3-4cc8-a439-8540ef89c7a5", "subscriber.websockethost.vova60e8-5206-42d0-9fc6-02e0abe6dc69"]
+				}
 			},
 			{
 				topicName: "WTF2PSS_EVENTS",
 				topicDescription: "WTF2 PSS Provider's callbacks",
-				publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
-				subscriberIds: ["subscriber.websockethost.9d65ce07-b8d5-4704-ba42-965c140df5e0", "subscriber.websockethost.vova2bb0-a620-47ea-bca3-54c3aad16969"]
+				publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e"
+			}
+		];
+		const hardcodedSubscriberConfigurations = [
+			{
+				topicNames: ["GITLAB"],
+				subscriberIds: ["subscriber.websockethost.41dd9c66-09ae-473d-a694-1dcfe347e8af"]
+			},
+			{
+				topicNames: ["WTF1_WALLET_CREATE_TX", "WTF1_WALLET_TX", "WTF2PSS_EVENTS"],
+				subscriberIds: [
+					"subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3",
+					"subscriber.websockethost.serg4683-a00d-4269-b116-6959fb9ac889",
+					"subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889",
+					"subscriber.websockethost.roma4683-a00d-4269-b116-6959fb9ac889",
+					"subscriber.websockethost.maks4683-a00d-4269-b116-6959fb9ac889"
+				]
 			}
 		];
 
@@ -97,42 +110,48 @@ export default async function (cancellationToken: CancellationToken, config: Con
 		const endpointsProvider: EndpointsProvider = Container.get(EndpointsProvider);
 		const messageBusProvider: MessageBusProvider = Container.get(MessageBusProvider);
 
-		for (const hardcodedConfiguration of hardcodedConfigurations) {
-			// Setup HTTP publisher
+		// Setup HTTP publisher
+		for (const hardcodedPublisherConfiguration of hardcodedPublisherConfigurations) {
 			const httpPublisherInstance: HttpPublisher = new HttpPublisher(
 				{
-					topicName: hardcodedConfiguration.topicName,
-					topicDescription: hardcodedConfiguration.topicDescription,
+					topicName: hardcodedPublisherConfiguration.topicName,
+					topicDescription: hardcodedPublisherConfiguration.topicDescription,
 					mediaType: "application/json"
 				},
-				hardcodedConfiguration.publisherId,
+				hardcodedPublisherConfiguration.publisherId,
 				messageBusProvider.messageBus,
 				{
 					transformers: [],
-					bindPath: hardcodedConfiguration.publisherPath,
-					successResponseGenerator: hardcodedConfiguration.publisherSuccessResponseGenerator
+					bindPath: hardcodedPublisherConfiguration.publisherPath,
+					successResponseGenerator: hardcodedPublisherConfiguration.publisherSuccessResponseGenerator
 				}
 			);
 			//harcodedItemsToDispose.push(httpPublisherInstance);
 			for (const publisherApiRestEndpoint of endpointsProvider.publisherApiRestEndpoints) {
 				publisherApiRestEndpoint.addHttpPublisher(httpPublisherInstance);
 			}
+		}
 
-
-			// Setup WebSocketHost subscriber
-			for (const subscriberId of hardcodedConfiguration.subscriberIds) {
-				const channel = await messageBusProvider.messageBus.retainChannel(
-					cancellationToken, hardcodedConfiguration.topicName, subscriberId
-				);
-				harcodedItemsToDispose.push(channel);
+		// Setup WebSocketHost subscriber
+		for (const hardcodedSubscriberConfiguration of hardcodedSubscriberConfigurations) {
+			for (const subscriberId of hardcodedSubscriberConfiguration.subscriberIds) {
+				const channels: Array<MessageBus.Channel> = [];
+				for (const topicName of hardcodedSubscriberConfiguration.topicNames) {
+					const channel = await messageBusProvider.messageBus.retainChannel(cancellationToken, topicName, subscriberId);
+					harcodedItemsToDispose.push(channel);
+					channels.push(channel);
+				}
 
 				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
-					const webSocketHostSubscriber = new WebSocketHostSubscriber(channel, {
-						baseBindPath: subscriberApiRestEndpoint.bindPath,
-						bindServers: subscriberApiRestEndpoint.servers,
-						log,
-						subscriberId: subscriberId
-					});
+					const webSocketHostSubscriber = new WebSocketHostSubscriber(
+						{
+							baseBindPath: subscriberApiRestEndpoint.bindPath,
+							bindServers: subscriberApiRestEndpoint.servers,
+							log,
+							subscriberId: subscriberId
+						},
+						...channels
+					);
 					await webSocketHostSubscriber.init(cancellationToken);
 					harcodedItemsToDispose.push(webSocketHostSubscriber);
 				}

@@ -9,16 +9,18 @@ import { WebSocketHostSubscriberEndpoint } from "../endpoints/WebSocketHostSubsc
 import { Subscriber } from "../model/Subscriber";
 import { InvalidOperationError, ArgumentError } from "@zxteam/errors";
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
+import { Message } from "../model/Message";
+import { Topic } from "../model/Topic";
 
 export class WebSocketHostSubscriber extends Initable {
 
 	private readonly _webSocketHostSubscriberEndpoint: WebSocketHostSubscriberEndpoint;
-	private readonly _messagesChannel: MessageBus.Channel;
+	private readonly _channels: ReadonlyArray<MessageBus.Channel>;
 
-	public constructor(messagesChannel: MessageBus.Channel, opts: WebSocketHostSubscriber.Opts) {
+	public constructor(opts: WebSocketHostSubscriber.Opts, ...channels: ReadonlyArray<MessageBus.Channel>) {
 		super();
 
-		this._messagesChannel = messagesChannel;
+		this._channels = channels;
 
 		let baseBindPath = opts.baseBindPath;
 		while (baseBindPath.length > 0 && baseBindPath.endsWith("/")) {
@@ -39,7 +41,7 @@ export class WebSocketHostSubscriber extends Initable {
 		const bindPath = `${baseBindPath}/websockethost/${id}`;
 
 		this._webSocketHostSubscriberEndpoint = new WebSocketHostSubscriberEndpoint(
-			messagesChannel.topicName,
+			//messagesChannel.topicName,
 			opts.bindServers,
 			{
 				allowedProtocols: ["json-rpc"],
@@ -53,10 +55,12 @@ export class WebSocketHostSubscriber extends Initable {
 
 		this._webSocketHostSubscriberEndpoint.on("consumersCountChanged", () => {
 			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
-				this._messagesChannel.removeHandler(onMessageBound);
+				this._channels.forEach(channel => channel.removeHandler(onMessageBound));
 			} else if (this._webSocketHostSubscriberEndpoint.consumersCount === 1) {
-				this._messagesChannel.addHandler(onMessageBound);
-				this._messagesChannel.wakeUp();
+				this._channels.forEach(channel => {
+					channel.addHandler(onMessageBound);
+					channel.wakeUp();
+				});
 			}
 		});
 	}
@@ -76,13 +80,17 @@ export class WebSocketHostSubscriber extends Initable {
 			return;
 		}
 
-		if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
-			event.delivered = false;
-			return;
-		}
-
 		try {
-			await this._webSocketHostSubscriberEndpoint.delivery(DUMMY_CANCELLATION_TOKEN, event.data);
+
+			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
+				event.delivered = false;
+				return;
+			}
+
+			const topicName: Topic["topicName"] = event.source.topicName;
+			const message: Message.Id & Message.Data = event.data;
+
+			await this._webSocketHostSubscriberEndpoint.delivery(DUMMY_CANCELLATION_TOKEN, topicName, message);
 			event.delivered = true;
 		} catch (e) {
 			event.delivered = false;

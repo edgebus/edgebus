@@ -6,21 +6,22 @@ import * as WebSocket from "ws";
 
 import { Message } from "../model/Message";
 import { SubscriberChannelBase } from "../utils/SubscriberChannelBase";
+import { Topic } from "../model/Topic";
 
 export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndpoint {
 	private readonly _emmiter: EventEmitter;
 	//private readonly _binaryChannels: Array<BinaryChannel> = [];
 	private readonly _textChannels: Array<TextChannel> = [];
-	private readonly _topicName: string;
+	//private readonly _topicNames: ReadonlyArray<string>;
 
 	public constructor(
-		topicName: string,
+		//topicNames: ReadonlyArray<string>,
 		servers: ReadonlyArray<WebServer>,
 		opts: HostingConfiguration.WebSocketEndpoint,
 		log: Logger
 	) {
 		super(servers, opts, log, { text: true });
-		this._topicName = topicName;
+		//this._topicNames = topicNames;
 		this._emmiter = new EventEmitter();
 	}
 
@@ -66,10 +67,12 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 	}
 
 
-	public async delivery(cancellationToken: CancellationToken, message: Message.Id & Message.Data): Promise<void> {
+	public async delivery(
+		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message.Id & Message.Data
+	): Promise<void> {
 		const messageStr = JSON.stringify({
 			jsonrpc: "2.0",
-			method: this._topicName,
+			method: topicName,
 			id: message.messageId,
 			params: {
 				mediaType: message.mediaType,
@@ -77,7 +80,7 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 			}
 		});
 		for (const textChannel of this._textChannels) {
-			await textChannel.rpcDelivery(messageStr);
+			await textChannel.rpcDelivery(cancellationToken, messageStr);
 		}
 		// if (this._binaryChannels.length > 0) {
 		// 	const messageBinary = Buffer.from(messageStr);
@@ -101,7 +104,7 @@ class TextChannel extends SubscriberChannelBase<string> implements WebSocketChan
 		return this.notify({ data });
 	}
 
-	public async rpcDelivery(messageStr: string) {
+	public async rpcDelivery(cancellationToken: CancellationToken, messageStr: string) {
 		await this.notify({ data: messageStr });
 		// TODO wait for deliver ACK message
 	}

@@ -40,7 +40,8 @@ export class MessageBusLocal extends Initable implements MessageBus {
 		for (const [subscriberId, queue] of topicQueuesMap) {
 			console.log(`Forward message '${messageId}' to subscriber ${subscriberId}`);
 			queue.push(message);
-			const channel = this._channels.get(subscriberId);
+			const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
+			const channel = this._channels.get(channelId);
 			if (channel !== undefined) {
 				channel.wakeUp();
 			}
@@ -50,7 +51,9 @@ export class MessageBusLocal extends Initable implements MessageBus {
 	public async retainChannel(
 		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
 	): Promise<MessageBus.Channel> {
-		if (this._channels.has(subscriberId)) {
+		const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
+
+		if (this._channels.has(channelId)) {
 			throw new InvalidOperationError("Wrong operation. Cannot retain chanel twice.");
 		}
 
@@ -67,7 +70,7 @@ export class MessageBusLocal extends Initable implements MessageBus {
 		}
 
 		const channel = new MessageBusLocalChannel(topicName, subscriberId, queue);
-		this._channels.set(subscriberId, channel);
+		this._channels.set(channelId, channel);
 
 		return channel;
 	}
@@ -79,6 +82,11 @@ export class MessageBusLocal extends Initable implements MessageBus {
 	protected onDispose(): void | Promise<void> {
 		// TODO
 	}
+
+	private static _makeChannelId(topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]): string {
+		const channelId: string = `${subscriberId}.${topicName}`;
+		return channelId;
+	}
 }
 
 export namespace MessageBusLocal {
@@ -88,7 +96,8 @@ export namespace MessageBusLocal {
 }
 
 
-class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.Data> implements MessageBus.Channel {
+class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
+	implements MessageBus.Channel {
 	private readonly _queue: Array<Message>;
 	private readonly _topicName: Topic["topicName"];
 	private readonly _subscriberId: Subscriber["subscriberId"];
@@ -135,11 +144,12 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 			const message: Message = this._queue[0];
 			try {
 				const event: MessageBus.Channel.Event = {
+					source: this,
 					data: message
 				};
 				await this.notify(event);
 				if (event.delivered === true) {
-					this._queue.pop(); // OK, going to next message
+					this._queue.shift(); // OK, going to next message
 				}
 			} catch (e) {
 				console.error(`Cannot deliver message '${message.messageId}' to subscriber '${this._subscriberId}'`);

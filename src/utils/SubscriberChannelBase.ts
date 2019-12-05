@@ -2,8 +2,9 @@ import { CancellationToken, SubscriberChannel } from "@zxteam/contract";
 import { CancelledError, AggregateError, InvalidOperationError } from "@zxteam/errors";
 import { Disposable } from "@zxteam/disposable";
 
-export abstract class SubscriberChannelBase<T> extends Disposable implements SubscriberChannel<T> {
-	private readonly _callbacks: Array<SubscriberChannel.Callback<T>>;
+export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChannel.Event<TData> = SubscriberChannel.Event<TData>>
+	extends Disposable implements SubscriberChannel<TData, TEvent> {
+	private readonly _callbacks: Array<SubscriberChannel.Callback<TData, TEvent>>;
 	private _broken: boolean;
 
 	public constructor() {
@@ -12,7 +13,7 @@ export abstract class SubscriberChannelBase<T> extends Disposable implements Sub
 		this._broken = false;
 	}
 
-	public addHandler(cb: SubscriberChannel.Callback<T>): void {
+	public addHandler(cb: SubscriberChannel.Callback<TData, TEvent>): void {
 		this.verifyBrokenChannel();
 
 		this._callbacks.push(cb);
@@ -21,7 +22,7 @@ export abstract class SubscriberChannelBase<T> extends Disposable implements Sub
 		}
 	}
 
-	public removeHandler(cb: SubscriberChannel.Callback<T>): void {
+	public removeHandler(cb: SubscriberChannel.Callback<TData, TEvent>): void {
 		const index = this._callbacks.indexOf(cb);
 		if (index !== -1) {
 			this._callbacks.splice(index, 1);
@@ -39,7 +40,7 @@ export abstract class SubscriberChannelBase<T> extends Disposable implements Sub
 		}
 	}
 
-	protected notify(event: SubscriberChannel.Event<T> | Error): void | Promise<void> {
+	protected notify(event: TEvent | Error): void | Promise<void> {
 		if (this._callbacks.length === 0) {
 			return;
 		}
