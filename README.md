@@ -364,3 +364,33 @@ $ curl --verbose --method POST --header 'Content-Type: application/json' https:/
 
 
 wscat --connect ws://127.0.0.1:8080/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
+
+
+### HTTP (Host Mode)
+This kind of subscriber allows to receive messages through HTTP callback function. `Host Mode` means that message subscriber connects to `Notifier` as client.
+
+#### Create subscriber endpoint
+```bash
+$ cat docs/subscriber/create-http-subscriber.json
+```
+```json
+{
+	"topic": "MyGitLabPushTopic.yourdomain.ltd",
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+		"url": "https://mypublishersystem.com/function",
+	},
+	"ssl": {
+		... optional
+	}
+}
+```
+```bash
+$ curl --verbose --method POST --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/subscriber/webhook --data @docs/subscriber/create-websocker-host-subscriber.json
+```
+### Response
+```
+status: 201
+Created
+```

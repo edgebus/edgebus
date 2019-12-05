@@ -1,0 +1,16 @@
+{
+	"topic": "MyTopic",
+	"subscriberSecurityKind": "TOKEN",
+	"subscriberSecurityToken": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	"url": "https://mypublishersystem.com/function",
+	"ssl": {
+		"clientTrustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----",
+		"clientCommonName": "CN-MyPublisherSystem"
+	},
+	"transformers": [
+		{
+			"kind": "javascript",
+			"code": "your transformer code"
+		}
+	]
+}
