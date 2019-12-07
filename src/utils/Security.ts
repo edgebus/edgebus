@@ -58,8 +58,10 @@ export class Encrypter {
  * Password-Based Key Derivation Function helper
  * https://en.wikipedia.org/wiki/PBKDF2
  */
-export async function passwordDerivation(password: string): Promise<Buffer> {
-	const salt: Buffer = new Buffer([0x6d, 0x14, 0xcb, 0x3a, 0xdc, 0xa8, 0x10, 0xdb]);
+export async function passwordDerivation(
+	password: string, iterations: number = 10, keylen: number = 32, digest: string = "sha512"
+): Promise<Buffer> {
+	const salt: Buffer = new Buffer([0x22, 0x9d, 0xcf, 0xdd, 0x8d, 0xa1, 0x52, 0x0f]);
 	const encriptionKey: Buffer = await pbkdf2Async(Buffer.from(password), salt, 10, 32, "sha512");
 	return encriptionKey;
 }

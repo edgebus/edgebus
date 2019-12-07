@@ -1,0 +1,14 @@
+{
+	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
+	"subscriberSecurityKind": "TOKEN",
+	"subscriberSecurityToken": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	"url": "https://callback.yourdomain.ltd/my-github-commits",
+	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----",
+	"headerToken": "my-secret-words-for-NF-TOKEN-header",
+	"transformers": [
+		{
+			"kind": "javascript",
+			"code": "your transformer code"
+		}
+	]
+}

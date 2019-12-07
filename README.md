@@ -23,30 +23,30 @@ Release from tag
 
 | Title                                       | URL                                                     |
 |---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.pub.zxteam.org/docs                    |
-| Managment API                               | https://notifier.pub.zxteam.org/management              |
-| Publisher API                               | https://notifier.pub.zxteam.org/publisher               |
-| Subscriber API                              | https://notifier.pub.zxteam.org/subscriber              |
+| Self-hosted docs                            | https://notifier.zxteam.org/docs                    |
+| Managment API                               | https://notifier.zxteam.org/management              |
+| Publisher API                               | https://notifier.zxteam.org/publisher               |
+| Subscriber API                              | https://notifier.zxteam.org/subscriber              |
 
 ### Presentation
 Usually latest tag (sometimes `master` branch)
 
 | Title                                       | URL                                                     |
 |---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.pub.zxteam.org:10443/docs              |
-| Managment API                               | https://notifier.pub.zxteam.org:10443/management        |
-| Publisher API                               | https://notifier.pub.zxteam.org:10443/publisher         |
-| Subscriber API                              | https://notifier.pub.zxteam.org:10443/subscriber        |
+| Self-hosted docs                            | https://notifier.zxteam.org:10443/docs              |
+| Managment API                               | https://notifier.zxteam.org:10443/management        |
+| Publisher API                               | https://notifier.zxteam.org:10443/publisher         |
+| Subscriber API                              | https://notifier.zxteam.org:10443/subscriber        |
 
 ### Evolution
 Usually `master` branch (sometimes `dev` branch)
 
 | Title                                       | URL                                                     |
 |---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.pub.zxteam.org:20443/docs              |
-| Managment API                               | https://notifier.pub.zxteam.org:20443/management        |
-| Publisher API                               | https://notifier.pub.zxteam.org:20443/publisher         |
-| Subscriber API                              | https://notifier.pub.zxteam.org:20443/subscriber        |
+| Self-hosted docs                            | https://notifier.zxteam.org:20443/docs              |
+| Managment API                               | https://notifier.zxteam.org:20443/management        |
+| Publisher API                               | https://notifier.zxteam.org:20443/publisher         |
+| Subscriber API                              | https://notifier.zxteam.org:20443/subscriber        |
 
 
 ## General information
@@ -190,7 +190,7 @@ $ cat docs/topic/create-topic.json
 }
 ```
 ```bash
-$ curl --verbose --key ./admin-key.pem --cert ./admin-cert.pem --method POST --header 'Content-Type: application/json'  https://notifier.pub.zxteam.org/management/topic --data @docs/topic/create-topic.json
+$ curl --verbose --key ./admin-key.pem --cert ./admin-cert.pem --request POST --header 'Content-Type: application/json'  https://notifier.zxteam.org/management/topic --data @docs/topic/create-topic.json
 ```
 ```json
 {
@@ -224,7 +224,7 @@ $ cat docs/topic/delete-topic.json
 }
 ```
 ```bash
-$ curl --verbose --method DELETE --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/management/MyGitLabPushTopic.yourdomain.ltd --data @docs/topic/delete-topic.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/MyGitLabPushTopic.yourdomain.ltd --data @docs/topic/delete-topic.json
 ```
 ```json
 {
@@ -252,7 +252,7 @@ $ cat docs/publisher/delete-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --method DELETE --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
 ```
 ```json
 {
@@ -280,15 +280,18 @@ $ cat docs/publisher/create-http-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --method POST --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/publisher/http --data @docs/publisher/create-http-publisher.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/http --data @docs/publisher/create-http-publisher.json
 ```
 ```json
 {
 	"publisherId": "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "https://notifier.pub.zxteam.org/publisher/push/publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"url": "https://notifier.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
-http://127.0.0.1:8080/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6
+#### Push message
+```bash
+curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6 --data '{"hello":"world"}'
+```
 
 
 ## Subscribers
@@ -305,7 +308,7 @@ $ cat docs/subscriber/delete-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --method DELETE --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
 ```
 ```json
 {
@@ -327,18 +330,39 @@ When an event occurs, `Notifier` makes an HTTP request to the URI configured for
 SSL Verification enables automatically for URL scheme `https:`. No additional configuration required.
 
 >>>
-**Optional:** If you specify a CA Certificates (via Management API), it will be used to verify the SSL certificate of the webhook endpoint. Otherwise the SSL certificate of the webhook endpoint is verified based on an internal list of Certificate Authorities.
+**Optional:** If you specify a CA Certificates in a `trustedCA` field of create subscriber request, it will be used to verify the SSL certificate of the webhook endpoint.
+If `trustedCA` is omited the SSL certificate of the webhook endpoint is verified based on an internal list of Certificate Authorities.
 >>>
 
 #### Secret token
-If you setup a `secret token` (via Management API), it will be sent with the hook request in the **NF-TOKEN** HTTP header.
+If you specify a secret token in a `headerToken` field of create subscriber request, it will be sent along with the hook request in the **NF-TOKEN** HTTP header.
+
+#### Create subscriber endpoint
+```bash
+$ cat docs/subscriber/create-webhook-subscriber.json
+```
+```json
+{
+	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
+	"subscriberSecurityKind": "TOKEN",
+	"subscriberSecurityToken": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	"url": "https://callback.yourdomain.ltd/my-github-commits",
+	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----", // ...optional
+	"headerToken": "my-secret-words-for-NF-TOKEN-header", // ...optional
+	"transformers": [ // ...optional
+	]
+}
+```
+```bash
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/webhook --data @docs/subscriber/create-webhook-subscriber.json
+```
 
 ### WebSocket (Host Mode)
 This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `Notifier` as client.
 
 #### Create subscriber endpoint
 ```bash
-$ cat docs/subscriber/create-websocker-host-subscriber.json
+$ cat docs/subscriber/create-websocket-host-subscriber.json
 ```
 ```json
 {
@@ -353,44 +377,15 @@ $ cat docs/subscriber/create-websocker-host-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --method POST --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/subscriber/websockethost --data @docs/subscriber/create-websocker-host-subscriber.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/websockethost --data @docs/subscriber/create-websocket-host-subscriber.json
 ```
 ```json
 {
 	"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "wss://notifier.pub.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"url": "wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
-
-
-wscat --connect ws://127.0.0.1:8080/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
-
-
-### HTTP (Host Mode)
-This kind of subscriber allows to receive messages through HTTP callback function. `Host Mode` means that message subscriber connects to `Notifier` as client.
-
-#### Create subscriber endpoint
-```bash
-$ cat docs/subscriber/create-http-subscriber.json
+#### Listen subscriber endpoint
 ```
-```json
-{
-	"topic": "MyGitLabPushTopic.yourdomain.ltd",
-	"subscriberSecurity": {
-		"kind": "TOKEN",
-		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-		"url": "https://mypublishersystem.com/function",
-	},
-	"ssl": {
-		... optional
-	}
-}
-```
-```bash
-$ curl --verbose --method POST --header 'Content-Type: application/json' https://notifier.pub.zxteam.org/subscriber/webhook --data @docs/subscriber/create-websocker-host-subscriber.json
-```
-### Response
-```
-status: 201
-Created
+wscat --connect wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
 ```

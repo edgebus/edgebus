@@ -1,6 +1,6 @@
 {
-	"name": "MyGitLabPushTopic",
-	"description": "My first topic to handle GitLab's push events. See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events",
+	"name": "MyGitHubEventsTopic",
+	"description": "My first topic to handle GitHub's push events. See https://developer.github.com/webhooks/",
 	"mediaType": "application/json",
 	"schema": {
 		"$schema": "http://json-schema.org/draft-07/schema",
