@@ -7,7 +7,7 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
-import { handledException } from "./errors";
+import { endpointHandledException } from "./errors";
 import { Topic } from "../model/Topic";
 const ensure: Ensure = ensureFactory();
 
@@ -98,7 +98,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				}), "utf-8"));
 
 		} catch (error) {
-			return handledException(res, error);
+			return endpointHandledException(res, error);
 		}
 
 	}
@@ -134,7 +134,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 			return res.writeHead(200, "Delete").end();
 
 		} catch (error) {
-			return handledException(res, error);
+			return endpointHandledException(res, error);
 		}
 	}
 }

@@ -10,7 +10,7 @@ import * as bodyParser from "body-parser";
 import { SubscriberApi } from "../api/SubscriberApi";
 import { Webhook } from "../model/Webhook";
 
-import { handledException } from "./errors";
+import { endpointHandledException } from "./errors";
 // TO REMOVE
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { Topic } from "../model/Topic";
@@ -102,23 +102,24 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 	private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 		try {
 			const reqTopic: string = ensure.string(req.body.topic, "subscribeWebhook, request.body.topic field is not a string");
-			const subscriberSecurityKind: string = ensure.string(req.body.subscriberSecurityKind, "subscribeWebhook, request.body.subscriberSecurityKind field is not a string");
-			const subscriberSecurityToken: string = ensure.string(req.body.subscriberSecurityToken, "subscribeWebhook, request.body.subscriberSecurityToken field is not a string");
+
+			const subscriberSecurity: any = ensure.object(req.body.subscriberSecurity, "subscribeWebhook, request.body.subscriberSecurity field is not a string");
+			const kind: string = ensure.string(subscriberSecurity.kind, "subscribeWebhook, subscriberSecurity.kind field is not a string");
+			const token: string = ensure.string(subscriberSecurity.token, "subscribeWebhook, subscriberSecurity.token field is not a string");
+
 			const reqUrl: string = ensure.string(req.body.url, "subscribeWebhook, request.body.url field is not a string");
 			const trustedCA: string = ensure.string(req.body.trustedCA, "subscribeWebhook, request.body.trustedCA field is not a object");
 			const headerToken: string = ensure.string(req.body.headerToken, "subscribeWebhook, request.body.headerToken field is not a object");
 
-			if (subscriberSecurityKind !== "TOKEN") {
-				return res.writeHead(400, "Bad subscriberSecurityKind").end();
+			if (kind !== "TOKEN") {
+				throw new EnsureError("subscribeWebhook, subscriberSecurity.kind field is not a TOKEN", kind);
 			}
 
 			const topicData: Topic.Name & Subscriber.Security = {
 				topicName: reqTopic,
-				subscriberSecurity: {
-					kind: subscriberSecurityKind,
-					token: subscriberSecurityToken
-				}
+				subscriberSecurity: { kind, token }
 			};
+
 			const webhookData: Webhook.Data = {
 				url: new URL(reqUrl),
 				trustedCaCertificate: trustedCA,
@@ -131,13 +132,17 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 				.status(201)
 				.header("Content-Type", "application/json")
 				.end(Buffer.from(JSON.stringify({
-					webhookId: webhook.webhookId,
+					kind: "webhook",
+					subscriberId: webhook.webhookId,
+					topic: webhook.topicName,
 					url: webhook.url,
-					topicName: webhook.topicName
+					trustedCA: webhook.trustedCaCertificate,
+					headerToken: webhook.headerToken,
+					transformers: "no save"
 				}), "utf-8"));
 		} catch (error) {
 			this._log.error(error);
-			return handledException(res, error);
+			return endpointHandledException(res, error);
 		}
 	}
 
@@ -179,7 +184,7 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 				}), "utf-8"));
 		} catch (error) {
 			this._log.error(error);
-			return handledException(res, error);
+			return endpointHandledException(res, error);
 		}
 	}
 

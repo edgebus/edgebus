@@ -22,7 +22,7 @@ export async function getByTopicIdActive(
 	url: Webhook.Data["url"]
 ): Promise<Webhook> {
 	const sqlRow: SqlResultRecord = await sqlProvider.statement(
-		"SELECT w.id, t.name, w.url, w.trusted_ca_certificate, w.header_token, w.utc_create_date, w.utc_delete_date "
+		"SELECT w.id, t.name, w.webhook_id, w.url, w.trusted_ca_certificate, w.header_token, w.utc_create_date, w.utc_delete_date "
 		+ "FROM subscriber_webhook AS w INNER JOIN topic AS t ON t.id=w.topic_id "
 		+ "WHERE w.topic_id=(SELECT id FROM topic WHERE name=$1) AND w.url=$2 AND w.utc_delete_date IS NULL;"
 	).executeSingle(cancellationToken, topicName, url.toString());

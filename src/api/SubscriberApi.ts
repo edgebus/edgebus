@@ -49,7 +49,6 @@ export class SubscriberApi extends Initable {
 	): Promise<Webhook> {
 
 		this._log.debug(`Run subscriberWebhook with topic: ${topic} and webhookData ${webhookData}`);
-		this.verifyInitializedAndNotDisposed();
 
 		try {
 			const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, topic.topicName);
