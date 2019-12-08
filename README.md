@@ -295,7 +295,32 @@ curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam
 
 
 ## Subscribers
-Any subscriber may be deleted by following request
+### List subscribers (GET)
+```bash
+$ curl --verbose --request GET 'https://notifier.zxteam.org/subscriber?subscriberSecurity.kind=TOKEN&subscriberSecurity.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+```json
+[
+	{
+		"kind": "webhook",
+		"subscriberId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+		...
+	},
+	{
+		"kind": "webhook",
+		"subscriberId": "subscriber.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
+		...
+	},
+	{
+		"kind": "websockethost",
+		"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+		...
+	},
+	...
+]
+```
+
+### Delete subscriber (DELETE)
 ```bash
 $ cat docs/subscriber/delete-subscriber.json
 ```
@@ -344,8 +369,10 @@ $ cat docs/subscriber/create-webhook-subscriber.json
 ```json
 {
 	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
-	"subscriberSecurityKind": "TOKEN",
-	"subscriberSecurityToken": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	"subscriberSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
 	"url": "https://callback.yourdomain.ltd/my-github-commits",
 	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----", // ...optional
 	"headerToken": "my-secret-words-for-NF-TOKEN-header", // ...optional
@@ -356,6 +383,19 @@ $ cat docs/subscriber/create-webhook-subscriber.json
 ```bash
 $ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/webhook --data @docs/subscriber/create-webhook-subscriber.json
 ```
+```json
+{
+	"kind": "webhook",
+	"subscriberId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
+	"url": "https://callback.yourdomain.ltd/my-github-commits",
+	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----", // ...optional
+	"headerToken": "my-secret-words-for-NF-TOKEN-header", // ...optional
+	"transformers": [ // ...optional
+	]
+}
+```
+
 
 ### WebSocket (Host Mode)
 This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `Notifier` as client.
@@ -381,6 +421,7 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 ```
 ```json
 {
+	"kind": "websockethost",
 	"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
 	"url": "wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
