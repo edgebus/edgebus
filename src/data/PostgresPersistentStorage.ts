@@ -21,6 +21,7 @@ import { Publisher } from "../model/Publisher";
 // Simple function for postgres database
 import * as topicFunctions from "./postgres/topic";
 import * as webhookFunctions from "./postgres/webhook";
+import { Security } from "../model/Security";
 
 export class PostgresPersistentStorage extends Initable implements PersistentStorage {
 	private readonly _sqlProviderFactory: PostgresProviderFactory;
@@ -174,6 +175,23 @@ export class PostgresPersistentStorage extends Initable implements PersistentSto
 				});
 
 			return topic;
+		} catch (e) {
+			this._log.error(`getTopicByName Error: ${e.message}`);
+			throw storageHandledException(e);
+		}
+	}
+
+	public async getAvailableWebhooks(cancellationToken: CancellationToken, security: Security): Promise<Array<Webhook>> {
+		this._log.debug(`Run getAvailableWebhooks with security: ${security}`);
+		this.verifyInitializedAndNotDisposed();
+
+		try {
+			const webhooks: Array<Webhook>
+				= await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+					return await webhookFunctions.getBySecurity(cancellationToken, sqlProvider, security);
+				});
+
+			return webhooks;
 		} catch (e) {
 			this._log.error(`getTopicByName Error: ${e.message}`);
 			throw storageHandledException(e);

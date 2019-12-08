@@ -25,17 +25,14 @@ export class SubscriberApi extends Initable {
 		this._log = log;
 	}
 
-	public async getAvailableTopics(
-		cancellationToken: CancellationToken
-	): Promise<SubscriberApi.TopicMap> {
-		const hardCodedMap = new Map();
-		// const topics: Topic[] = await this._storage.getAvailableTopics(cancellationToken);
+	public async getAvailableWebhooks(
+		cancellationToken: CancellationToken,
+		subscriberSecurity: Security
+	): Promise<Array<Webhook>> {
 
-		// for (const topic of topics) {
-		// 	hardCodedMap.set(topic.topicName, topic);
-		// }
+		const webhooks: Array<Webhook> = await this._storage.getAvailableWebhooks(cancellationToken, subscriberSecurity);
 
-		return hardCodedMap;
+		return webhooks;
 	}
 
 	/**

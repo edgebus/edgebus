@@ -5,6 +5,7 @@ import { Publisher } from "../model/Publisher";
 import { Subscriber } from "../model/Subscriber";
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
+import { Security } from "../model/Security";
 
 export interface PersistentStorage extends Initable {
 	addTopic(
@@ -27,6 +28,8 @@ export interface PersistentStorage extends Initable {
 	getTopicByWebhookId(cancellationToken: CancellationToken, webhook: Webhook.Id["webhookId"]): Promise<Topic>;
 
 	getTopicByName(cancellationToken: CancellationToken, topicName: Topic.Name["topicName"]): Promise<Topic>;
+
+	getAvailableWebhooks(cancellationToken: CancellationToken, subscriberSecurity: Security): Promise<Array<Webhook>>;
 
 	removeSubscriberWebhook(
 		cancellationToken: CancellationToken,

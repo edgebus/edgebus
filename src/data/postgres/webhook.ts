@@ -7,6 +7,7 @@ import { v4 as uuid } from "uuid";
 // Model
 import { Topic } from "../../model/Topic";
 import { Webhook } from "../../model/Webhook";
+import { Security } from "../../model/Security";
 
 export async function getByWebhookId(
 	cancellationToken: CancellationToken,
@@ -21,13 +22,28 @@ export async function getByTopicIdActive(
 	topicName: Webhook.Instance["topicName"],
 	url: Webhook.Data["url"]
 ): Promise<Webhook> {
-	const sqlRow: SqlResultRecord = await sqlProvider.statement(
+	const record: SqlResultRecord = await sqlProvider.statement(
 		"SELECT w.id, t.name, w.webhook_id, w.url, w.trusted_ca_certificate, w.header_token, w.utc_create_date, w.utc_delete_date "
 		+ "FROM subscriber_webhook AS w INNER JOIN topic AS t ON t.id=w.topic_id "
 		+ "WHERE w.topic_id=(SELECT id FROM topic WHERE name=$1) AND w.url=$2 AND w.utc_delete_date IS NULL;"
 	).executeSingle(cancellationToken, topicName, url.toString());
 
-	return mapDbRow(sqlRow);
+	return mapDbRow(record);
+}
+export async function getBySecurity(
+	cancellationToken: CancellationToken,
+	sqlProvider: SqlProvider,
+	security: Security
+): Promise<Array<Webhook>> {
+	const records: ReadonlyArray<SqlResultRecord> = await sqlProvider.statement(
+		"SELECT w.id, t.name, w.webhook_id, w.topic_id, w.url, w.trusted_ca_certificate, w.header_token, w.utc_create_date, w.utc_delete_date "
+		+ "FROM subscriber_webhook AS w "
+		+ "INNER JOIN topic AS t ON t.id=w.topic_id "
+		+ "WHERE topic_id=(SELECT id FROM topic AS t "
+		+ "WHERE t.subscriber_security=$1);"
+	).executeQuery(cancellationToken, JSON.stringify(security));
+
+	return records.map((record) => mapDbRow(record));
 }
 export async function getAll(
 	cancellationToken: CancellationToken,

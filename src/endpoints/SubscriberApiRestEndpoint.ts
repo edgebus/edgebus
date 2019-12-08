@@ -15,6 +15,7 @@ import { endpointHandledException } from "./errors";
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { Topic } from "../model/Topic";
 import { Subscriber } from "../model/Subscriber";
+import { Security } from "../model/Security";
 
 const ensure: Ensure = ensureFactory();
 
@@ -66,7 +67,7 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 				return handler;
 			}
 
-			router.get("/topic", safeBinder(this.getTopics.bind(this)));
+			router.get("/", safeBinder(this.listSubscribers.bind(this)));
 			router.post("/webhook", safeBinder(this.subscribeWebhook.bind(this)));
 			router.delete("/webhook", safeBinder(this.unsubscribeWebhook.bind(this)));
 		}
@@ -76,9 +77,18 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 		//
 	}
 
-	private async getTopics(req: express.Request, res: express.Response): Promise<void> {
+	private async listSubscribers(req: express.Request, res: express.Response): Promise<void> {
 		try {
-			const topics: SubscriberApi.TopicMap = await this._api.getAvailableTopics(DUMMY_CANCELLATION_TOKEN);
+			const kind: string = ensure.string(req.query["subscriberSecurity.kind"], "listSubscribers, req.query.subscriberSecurity.kind field is not a string");
+			const token: string = ensure.string(req.query["subscriberSecurity.token"], "listSubscribers, req.query.subscriberSecurity.token field is not a string");
+
+			if (kind !== "TOKEN") {
+				throw new EnsureError("subscribeWebhook, subscriberSecurity.kind field is not a TOKEN", kind);
+			}
+
+			const security: Security = { kind, token };
+
+			const webhooks: Array<Webhook> = await this._api.getAvailableWebhooks(DUMMY_CANCELLATION_TOKEN, security);
 
 			const response: {
 				[topicName: string]: {
@@ -86,13 +96,14 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 				};
 			} = {};
 
-			for (const topic of topics) {
-				response[topic[1].topicName] = {
-					description: topic[1].topicDescription
-				};
-			}
+			// for (const topic of topics) {
+			// 	response[topic[1].topicName] = {
+			// 		description: topic[1].topicDescription
+			// 	};
+			// }
 
-			res.end(JSON.stringify(response, null, "\t") + "\n");
+			// res.end(JSON.stringify(response, null, "\t") + "\n");
+			res.end(JSON.stringify(webhooks, null, "\t") + "\n");
 		} catch (e) {
 			this._log.error("getTopics fault", e);
 			res.status(500).end();
