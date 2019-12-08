@@ -9,19 +9,20 @@ import { Security } from "../model/Security";
 
 import { PersistentStorage } from "../data/PersistentStorage";
 import { Subscriber } from "../model/Subscriber";
+import { ServiceUnavailableSubscriberApiError, ForbiddenSubcriberApiError, apiHandledException } from "./errors";
 
 /**
  * Subscriber API allows subscribe/unsibscribe for events via webhooks and other subscriber's type
  */
 export class SubscriberApi extends Initable {
 	// private readonly _storageProvider!: StorageProvider;
-	private readonly _logger: Logger;
+	private readonly _log: Logger;
 	private readonly _storage: PersistentStorage;
 
 	constructor(_storage: PersistentStorage, log: Logger) {
 		super();
 		this._storage = _storage;
-		this._logger = log;
+		this._log = log;
 	}
 
 	public async getAvailableTopics(
@@ -47,9 +48,32 @@ export class SubscriberApi extends Initable {
 		cancellationToken: CancellationToken, topic: Topic.Name & Subscriber.Security, webhookData: Webhook.Data
 	): Promise<Webhook> {
 
-		const webhookId: Webhook = await this._storage.addSubscriberWebhook(cancellationToken, topic, webhookData);
+		this._log.debug(`Run subscriberWebhook with topic: ${topic} and webhookData ${webhookData}`);
+		this.verifyInitializedAndNotDisposed();
 
-		return webhookId;
+		try {
+			const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, topic.topicName);
+
+			const subscriberSecurityKind = topicRecord.subscriberSecurity.kind;
+			const subscriberSecurityToken = topicRecord.subscriberSecurity.token;
+
+			if (topic.subscriberSecurity.kind !== subscriberSecurityKind
+				|| topic.subscriberSecurity.token !== subscriberSecurityToken) {
+				throw new ForbiddenSubcriberApiError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
+			}
+
+			const webhookId: Webhook = await this._storage.addSubscriberWebhook(cancellationToken, topic.topicName, webhookData);
+
+			return webhookId;
+		} catch (e) {
+			this._log.error(`subscriberWebhook Error: ${e.message}`);
+			throw apiHandledException(e);
+			// if (e instanceof ConnectionPersistentStorageError) {
+			// 	throw new ServiceUnavailableSubscriberApiError("Text", e);
+			// }
+
+			// throw new WrongArgumentSubscriberApiError("");
+		}
 	}
 
 	/**
@@ -60,6 +84,13 @@ export class SubscriberApi extends Initable {
 	public async unsubscribeWebhook(
 		cancellationToken: CancellationToken, webhook: Webhook.Id & Subscriber.Security
 	): Promise<SubscriberApi.TopicMap> {
+
+		try {
+			const topic: Topic = await this._storage.getTopicByWebhookId(cancellationToken, webhook.webhookId);
+
+		} catch (e) {
+			//
+		}
 		throw new InvalidOperationError("Method does not have implementation yet");
 	}
 

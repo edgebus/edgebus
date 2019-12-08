@@ -7,7 +7,7 @@ import * as _ from "lodash";
 
 import { ConfigurationProvider } from "./ConfigurationProvider";
 import { PersistentStorage } from "../data/PersistentStorage";
-import { SQLPersistentStorage } from "../data/SQLPersistentStorage";
+import { PostgresPersistentStorage } from "../data/PostgresPersistentStorage";
 
 @Singleton
 export abstract class StorageProvider extends Initable {
@@ -36,7 +36,7 @@ class StorageProviderImpl extends StorageProvider {
 	public constructor() {
 		super();
 		this._cacheStorage = null; //storageFactory(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
-		this._persistentStorage = new SQLPersistentStorage(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
+		this._persistentStorage = new PostgresPersistentStorage(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
 	}
 
 	public get cacheStorage() { return this._cacheStorage; }

@@ -19,6 +19,7 @@ CREATE TABLE "topic"
 CREATE TABLE "subscriber_webhook"
 (
 	"id" SERIAL NOT NULL PRIMARY KEY,
+	"webhook_id" VARCHAR(64) NOT NULL,
 	"topic_id" INT REFERENCES topic(id) NOT NULL,
 	"url" VARCHAR(1028) NOT NULL,
 	"trusted_ca_certificate" VARCHAR(4096) NULL DEFAULT NULL,
@@ -29,5 +30,8 @@ CREATE TABLE "subscriber_webhook"
 	CONSTRAINT "uq_subscriber_webhook_topic_id_url_utc_delete_date" UNIQUE ("topic_id", "url", "utc_delete_date")
 );
 
--- INSERT INTO "topic" ("id", "name", "description", "media_type", "topic_security", "publisher_security", "subscriber_security", "utc_delete_date")
--- VALUES (1, 'market', 'Market currency', 's', 's', 'd', 'as', (NOW() AT TIME ZONE 'utc'));
+-- INSERT INTO "topic" ("id", "name", "description", "media_type", "topic_security", "publisher_security", "subscriber_security")
+-- VALUES (1, 'market', 'Market currency', 's', 's', 'd', 'as');
+
+-- INSERT INTO "subscriber_webhook" ("webhook_id", "topic_id", "url", "trusted_ca_certificate", "header_token")
+-- VALUES ('market', 1, 's', 's', 'd');

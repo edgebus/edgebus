@@ -3,9 +3,7 @@ import { Publisher } from "./Publisher";
 import { Subscriber } from "./Subscriber";
 
 export namespace Topic {
-	/**
-	 * The ID of the `Topic`
-	 */
+
 	export interface Name {
 		/**
  		* Human readable name defines a `Topic`'s purpose
@@ -26,6 +24,11 @@ export namespace Topic {
 		readonly mediaType: string;
 	}
 
+	export interface Timestamps {
+		readonly createAt: Date;
+		readonly deleteAt: Date | null;
+	}
+
 	export interface Security {
 		readonly topicSecurity: SecurityModel;
 	}
@@ -33,4 +36,4 @@ export namespace Topic {
 	export type Data = Name & Description & MediaType;
 }
 
-export type Topic = Topic.Name & Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security;
+export type Topic = Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security & Topic.Timestamps;

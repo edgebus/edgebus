@@ -10,8 +10,7 @@ import * as bodyParser from "body-parser";
 import { SubscriberApi } from "../api/SubscriberApi";
 import { Webhook } from "../model/Webhook";
 
-import { TOKEN_BYTES_LEN } from "../constants";
-import { handledException } from "./helper";
+import { handledException } from "./errors";
 // TO REMOVE
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { Topic } from "../model/Topic";
@@ -143,7 +142,45 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 	}
 
 	private async unsubscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
-		throw new InvalidOperationError("Method does not have implementation yet");
+		try {
+			const reqTopic: string = ensure.string(req.body.topic, "subscribeWebhook, request.body.topic field is not a string");
+			const subscriberSecurityKind: string = ensure.string(req.body.subscriberSecurityKind, "subscribeWebhook, request.body.subscriberSecurityKind field is not a string");
+			const subscriberSecurityToken: string = ensure.string(req.body.subscriberSecurityToken, "subscribeWebhook, request.body.subscriberSecurityToken field is not a string");
+			const reqUrl: string = ensure.string(req.body.url, "subscribeWebhook, request.body.url field is not a string");
+			const trustedCA: string = ensure.string(req.body.trustedCA, "subscribeWebhook, request.body.trustedCA field is not a object");
+			const headerToken: string = ensure.string(req.body.headerToken, "subscribeWebhook, request.body.headerToken field is not a object");
+
+			if (subscriberSecurityKind !== "TOKEN") {
+				return res.writeHead(400, "Bad subscriberSecurityKind").end();
+			}
+
+			const topicData: Topic.Name & Subscriber.Security = {
+				topicName: reqTopic,
+				subscriberSecurity: {
+					kind: subscriberSecurityKind,
+					token: subscriberSecurityToken
+				}
+			};
+			const webhookData: Webhook.Data = {
+				url: new URL(reqUrl),
+				trustedCaCertificate: trustedCA,
+				headerToken
+			};
+
+			const webhook: Webhook = await this._api.subscriberWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
+
+			return res
+				.status(201)
+				.header("Content-Type", "application/json")
+				.end(Buffer.from(JSON.stringify({
+					webhookId: webhook.webhookId,
+					url: webhook.url,
+					topicName: webhook.topicName
+				}), "utf-8"));
+		} catch (error) {
+			this._log.error(error);
+			return handledException(res, error);
+		}
 	}
 
 	// private async cancelMessage(req: express.Request, res: express.Response): Promise<void> {

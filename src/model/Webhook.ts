@@ -1,10 +1,10 @@
 import { Topic } from "./Topic";
 
 export namespace Webhook {
-	/**
-	 * The ID of the Webhook
-	 */
 	export interface Id {
+		/**
+ 		* The ID of the Webhook
+ 		*/
 		readonly webhookId: string;
 	}
 
@@ -31,6 +31,11 @@ export namespace Webhook {
 		 */
 		readonly topicName: Topic.Name["topicName"];
 	}
+
+	export interface Timestamps {
+		readonly createAt: Date;
+		readonly deleteAt: Date | null;
+	}
 }
 
-export type Webhook = Webhook.Id & Webhook.Data & Webhook.Instance;
+export type Webhook = Webhook.Id & Webhook.Data & Webhook.Instance & Webhook.Timestamps;

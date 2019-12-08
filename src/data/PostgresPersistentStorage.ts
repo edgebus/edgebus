@@ -2,23 +2,27 @@ import { CancellationToken, Logger } from "@zxteam/contract";
 import { Initable, Disposable } from "@zxteam/disposable";
 import { SqlProvider, SqlResultRecord, SqlConstraintError } from "@zxteam/sql";
 import { PostgresProviderFactory } from "@zxteam/sql-postgres";
+import { PersistentStorage } from "./PersistentStorage";
 
 import {
-	PersistentStorage,
-	ForbiddenPersistentStorageError,
+	ConnectionPersistentStorageError,
 	NoRecordPersistentStorageError,
-	BadRequestPersistentStorageError
-} from "./PersistentStorage";
+	UnknownPersistentStorageError,
+	storageHandledException
+} from "./errors";
 import * as _ from "lodash";
 
-import { TopicStorage, ITopicStorage } from "./model/TopicStorage";
+// Model
 import { Topic } from "../model/Topic";
 import { Webhook } from "../model/Webhook";
 import { Subscriber } from "../model/Subscriber";
 import { Publisher } from "../model/Publisher";
-import { WebHookStorage, IWebHookStorage } from "./model/WebhookStorage";
 
-export class SQLPersistentStorage extends Initable implements PersistentStorage {
+// Simple function for postgres database
+import * as topicFunctions from "./postgres/topic";
+import * as webhookFunctions from "./postgres/webhook";
+
+export class PostgresPersistentStorage extends Initable implements PersistentStorage {
 	private readonly _sqlProviderFactory: PostgresProviderFactory;
 	private readonly _log: Logger;
 	private readonly _url: URL;
@@ -39,39 +43,36 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 		cancellationToken: CancellationToken,
 		topicData: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security
 	): Promise<Topic> {
+		this._log.debug(`Run addTopic with topicData: ${topicData}`);
 		this.verifyInitializedAndNotDisposed();
+
 		try {
-			const topic: ITopicStorage = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-				return await TopicStorage.save(cancellationToken, sqlProvider, topicData);
+
+			const topic: Topic = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+				return await topicFunctions.save(cancellationToken, sqlProvider, topicData);
 			});
 
-			const friendlyTopic: Topic = {
-				topicName: topic.name,
-				topicDescription: topic.description,
-				mediaType: topic.mediaType,
-				topicSecurity: topic.topicSecurity,
-				publisherSecurity: topic.publisherSecurity,
-				subscriberSecurity: topic.subscriberSecurity
-			};
-
-			return friendlyTopic;
-		} catch (error) {
-			if (error instanceof SqlConstraintError && error.innerError) {
-				// if (error.innerError.code === 23505) {
-				throw new BadRequestPersistentStorageError(error.innerError.message);
-				// }
-			}
-			this._log.error(error.message);
-			throw error;
+			return topic;
+		} catch (e) {
+			this._log.error(`addTopic Error: ${e.message}`);
+			throw storageHandledException(e);
 		}
+
 	}
 
 	public async deleteTopic(
 		cancellationToken: CancellationToken,
 		topicData: Topic.Name & Topic.Security
 	): Promise<void> {
+		this._log.debug(`Run deleteTopic with topicData: ${topicData}`);
 		this.verifyInitializedAndNotDisposed();
 		try {
+
+			await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+				return await topicFunctions.updateDeleteDate(cancellationToken, sqlProvider, topicData.topicName);
+			});
+			return;
+
 			const sqlCheck = "SELECT utc_delete_date, topic_security FROM topic WHERE name=$1;";
 
 			const topic = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
@@ -86,13 +87,13 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 
 				if (topicData.topicSecurity.kind !== topicSecurityKind
 					|| topicData.topicSecurity.token !== topicSecurityToken) {
-					throw new ForbiddenPersistentStorageError("Wrong Security Kind or Security Token");
+					// throw new ForbiddenPersistentStorageError("Wrong Security Kind or Security Token");
 				}
 
 				const deleteDate = topic[0].get("utc_delete_date").asNullableDate;
 				if (deleteDate) {
 					// Topic already deleted
-					throw new BadRequestPersistentStorageError(`Topic ${topicData.topicName} already deleted`);
+					// throw new BadRequestPersistentStorageError(`Topic ${topicData.topicName} already deleted`);
 				}
 			} else {
 				// Topic does not exist
@@ -106,71 +107,77 @@ export class SQLPersistentStorage extends Initable implements PersistentStorage 
 			});
 
 			return;
-		} catch (error) {
-			this._log.error(error.message);
-			throw error;
+		} catch (e) {
+			this._log.error(`deleteTopic Error: ${e.message}`);
+			throw storageHandledException(e);
 		}
 	}
 
 	public async addSubscriberWebhook(
 		cancellationToken: CancellationToken,
-		topicData: Topic.Name & Subscriber.Security,
+		topicName: Topic.Name["topicName"],
 		webhookData: Webhook.Data
 	): Promise<Webhook> {
+
+		this._log.debug(`Run addSubscriberWebhook with topicName: ${topicName} and webhookData ${webhookData}`);
 		this.verifyInitializedAndNotDisposed();
+
 		try {
 
-			const isExistTopic: boolean = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-				return TopicStorage.isExsistByName(cancellationToken, topicData.topicName, sqlProvider);
-			});
-
-			if (!isExistTopic) {
-				const message = `Don't find topic is name ${topicData.topicName}`;
-				throw new BadRequestPersistentStorageError(message);
-			}
-
-			const topicSelect: ITopicStorage = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-				return await TopicStorage.getByName(cancellationToken, topicData.topicName, sqlProvider);
-			});
-
-			const subscriberSecurityKind = topicSelect.subscriberSecurity.kind;
-			const subscriberSecurityToken = topicSelect.subscriberSecurity.token;
-
-			if (topicData.subscriberSecurity.kind !== subscriberSecurityKind
-				|| topicData.subscriberSecurity.token !== subscriberSecurityToken) {
-				throw new ForbiddenPersistentStorageError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
-			}
-
-			const deleteDate = topicSelect.deleteAt;
-			if (deleteDate) {
-				// Topic already deleted
-				throw new BadRequestPersistentStorageError(`Topic ${topicData.topicName} already deleted, can't subscribe`);
-			}
-
-			const webhookStorage: IWebHookStorage
+			const webhook: Webhook
 				= await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-					return await WebHookStorage.save(cancellationToken, sqlProvider, topicSelect, webhookData);
+					return await webhookFunctions.save(cancellationToken, sqlProvider, topicName, webhookData);
 				});
 
-			const webhook: Webhook = {
-				webhookId: webhookStorage.webHookId.toString(),
-				topicName: topicData.topicName,
-				url: webhookStorage.url,
-				trustedCaCertificate: webhookStorage.trustedCaCertificate,
-				headerToken: webhookStorage.headerToken
-			};
-
 			return webhook;
+
 		} catch (e) {
-			this._log.error(e);
-			throw e;
+			this._log.error(`addSubscriberWebhook Error: ${e.message}`);
+			throw storageHandledException(e);
 		}
 	}
 
 	public getSubscriberWebhook(
+		cancellationToken: CancellationToken,
 		webhook: Webhook.Id["webhookId"]
 	): Promise<Webhook> {
+		this._log.debug(`Run getSubscriberWebhook with webhook: ${webhook}`);
+		this.verifyInitializedAndNotDisposed();
 		throw new Error("Method not implemented.");
+	}
+
+	public async getTopicByWebhookId(cancellationToken: CancellationToken, webhookId: Webhook.Id["webhookId"]): Promise<Topic> {
+		this._log.debug(`Run getTopicByWebhookId with webhookId: ${webhookId}`);
+		this.verifyInitializedAndNotDisposed();
+
+		try {
+			const topic: Topic
+				= await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+					return await topicFunctions.getTopicByWebhookId(cancellationToken, sqlProvider, webhookId);
+				});
+
+			return topic;
+		} catch (e) {
+			this._log.error(`getTopicByWebhookId Error: ${e.message}`);
+			throw storageHandledException(e);
+		}
+	}
+
+	public async getTopicByName(cancellationToken: CancellationToken, topicName: Topic.Name["topicName"]): Promise<Topic> {
+		this._log.debug(`Run getTopicByName with topicName: ${topicName}`);
+		this.verifyInitializedAndNotDisposed();
+
+		try {
+			const topic: Topic
+				= await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+					return await topicFunctions.getByName(cancellationToken, sqlProvider, topicName);
+				});
+
+			return topic;
+		} catch (e) {
+			this._log.error(`getTopicByName Error: ${e.message}`);
+			throw storageHandledException(e);
+		}
 	}
 
 	public removeSubscriberWebhook(

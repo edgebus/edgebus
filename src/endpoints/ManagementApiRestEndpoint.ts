@@ -7,7 +7,7 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/ManagementApi";
-import { handledException } from "./helper";
+import { handledException } from "./errors";
 import { Topic } from "../model/Topic";
 const ensure: Ensure = ensureFactory();
 

@@ -18,27 +18,19 @@ export interface PersistentStorage extends Initable {
 
 	addSubscriberWebhook(
 		cancellationToken: CancellationToken,
-		topic: Topic.Name & Subscriber.Security,
+		topicName: Topic.Name["topicName"],
 		webhookData: Webhook.Data
 	): Promise<Webhook>;
 
-	getSubscriberWebhook(webhook: Webhook.Id["webhookId"]): Promise<Webhook>;
+	getSubscriberWebhook(cancellationToken: CancellationToken, webhook: Webhook.Id["webhookId"]): Promise<Webhook>;
+
+	getTopicByWebhookId(cancellationToken: CancellationToken, webhook: Webhook.Id["webhookId"]): Promise<Topic>;
+
+	getTopicByName(cancellationToken: CancellationToken, topicName: Topic.Name["topicName"]): Promise<Topic>;
 
 	removeSubscriberWebhook(
 		cancellationToken: CancellationToken,
 		webhookId: Webhook.Id["webhookId"]
 	): Promise<void>;
-}
-
-export class NoRecordPersistentStorageError extends Error {
-	public readonly name = "NoRecordPersistentStorageError";
-}
-
-export class ForbiddenPersistentStorageError extends Error {
-	public readonly name = "ForbiddenPersistentStorageError";
-}
-
-export class BadRequestPersistentStorageError extends Error {
-	public readonly name = "BadRequestPersistentStorageError";
 }
 

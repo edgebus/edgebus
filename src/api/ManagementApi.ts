@@ -1,6 +1,5 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
-import { InvalidOperationError } from "@zxteam/errors";
 
 import * as crypto from "crypto";
 
