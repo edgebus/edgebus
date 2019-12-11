@@ -1,13 +1,29 @@
 import { InnerError } from "@zxteam/errors";
+import {
+	ConnectionPersistentStorageError,
+	UnknownPersistentStorageError,
+	NoRecordPersistentStorageError
+} from "../data/errors";
 
 export abstract class ApiError extends InnerError { }
 
-export class ServiceUnavailableSubscriberApiError extends ApiError { }
+export class ServiceUnavailableApiError extends ApiError { }
 
-export class WrongArgumentSubscriberApiError extends ApiError { }
+export class WrongArgumentApiError extends ApiError { }
 
-export class ForbiddenSubcriberApiError extends ApiError { }
+export class UnknownApiError extends ApiError { }
 
 export function apiHandledException(error: any): Error {
-	throw new ServiceUnavailableSubscriberApiError();
+
+	if (error instanceof NoRecordPersistentStorageError) {
+		throw new WrongArgumentApiError(error.message, error);
+	}
+	if (error instanceof ConnectionPersistentStorageError) {
+		throw new ServiceUnavailableApiError(error.message, error);
+	}
+	if (error instanceof UnknownPersistentStorageError) {
+		throw new UnknownApiError(error.message, error);
+	}
+
+	throw new UnknownApiError("Unkwon error", error);
 }

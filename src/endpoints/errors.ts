@@ -1,6 +1,8 @@
 import * as express from "express";
 import { EnsureError } from "@zxteam/ensure";
-import { SqlNoSuchRecordError } from "@zxteam/sql";
+import { InnerError } from "@zxteam/errors";
+
+export abstract class EndpointError extends InnerError { }
 
 export function endpointHandledException(res: express.Response, error: any) {
 

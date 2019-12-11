@@ -74,40 +74,6 @@ export class PostgresPersistentStorage extends Initable implements PersistentSto
 			});
 			return;
 
-			const sqlCheck = "SELECT utc_delete_date, topic_security FROM topic WHERE name=$1;";
-
-			const topic = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-				return await sqlProvider.statement(sqlCheck).executeQuery(cancellationToken, topicData.topicName);
-			});
-
-			if (topic.length === 1) {
-				const topicSecurity = topic[0].get("topic_security").asString;
-
-				const topicSecurityKind = JSON.parse(topicSecurity).topicSecurityKind;
-				const topicSecurityToken = JSON.parse(topicSecurity).topicSecurityToken;
-
-				if (topicData.topicSecurity.kind !== topicSecurityKind
-					|| topicData.topicSecurity.token !== topicSecurityToken) {
-					// throw new ForbiddenPersistentStorageError("Wrong Security Kind or Security Token");
-				}
-
-				const deleteDate = topic[0].get("utc_delete_date").asNullableDate;
-				if (deleteDate) {
-					// Topic already deleted
-					// throw new BadRequestPersistentStorageError(`Topic ${topicData.topicName} already deleted`);
-				}
-			} else {
-				// Topic does not exist
-				throw new NoRecordPersistentStorageError(`Topic with this name '${topicData.topicName}' does not exist`);
-			}
-
-			const sqlDelete = "UPDATE topic SET utc_delete_date=(NOW() AT TIME ZONE 'utc') WHERE name=$1;";
-
-			await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
-				await sqlProvider.statement(sqlDelete).execute(cancellationToken, topicData.topicName);
-			});
-
-			return;
 		} catch (e) {
 			this._log.error(`deleteTopic Error: ${e.message}`);
 			throw storageHandledException(e);

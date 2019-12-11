@@ -90,19 +90,6 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 			const webhooks: Array<Webhook> = await this._api.getAvailableWebhooks(DUMMY_CANCELLATION_TOKEN, security);
 
-			const response: {
-				[topicName: string]: {
-					description: string;
-				};
-			} = {};
-
-			// for (const topic of topics) {
-			// 	response[topic[1].topicName] = {
-			// 		description: topic[1].topicDescription
-			// 	};
-			// }
-
-			// res.end(JSON.stringify(response, null, "\t") + "\n");
 			res.end(JSON.stringify(webhooks, null, "\t") + "\n");
 		} catch (e) {
 			this._log.error("getTopics fault", e);
