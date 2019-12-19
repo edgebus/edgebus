@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/notifier.service",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "ZXTeam's Notifier Service. Main responsibility is to deliver callback messages via WebHooks, AMQP, JMS, Slack, Telegram and other messaging solutions.",
 	"main": "./src/index.js",
 	"types": "./src/index.d.ts",
@@ -29,7 +29,7 @@
 	},
 	"dependencies": {
 		"@zxteam/cancellation": "^6.0.25",
-		"@zxteam/configuration": "^6.0.36",
+		"@zxteam/configuration": "^6.0.37",
 		"@zxteam/contract": "^6.0.40",
 		"@zxteam/disposable": "^6.0.23",
 		"@zxteam/ensure": "^6.0.23",
@@ -37,7 +37,7 @@
 		"@zxteam/hosting": "^6.0.41",
 		"@zxteam/launcher": "^6.0.26",
 		"@zxteam/logger": "^6.0.22",
-		"@zxteam/sql-postgres": "^6.0.41",
+		"@zxteam/sql-postgres": "^6.0.42",
 		"lodash": "^4.17.15",
 		"moment": "^2.24.0",
 		"uuid": "^3.3.3"
@@ -58,7 +58,8 @@
 		"clean": "zxbuild clean",
 		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/",
 		"start": "node src/app.js --config=service.config",
-		"test": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000"
+		"test": "true",
+		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000"
 	},
 	"private": true
 }
