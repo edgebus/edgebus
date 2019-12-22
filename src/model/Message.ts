@@ -7,6 +7,9 @@ export namespace Message {
 	}
 
 	export interface Data {
+		readonly headers: {
+			readonly [name: string]: string;
+		};
 		/**
 		 * https://en.wikipedia.org/wiki/Media_type
 		 */

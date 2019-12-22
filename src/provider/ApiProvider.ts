@@ -1,6 +1,6 @@
 import { CancellationToken } from "@zxteam/contract";
 import { Initable, Disposable } from "@zxteam/disposable";
-import { Inject, Provides, Singleton } from "@zxteam/launcher";
+import { Container, Provides, Singleton } from "@zxteam/launcher";
 import { logger } from "@zxteam/logger";
 
 // Providers
@@ -21,10 +21,9 @@ export abstract class ApiProvider extends Initable {
 
 @Provides(ApiProvider)
 class ApiProviderImpl extends ApiProvider {
-	@Inject
-	private readonly _storageProvider!: StorageProvider;
-	@Inject
-	private readonly _messageBusProvider!: MessageBusProvider;
+	// Do not use Inject inside providers to prevents circular dependency
+	private readonly _storageProvider: StorageProvider;
+	private readonly _messageBusProvider: MessageBusProvider;
 
 	private readonly _managementApi: ManagementApi;
 	private readonly _publisherApi: PublisherApi;
@@ -32,6 +31,9 @@ class ApiProviderImpl extends ApiProvider {
 
 	public constructor() {
 		super();
+
+		this._storageProvider = Container.get(StorageProvider);
+		this._messageBusProvider = Container.get(MessageBusProvider);
 
 		this._managementApi
 			= new ManagementApi(this._storageProvider.persistentStorage, logger.getLogger("ManagementApi"));

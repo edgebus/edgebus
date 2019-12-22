@@ -1,6 +1,6 @@
 import { Logger, CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
-import { Inject, Provides } from "@zxteam/launcher";
+import { Container, Provides } from "@zxteam/launcher";
 import { logger } from "@zxteam/logger";
 
 import * as _ from "lodash";
@@ -26,12 +26,6 @@ export abstract class MessageBusProvider extends Initable implements MessageBus 
 		}
 	}
 
-	public abstract get messageBus(): MessageBus;
-
-	public markChannelForDestory(cancellationToken: CancellationToken, topicName: string, subscriberId: string): Promise<void> {
-		return this.messageBus.markChannelForDestory(cancellationToken, topicName, subscriberId);
-	}
-
 	public publish(
 		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
 	): Promise<void> {
@@ -42,17 +36,20 @@ export abstract class MessageBusProvider extends Initable implements MessageBus 
 		return this.messageBus.retainChannel(cancellationToken, topicName, subscriberId);
 	}
 
+	protected abstract get messageBus(): MessageBus;
 }
 
 @Provides(MessageBusProvider)
 class MessageBusProviderImpl extends MessageBusProvider {
-	@Inject
-	private readonly configProvider!: ConfigurationProvider;
+	// Do not use Inject inside providers to prevents circular dependency
+	private readonly _configProvider: ConfigurationProvider;
 
 	private readonly _messageBus: MessageBusLocal;
 
 	public constructor() {
 		super();
+
+		this._configProvider = Container.get(ConfigurationProvider);
 
 		//const rabbitUrl: URL = this.configProvider.rabbit.url;
 		//const rabbitSsl: Configuration.SSL = this.configProvider.rabbit.ssl;
@@ -63,7 +60,7 @@ class MessageBusProviderImpl extends MessageBusProvider {
 		});
 	}
 
-	public get messageBus() { return this._messageBus; }
+	protected get messageBus() { return this._messageBus; }
 
 	protected async onInit(cancellationToken: CancellationToken) {
 		await this._messageBus.init(cancellationToken);

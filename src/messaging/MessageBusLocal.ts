@@ -20,12 +20,6 @@ export class MessageBusLocal extends Initable implements MessageBus {
 		this._channels = new Map();
 	}
 
-	public async markChannelForDestory(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
-	): Promise<void> {
-		// NOP
-	}
-
 	public async publish(
 		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
 	): Promise<void> {

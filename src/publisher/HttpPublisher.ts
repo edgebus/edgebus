@@ -85,8 +85,16 @@ export class HttpPublisher extends PublisherBase {
 
 			// TODO Validate final message by Topic's json schema
 
+			const messageHeaders: { [name: string]: string; } = {};
+			for (const [name, value] of _.entries(req.headers)) {
+				if (_.isString(value)) {
+					messageHeaders[name] = value;
+				}
+			}
+
 			const message: Message.Id & Message.Data = {
 				messageId: uuid(),
+				headers: Object.freeze(messageHeaders),
 				mediaType: "application/json",
 				messageBody: Buffer.from(JSON.stringify(finalMessageBody))
 			};

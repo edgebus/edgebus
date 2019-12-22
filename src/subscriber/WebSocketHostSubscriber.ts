@@ -44,8 +44,8 @@ export class WebSocketHostSubscriber extends Initable {
 			//messagesChannel.topicName,
 			opts.bindServers,
 			{
-				allowedProtocols: ["json-rpc"],
-				defaultProtocol: "json-rpc",
+				allowedProtocols: ["jsonrpc"],
+				defaultProtocol: "jsonrpc",
 				bindPath
 			},
 			opts.log

@@ -14,12 +14,6 @@ export interface MessageBus {
 		topicName: Topic["topicName"],
 		subscriberId: Subscriber["subscriberId"]
 	): Promise<MessageBus.Channel>;
-
-	markChannelForDestory(
-		cancellationToken: CancellationToken,
-		topicName: Topic["topicName"],
-		subscriberId: Subscriber["subscriberId"]
-	): Promise<void>;
 }
 
 export namespace MessageBus {

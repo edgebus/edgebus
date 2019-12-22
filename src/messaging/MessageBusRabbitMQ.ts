@@ -14,11 +14,6 @@ export class MessageBusRabbitMQ extends Initable implements MessageBus {
 
 		// TODO
 	}
-	public async  markChannelForDestory(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
-	): Promise<void> {
-		throw new InvalidOperationError("Not implemented yet");
-	}
 
 	public async publish(
 		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message

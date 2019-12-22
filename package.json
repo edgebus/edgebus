@@ -23,7 +23,7 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/lodash": "^4.14.149",
-		"@types/node": "^11.15.2",
+		"@types/node": "^11.15.3",
 		"@types/uuid": "^3.4.6",
 		"@zxnode/build": "^0.0.34"
 	},

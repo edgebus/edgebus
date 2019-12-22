@@ -1,6 +1,6 @@
 import { Logger, CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
-import { Inject, Provides, Singleton } from "@zxteam/launcher";
+import { Container, Provides, Singleton } from "@zxteam/launcher";
 import { logger } from "@zxteam/logger";
 
 import * as _ from "lodash";
@@ -27,16 +27,19 @@ export abstract class StorageProvider extends Initable {
 
 @Provides(StorageProvider)
 class StorageProviderImpl extends StorageProvider {
-	@Inject
-	private readonly configProvider!: ConfigurationProvider;
+	// Do not use Inject inside providers to prevents circular dependency
+	private readonly _configProvider: ConfigurationProvider;
 
 	private readonly _cacheStorage: StorageProvider["cacheStorage"];
 	private readonly _persistentStorage: PersistentStorage;
 
 	public constructor() {
 		super();
-		this._cacheStorage = null; //storageFactory(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
-		this._persistentStorage = new PostgresPersistentStorage(this.configProvider.notifierServiceOpts.persistentStorageURL, this.log);
+
+		this._configProvider = Container.get(ConfigurationProvider);
+
+		this._cacheStorage = null; //RedisCacheStorage(this.configProvider.cacheStorageURL, this.log);
+		this._persistentStorage = new PostgresPersistentStorage(this._configProvider.persistentStorageURL, this.log);
 	}
 
 	public get cacheStorage() { return this._cacheStorage; }

@@ -1,6 +1,6 @@
 import { Logger, CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
-import { Inject, Provides, Singleton } from "@zxteam/launcher";
+import { Container, Provides, Singleton } from "@zxteam/launcher";
 import { logger } from "@zxteam/logger";
 import * as hosting from "@zxteam/hosting";
 
@@ -37,14 +37,10 @@ export abstract class EndpointsProvider extends Initable {
 
 @Provides(EndpointsProvider)
 class EndpointsProviderImpl extends EndpointsProvider {
-	@Inject
-	public readonly configProvider!: ConfigurationProvider;
-
-	@Inject
-	private readonly _apiProvider!: ApiProvider;
-
-	@Inject
-	private readonly _hostingProvider!: HostingProvider;
+	// Do not use Inject inside providers to prevents circular dependency
+	private readonly _configProvider: ConfigurationProvider;
+	private readonly _apiProvider: ApiProvider;
+	private readonly _hostingProvider: HostingProvider;
 
 	private readonly _endpointInstances: Array<Initable>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
@@ -55,12 +51,17 @@ class EndpointsProviderImpl extends EndpointsProvider {
 		super();
 
 		this.log.info("Constructing endpoints...");
+
+		this._hostingProvider = Container.get(HostingProvider);
+		this._configProvider = Container.get(ConfigurationProvider);
+		this._apiProvider = Container.get(ApiProvider);
+
 		this._endpointInstances = [];
 
 		const publisherApiRestEndpoints: Array<PublisherApiRestEndpoint> = [];
 		const subscriberApiRestEndpoints: Array<SubscriberApiRestEndpoint> = [];
 
-		for (const endpoint of this.configProvider.endpoints) {
+		for (const endpoint of this._configProvider.endpoints) {
 
 			if (endpoint.type === "express-router-management" || endpoint.type === "express-router-publisher") {
 				throw new Error("Not supported yet");

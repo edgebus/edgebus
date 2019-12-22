@@ -1,5 +1,6 @@
+import { Logger, CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
-import { Inject, Provides, Singleton } from "@zxteam/launcher";
+import { Container, Provides, Singleton } from "@zxteam/launcher";
 import { logger } from "@zxteam/logger";
 import * as hosting from "@zxteam/hosting";
 
@@ -7,7 +8,6 @@ import * as express from "express";
 import * as _ from "lodash";
 
 import { ConfigurationProvider } from "./ConfigurationProvider";
-import { Logger, CancellationToken } from "@zxteam/contract";
 
 @Singleton
 export abstract class HostingProvider extends Initable {
@@ -33,8 +33,8 @@ export namespace HostingProvider {
 
 @Provides(HostingProvider)
 class HostingProviderImpl extends HostingProvider {
-	@Inject
-	public readonly configProvider!: ConfigurationProvider;
+	// Do not use Inject inside providers to prevents circular dependency
+	private readonly _configProvider: ConfigurationProvider;
 
 	private readonly _serverInstances: Array<{ name: string, server: hosting.WebServer, isOwnInstance: boolean }>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
@@ -43,7 +43,10 @@ class HostingProviderImpl extends HostingProvider {
 		super();
 
 		this.log.info("Constructing Web servers...");
-		this._serverInstances = this.configProvider.servers.map((serverOpts) => {
+
+		this._configProvider = Container.get(ConfigurationProvider);
+
+		this._serverInstances = this._configProvider.servers.map((serverOpts) => {
 			if (hosting.instanceofWebServer(serverOpts)) {
 				return { name: serverOpts.name, server: serverOpts, isOwnInstance: false };
 			}
