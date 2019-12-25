@@ -1,6 +1,6 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { InvalidOperationError, wrapErrorIfNeeded, ArgumentError } from "@zxteam/errors";
-import { Ensure, ensureFactory } from "@zxteam/ensure";
+import { Ensure, ensureFactory, EnsureError } from "@zxteam/ensure";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
@@ -11,6 +11,10 @@ import { BaseEndpoint } from "./BaseEndpoint";
 import { PublisherApi } from "../api/PublisherApi";
 import { Publisher } from "../model/Publisher";
 import { HttpPublisher } from "../publisher/HttpPublisher";
+import { Security } from "../model/Security";
+import { Topic } from "../model/Topic";
+import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
+import { endpointHandledException } from "./errors";
 
 const ensure: Ensure = ensureFactory();
 
@@ -49,6 +53,7 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 
 		this._router.use("/http/:httpPublisherUUID", this.pushMessage.bind(this));
 		this._router.get("/:publisherId", safeBinder(this.getPublisher.bind(this)));
+		this._router.post("/http", safeBinder(this.createPublisherHttp.bind(this)));
 		this._router.delete("/:publisherId", safeBinder(this.deletePublisher.bind(this)));
 	}
 
@@ -90,6 +95,45 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 		//this._api.getMessage(....);
 
 		return res.writeHead(500, "Not implemented yet").end();
+	}
+	private async createPublisherHttp(req: express.Request, res: express.Response): Promise<void> {
+		try {
+			const topicName = ensure.string(req.body.topic, "Сreate publisher http, req.body.topic field is not a string");
+			const kind: string = ensure.string(req.body.publisherSecurityKind, "Сreate publisher http, req.query.publisherSecurityKind field is not a string");
+			const token: string = ensure.string(req.body.publisherSecurityToken, "Сreate publisher http, req.query.publisherSecurityToken field is not a string");
+			const clientTrustedCA: string = ensure.string(req.body.ssl.clientTrustedCA, "Сreate publisher http, req.body.ssl.clientTrustedCA field is not a string");
+			const clientCommonName: string = ensure.string(req.body.ssl.clientCommonName, "Сreate publisher http, req.body.ssl.clientCommonName field is not a string");
+
+			if (kind !== "TOKEN") {
+				throw new EnsureError("Сreate publisher http, publisherSecurityKind field is not a TOKEN", kind);
+			}
+
+			const publisherSecurity: Security = { kind, token };
+
+			const topicData: Topic.Name & Publisher.Security & { sslOption: Publisher.Data["sslOption"] } = {
+				topicName,
+				publisherSecurity,
+				sslOption: {
+					clientTrustedCA,
+					clientCommonName
+				}
+			};
+
+			const publisher: Publisher = await this._api.createHttpPublisher(DUMMY_CANCELLATION_TOKEN, topicData);
+
+			const publisherUrl = new URL(req.protocol + "://" + req.host + req.originalUrl + "/" + publisher.publisherId);
+
+			return res
+				.status(201)
+				.header("Content-Type", "application/json")
+				.end(Buffer.from(JSON.stringify({
+					publisherId: publisher.publisherId,
+					url: publisherUrl
+				}), "utf-8"));
+
+		} catch (error) {
+			return endpointHandledException(res, error);
+		}
 	}
 	private async pushMessage(
 		req: express.Request, res: express.Response, next: express.NextFunction

@@ -15,7 +15,7 @@ export async function getByName(
 	const sqlRow: SqlResultRecord = await sqlProvider.statement(
 		"SELECT id, name, description, media_type, topic_security, "
 		+ "publisher_security, subscriber_security, utc_create_date, utc_delete_date "
-		+ "FROM topic WHERE name=$1;"
+		+ "FROM topic WHERE name=$1"
 	).executeSingle(cancellationToken, topicName);
 
 	return mapDbRow(sqlRow);
@@ -46,7 +46,7 @@ export async function save(
 	});
 
 	const sqlInsert
-		= "INSERT INTO topic (name, description, media_type, topic_security, publisher_security, subscriber_security) VALUES ($1, $2, $3, $4, $5, $6);";
+		= "INSERT INTO topic (name, description, media_type, topic_security, publisher_security, subscriber_security) VALUES ($1, $2, $3, $4, $5, $6)";
 	const sqlInsertValue = [
 		data.topicName,
 		data.topicDescription,
@@ -72,7 +72,7 @@ export async function updateDeleteDate(
 	topicName: Topic.Name["topicName"]
 ): Promise<void> {
 
-	const sql = "UPDATE topic SET utc_delete_date=(NOW() AT TIME ZONE 'utc') WHERE name=$1;";
+	const sql = "UPDATE topic SET utc_delete_date=(NOW() AT TIME ZONE 'utc') WHERE name=$1";
 
 	await sqlProvider.statement(sql).execute(cancellationToken, topicName);
 }
@@ -82,7 +82,7 @@ export async function isExsistByName(
 	topicName: Topic.Name["topicName"]
 ): Promise<boolean> {
 	const sqlRow: SqlData | null = await sqlProvider.statement(
-		"SELECT id FROM topic WHERE name=$1;"
+		"SELECT id FROM topic WHERE name=$1"
 	).executeScalarOrNull(cancellationToken, topicName);
 
 	return sqlRow ? true : false;
@@ -95,7 +95,7 @@ export async function getTopicByWebhookId(
 	const sqlRow: SqlResultRecord = await sqlProvider.statement(
 		"SELECT t.id, t.name, t.description, t.media_type, t.topic_security, t.publisher_security, "
 		+ "t.subscriber_security, t.utc_create_date, t.utc_delete_date FROM topic AS t "
-		+ "WHERE t.id=(SELECT w.topic_id FROM subscriber_webhook AS w WHERE w.webhook_id='$1');"
+		+ "WHERE t.id=(SELECT w.topic_id FROM subscriber_webhook AS w WHERE w.webhook_id='$1')"
 	).executeSingle(cancellationToken, webhookId);
 
 	return mapDbRow(sqlRow);

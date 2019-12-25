@@ -1,5 +1,5 @@
 import { CancellationToken } from "@zxteam/contract";
-import { Disposable, Initable } from "@zxteam/contract";
+import { Initable } from "@zxteam/contract";
 
 import { Publisher } from "../model/Publisher";
 import { Subscriber } from "../model/Subscriber";
@@ -12,6 +12,11 @@ export interface PersistentStorage extends Initable {
 		cancellationToken: CancellationToken,
 		topicData: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security
 	): Promise<Topic>;
+
+	addPublisherHttp(
+		cancellationToken: CancellationToken,
+		topicData: Topic.Name & { sslOption: Publisher.Data["sslOption"] }
+	): Promise<Publisher>;
 
 	deleteTopic(cancellationToken: CancellationToken,
 		topicData: Topic.Name & Topic.Security

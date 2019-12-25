@@ -1,17 +1,16 @@
-import { CancellationToken, Logger, PublisherChannel } from "@zxteam/contract";
+import { CancellationToken, Logger } from "@zxteam/contract";
 import { Initable } from "@zxteam/disposable";
 import { InvalidOperationError } from "@zxteam/errors";
 
 // Models
-import { Message } from "../model/Message";
 import { Publisher } from "../model/Publisher";
 import { Security } from "../model/Security";
 import { Topic } from "../model/Topic";
-import { Webhook } from "../model/Webhook";
 
 import { MessageBusProvider } from "../provider/MessageBusProvider";
 
 import { PersistentStorage } from "../data/PersistentStorage";
+import { UnknownApiError, apiHandledException } from "../index";
 
 /**
  * Publisher API allows to send messages to the topics
@@ -29,28 +28,28 @@ export class PublisherApi extends Initable {
 	}
 
 	public async createHttpPublisher(
-		cancellationToken: CancellationToken, topic: Topic.Name & { readonly subscriberSecurity: Security }, webhookData: Webhook.Data
-	): Promise<void> {
+		cancellationToken: CancellationToken, publisher: Topic.Name & Publisher.Security & { sslOption: Publisher.Data["sslOption"] }
+	): Promise<Publisher> {
+		this._log.debug(`Run createHttpPublisher with topic: ${publisher}`);
 
-		// >>>>
-		// {
-		// 	"topic": "MyGitLabPushTopic.yourdomain.ltd",
-		// 	"publisherSecurity": {
-		// 		"kind": "TOKEN",
-		// 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-		// 	},
-		// 	"ssl": {
-		// 		... optional
-		// 	}
-		// }
+		try {
+			const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, publisher.topicName);
 
-		// <<<<
-		// {
-		// 	"publisherId": "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-		// 	"url": "https://notifier.pub.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
-		// }
+			const publisherSecurityKind = topicRecord.publisherSecurity.kind;
+			const publisherSecurityToken = topicRecord.publisherSecurity.token;
 
-		throw new InvalidOperationError("Not implemented yet");
+			if (publisher.publisherSecurity.kind !== publisherSecurityKind
+				|| publisher.publisherSecurity.token !== publisherSecurityToken) {
+				throw new UnknownApiError(`Wrong Publisher Security Kind or Publisher Security Token`);
+			}
+
+			const publisherModel: Publisher = await this._storage.addPublisherHttp(cancellationToken, publisher);
+
+			return publisherModel;
+		} catch (e) {
+			this._log.error(`createHttpPublisher Error: ${e.message}`);
+			throw apiHandledException(e);
+		}
 	}
 
 	public async destroyPublisher(
@@ -73,7 +72,6 @@ export class PublisherApi extends Initable {
 
 		throw new InvalidOperationError("Not implemented yet");
 	}
-
 
 	protected async onInit() {
 		// nop

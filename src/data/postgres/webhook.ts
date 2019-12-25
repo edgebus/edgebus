@@ -25,7 +25,7 @@ export async function getByTopicIdActive(
 	const record: SqlResultRecord = await sqlProvider.statement(
 		"SELECT w.id, t.name, w.webhook_id, w.url, w.trusted_ca_certificate, w.header_token, w.utc_create_date, w.utc_delete_date "
 		+ "FROM subscriber_webhook AS w INNER JOIN topic AS t ON t.id=w.topic_id "
-		+ "WHERE w.topic_id=(SELECT id FROM topic WHERE name=$1) AND w.url=$2 AND w.utc_delete_date IS NULL;"
+		+ "WHERE w.topic_id=(SELECT id FROM topic WHERE name=$1) AND w.url=$2 AND w.utc_delete_date IS NULL"
 	).executeSingle(cancellationToken, topicName, url.toString());
 
 	return mapDbRow(record);
@@ -40,7 +40,7 @@ export async function getBySecurity(
 		+ "FROM subscriber_webhook AS w "
 		+ "INNER JOIN topic AS t ON t.id=w.topic_id "
 		+ "WHERE topic_id=(SELECT id FROM topic AS t "
-		+ "WHERE t.subscriber_security=$1);"
+		+ "WHERE t.subscriber_security=$1)"
 	).executeQuery(cancellationToken, JSON.stringify(security));
 
 	return records.map((record) => mapDbRow(record));
@@ -66,7 +66,7 @@ export async function save(
 
 	await sqlProvider.statement(
 		"INSERT INTO subscriber_webhook (webhook_id, topic_id, url, trusted_ca_certificate, header_token) "
-		+ "VALUES ($1, (SELECT id FROM topic WHERE name = $2), $3, $4, $5);"
+		+ "VALUES ($1, (SELECT id FROM topic WHERE name = $2), $3, $4, $5)"
 	).execute(cancellationToken, webhookId, topicName, webhookUrl, trustCaCertificate, headerToken);
 
 	const sqlRow: Webhook = await getByTopicIdActive(cancellationToken, sqlProvider, topicName, webhookData.url);

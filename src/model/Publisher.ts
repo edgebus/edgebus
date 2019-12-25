@@ -9,7 +9,7 @@ export namespace Publisher {
 	}
 
 	export interface Data {
-		//
+		readonly sslOption: SslModel;
 	}
 
 	export interface Security {
@@ -18,6 +18,16 @@ export namespace Publisher {
 		 */
 		readonly publisherSecurity: SecurityModel;
 	}
+
+	export interface Timestamps {
+		readonly createAt: Date;
+		readonly deleteAt: Date | null;
+	}
 }
 
-export type Publisher = Publisher.Id & Publisher.Data & Publisher.Security;
+interface SslModel {
+	readonly clientTrustedCA: string;
+	readonly clientCommonName: string;
+}
+
+export type Publisher = Publisher.Id & Publisher.Data & Publisher.Timestamps & Publisher.Security;

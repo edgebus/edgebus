@@ -1,6 +1,6 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
-import { Initable, Disposable } from "@zxteam/disposable";
-import { SqlProvider, SqlResultRecord, SqlConstraintError } from "@zxteam/sql";
+import { Initable } from "@zxteam/disposable";
+import { SqlProvider } from "@zxteam/sql";
 import { PostgresProviderFactory } from "@zxteam/sql-postgres";
 import { PersistentStorage } from "./PersistentStorage";
 
@@ -20,6 +20,7 @@ import { Publisher } from "../model/Publisher";
 
 // Simple function for postgres database
 import * as topicFunctions from "./postgres/topic";
+import * as publishFunctions from "./postgres/publisherHttp";
 import * as webhookFunctions from "./postgres/webhook";
 import { Security } from "../model/Security";
 
@@ -54,6 +55,27 @@ export class PostgresPersistentStorage extends Initable implements PersistentSto
 			});
 
 			return topic;
+		} catch (e) {
+			this._log.error(`addTopic Error: ${e.message}`);
+			throw storageHandledException(e);
+		}
+
+	}
+
+	public async addPublisherHttp(
+		cancellationToken: CancellationToken,
+		topicData: Topic.Name & { sslOption: Publisher.Data["sslOption"] }
+	): Promise<Publisher> {
+		this._log.debug(`Run addPublisherHttp with topicName: ${topicData}`);
+		this.verifyInitializedAndNotDisposed();
+
+		try {
+
+			const publisher: Publisher = await this._sqlProviderFactory.usingProvider(cancellationToken, async (sqlProvider: SqlProvider) => {
+				return await publishFunctions.save(cancellationToken, sqlProvider, topicData);
+			});
+
+			return publisher;
 		} catch (e) {
 			this._log.error(`addTopic Error: ${e.message}`);
 			throw storageHandledException(e);
