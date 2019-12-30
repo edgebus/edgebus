@@ -430,3 +430,71 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 ```
 wscat --connect wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
 ```
+
+
+
+https://api.telegram.org/bot957337804:AAEfHSDXPDKJtWbyHB-e09579zmC-_h7SLE/getMe
+https://api.telegram.org/bot957337804:AAEfHSDXPDKJtWbyHB-e09579zmC-_h7SLE/getUpdates
+```json
+{"ok":true,"result":[
+	{"update_id":554918867,"message":{"message_id":2,"from":{"id":867014308,"is_bot":false,"first_name":"Maksym","last_name":"Anurin","username":"theanurin","language_code":"en"},"chat":{"id":867014308,"first_name":"Maksym","last_name":"Anurin","username":"theanurin","type":"private"},"date":1577446910,"text":"\u043f\u0440\u0438\u0432\u0435\u0442"}},
+	{"update_id":554918868,
+"message":{"message_id":5,"from":{"id":867014308,"is_bot":false,"first_name":"Maksym","last_name":"Anurin","username":"theanurin","language_code":"en"},"chat":{"id":-383073836,"title":"CPEmulatorNotification","type":"group","all_members_are_administrators":true},"date":1577447428,"group_chat_created":true}},{"update_id":554918869,
+"message":{"message_id":6,"from":{"id":867014308,"is_bot":false,"first_name":"Maksym","last_name":"Anurin","username":"theanurin","language_code":"en"},"chat":{"id":-383073836,"title":"CPEmulatorNotification","type":"group","all_members_are_administrators":true},"date":1577447460,"new_chat_participant":{"id":384745746,"is_bot":false,"first_name":"Vladimir","last_name":"Syniakin"},"new_chat_member":{"id":384745746,"is_bot":false,"first_name":"Vladimir","last_name":"Syniakin"},"new_chat_members":[{"id":384745746,"is_bot":false,"first_name":"Vladimir","last_name":"Syniakin"}]}},{"update_id":554918870,
+"message":{"message_id":7,"from":{"id":867014308,"is_bot":false,"first_name":"Maksym","last_name":"Anurin","username":"theanurin","language_code":"en"},"chat":{"id":-383073836,"title":"CPEmulatorNotification","type":"group","all_members_are_administrators":true},"date":1577447489,"text":"/start","entities":[{"offset":0,"length":6,"type":"bot_command"}]}}]}
+```
+
+curl -v -X POST --header "Content-Type: application/json" --data '{"chat_id":"-383073836","text":"`hello` amigo","parse_mode":"Markdown"}' https://api.telegram.org/bot957337804:AAEfHSDXPDKJtWbyHB-e09579zmC-_h7SLE/sendMessage
+
+
+
+```bash
+curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/getMe
+```
+```json
+{"ok":true,"result":{"id":1036097604,"is_bot":true,"first_name":"ZXTeam\u2019s Notifier","username":"zxteam_notifier_bot"}}
+```
+
+```bash
+curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/getUpdates
+```
+```json
+{
+	"ok":true,
+	"result":[
+		{
+			"update_id":807119542,
+			"message":{
+				"message_id":1,
+				"from":{
+					"id":867014308,
+					"is_bot":false,
+					"first_name":"Maksym",
+					"last_name":"Anurin",
+					"username":"theanurin"
+				},
+				"chat":{
+					"id":-347824729,"title":"ZXTeam\u2019s Notifier",
+					"type":"group",
+					"all_members_are_administrators":true
+				},
+				"date":1577452660,
+				"group_chat_created":true
+			}
+		},
+		{
+			"update_id":807119543,
+			"message":{
+				"message_id":2,
+				"from":{"id":277364372,"is_bot":false,"first_name":"Serhii","last_name":"Zghama","username":"serhiizghama"},
+				"chat":{"id":-347824729,"title":"ZXTeam\u2019s Notifier","type":"group","all_members_are_administrators":true},
+				"date":1577452697,
+				"text":"/hello",
+				"entities":[{"offset":0,"length":6,"type":"bot_command"}]
+			}
+		}
+]
+}
+`
+
+curl -v -X POST --header "Content-Type: application/json" --data '{"chat_id":"-347824729","text":"{\\"echo\\":\\"hello\\",\\"time\\":\\"2019-12-27T13:25:18.341Z\\",\\"version\\":\\"0.0.3\\"}"}' https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/sendMessage

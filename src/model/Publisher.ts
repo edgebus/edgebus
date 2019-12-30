@@ -1,6 +1,28 @@
-import { Security as SecurityModel } from "./Security";
+import { PublisherSecurity } from "./PublisherSecurity";
+import { Topic } from "./Topic";
+import { DestroySecurity } from "./DestroySecurity";
+import { Converter } from "./Convert";
 
 export namespace Publisher {
+	export const enum Kind {
+		/**
+		 * Allows to publish messages via HTTP request
+		 */
+		Http = "HTTP",
+
+		/**
+		 * Allows to publish messages via WebSocket. `Notifier` will connect to your WebSocket server to get messages.
+		 */
+		WebSocketClient = "WEB_SOCKET_CLIENT",
+
+
+		/**
+		 * Allows to publish messages via WebSocket. `Notifier` will listen for client's connections.
+		 */
+		WebSocketHost = "WEB_SOCKET_HOST"
+	}
+
+
 	/**
 	 * The ID of the Webhook
 	 */
@@ -8,15 +30,50 @@ export namespace Publisher {
 		readonly publisherId: string;
 	}
 
-	export interface Data {
-		readonly sslOption: SslModel;
+	export interface Instance {
+		readonly kind: Kind;
+
+		/**
+		 * Name of the attached topic
+		 */
+		readonly topicName: Topic.Name["topicName"];
+
+		readonly createAt: Date;
 	}
 
-	export interface Security {
+	export interface Base extends DestroySecurity {
+		readonly converts: ReadonlyArray<Converter>;
+	}
+
+	export interface Http extends Base {
+		readonly kind: Kind.Http;
+
 		/**
-		 * ID of attached topic for the Webhook
+		 * The publisher will trust for clients that provide SSL certificate issued by this authorities
 		 */
-		readonly publisherSecurity: SecurityModel;
+		readonly clientSslTrustedCaCertificates: string | null;
+
+		/**
+		 * The publisher will trust for clients that provide SSL certificate with this common name
+		 */
+		readonly clientSslCommonName: string | null;
+
+		/**
+		 * The publisher will trust for clients that provide all of these headers
+		 */
+		readonly mandatoryHeaders: { readonly [name: string]: string };
+	}
+
+	export interface WebSocketHost extends Base {
+		readonly kind: Kind.WebSocketHost;
+
+		// TBD
+	}
+
+	export interface WebSocketClient extends Base {
+		readonly kind: Kind.WebSocketClient;
+
+		// TBD
 	}
 
 	export interface Timestamps {
@@ -30,4 +87,8 @@ interface SslModel {
 	readonly clientCommonName: string;
 }
 
-export type Publisher = Publisher.Id & Publisher.Data & Publisher.Timestamps & Publisher.Security;
+export type Publisher<
+	TImpl extends Publisher.Http | Publisher.WebSocketClient | Publisher.WebSocketHost =
+	(Publisher.Http | Publisher.WebSocketClient | Publisher.WebSocketHost)
+	>
+	= Publisher.Id & Publisher.Instance & PublisherSecurity & TImpl;

@@ -1,15 +1,21 @@
 {
 	"topic": "MyTopic",
-	"publisherSecurityKind": "TOKEN",
-	"publisherSecurityToken": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+	"publisherSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	},
+	"kind": "Http",
 	"ssl": {
 		"clientTrustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----",
 		"clientCommonName": "CN-MyPublisherSystem"
 	},
-	"transformers": [
+	"mandatoryHeaders": {
+		"X-Gitlab-Token": "My Strong Secret Token"
+	},
+	"converts": [
 		{
 			"kind": "javascript",
-			"code": "your transformer code"
+			"code": "async function convert(input) { /* your convert code here */ return input; }"
 		}
 	]
 }

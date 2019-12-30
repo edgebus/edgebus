@@ -3,19 +3,20 @@ import { SqlProvider, SqlResultRecord, SqlData } from "@zxteam/sql";
 import { InvalidOperationError } from "@zxteam/errors";
 
 import { Topic } from "../../model/Topic";
-import { Webhook } from "../../model/Webhook";
-import { Publisher } from "../../model/Publisher";
 import { Subscriber } from "../../model/Subscriber";
+import { TopicSecurity } from "../../model/TopicSecurity";
+import { PublisherSecurity } from "../../model/PublisherSecurity";
+import { SubscriberSecurity } from "../../model/SubscriberSecurity";
 
 export async function getByName(
 	cancellationToken: CancellationToken,
 	sqlProvider: SqlProvider,
-	topicName: Topic.Name["topicName"]
+	topicName: Topic["topicName"]
 ): Promise<Topic> {
 	const sqlRow: SqlResultRecord = await sqlProvider.statement(
 		"SELECT id, name, description, media_type, topic_security, "
 		+ "publisher_security, subscriber_security, utc_create_date, utc_delete_date "
-		+ "FROM topic WHERE name=$1"
+		+ "FROM topic WHERE name = $1;"
 	).executeSingle(cancellationToken, topicName);
 
 	return mapDbRow(sqlRow);
@@ -30,7 +31,7 @@ export async function getAll(
 export async function save(
 	cancellationToken: CancellationToken,
 	sqlProvider: SqlProvider,
-	data: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security
+	data: Topic.Data & TopicSecurity & PublisherSecurity & SubscriberSecurity
 ): Promise<Topic> {
 	const topicSecurity = JSON.stringify({
 		kind: data.topicSecurity.kind,
@@ -57,7 +58,7 @@ export async function save(
 	];
 
 	const sqlSelect
-		= "SELECT id, name, description, media_type, topic_security, publisher_security, subscriber_security, utc_create_date, utc_delete_date FROM topic WHERE name=$1";
+		= "SELECT id, name, description, media_type, topic_security, publisher_security, subscriber_security, utc_create_date, utc_delete_date FROM topic WHERE name = $1";
 	const sqlSelectValue = [data.topicName];
 
 	await sqlProvider.statement(sqlInsert).execute(cancellationToken, ...sqlInsertValue);
@@ -72,7 +73,7 @@ export async function updateDeleteDate(
 	topicName: Topic.Name["topicName"]
 ): Promise<void> {
 
-	const sql = "UPDATE topic SET utc_delete_date=(NOW() AT TIME ZONE 'utc') WHERE name=$1";
+	const sql = "UPDATE topic SET utc_delete_date=(NOW() AT TIME ZONE 'utc') WHERE name = $1";
 
 	await sqlProvider.statement(sql).execute(cancellationToken, topicName);
 }
@@ -90,13 +91,13 @@ export async function isExsistByName(
 export async function getTopicByWebhookId(
 	cancellationToken: CancellationToken,
 	sqlProvider: SqlProvider,
-	webhookId: Webhook.Id["webhookId"]
+	subscriberId: Subscriber["subscriberId"]
 ): Promise<Topic> {
 	const sqlRow: SqlResultRecord = await sqlProvider.statement(
 		"SELECT t.id, t.name, t.description, t.media_type, t.topic_security, t.publisher_security, "
 		+ "t.subscriber_security, t.utc_create_date, t.utc_delete_date FROM topic AS t "
 		+ "WHERE t.id=(SELECT w.topic_id FROM subscriber_webhook AS w WHERE w.webhook_id='$1')"
-	).executeSingle(cancellationToken, webhookId);
+	).executeSingle(cancellationToken, subscriberId);
 
 	return mapDbRow(sqlRow);
 }
@@ -111,6 +112,7 @@ function mapDbRow(sqlRow: SqlResultRecord): Topic {
 
 	const topic: Topic = {
 		topicName: sqlRow.get("name").asString,
+		topicDomain: null,
 		topicDescription: sqlRow.get("description").asString,
 		mediaType: sqlRow.get("media_type").asString,
 		topicSecurity: JSON.parse(topicSecurity),

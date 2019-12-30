@@ -5,8 +5,7 @@ import { logger } from "@zxteam/logger";
 
 import * as _ from "lodash";
 
-import { Configuration } from "./Configuration";
-
+// Providers
 import { ConfigurationProvider } from "./provider/ConfigurationProvider";
 import { StorageProvider } from "./provider/StorageProvider";
 import { EndpointsProvider } from "./provider/EndpointsProvider";
@@ -16,12 +15,11 @@ import { HttpPublisher } from "./publisher/HttpPublisher";
 import { WebSocketHostSubscriber } from "./subscriber/WebSocketHostSubscriber";
 import { MessageBus } from "./messaging/MessageBus";
 
-
+// Re-export stuff for embedded user's
 export * from "./api/errors";
 export { ManagementApi } from "./api/ManagementApi";
 export { PublisherApi } from "./api/PublisherApi";
 export { SubscriberApi } from "./api/SubscriberApi";
-
 export { ApiProvider } from "./provider/ApiProvider";
 export { ConfigurationProvider } from "./provider/ConfigurationProvider";
 //export { EndpointsProvider } from "./provider/EndpointsProvider";
@@ -133,6 +131,7 @@ export default async function (cancellationToken: CancellationToken, config: nul
 				const httpPublisherInstance: HttpPublisher = new HttpPublisher(
 					{
 						topicName: hardcodedPublisherConfiguration.topicName,
+						topicDomain: null,
 						topicDescription: hardcodedPublisherConfiguration.topicDescription,
 						mediaType: "application/json"
 					},

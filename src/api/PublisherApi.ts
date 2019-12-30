@@ -28,28 +28,29 @@ export class PublisherApi extends Initable {
 	}
 
 	public async createHttpPublisher(
-		cancellationToken: CancellationToken, publisher: Topic.Name & Publisher.Security & { sslOption: Publisher.Data["sslOption"] }
-	): Promise<Publisher> {
-		this._log.debug(`Run createHttpPublisher with topic: ${publisher}`);
+		cancellationToken: CancellationToken, topic: Topic.Name & { readonly publisherSecurity: Security }
+	): Promise<Publisher.Id> {
 
-		try {
-			const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, publisher.topicName);
+		// try {
+		// 	const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, publisher.topicName);
 
-			const publisherSecurityKind = topicRecord.publisherSecurity.kind;
-			const publisherSecurityToken = topicRecord.publisherSecurity.token;
+		// 	const publisherSecurityKind = topicRecord.publisherSecurity.kind;
+		// 	const publisherSecurityToken = topicRecord.publisherSecurity.token;
 
-			if (publisher.publisherSecurity.kind !== publisherSecurityKind
-				|| publisher.publisherSecurity.token !== publisherSecurityToken) {
-				throw new UnknownApiError(`Wrong Publisher Security Kind or Publisher Security Token`);
-			}
+		// 	if (publisher.publisherSecurity.kind !== publisherSecurityKind
+		// 		|| publisher.publisherSecurity.token !== publisherSecurityToken) {
+		// 		throw new UnknownApiError(`Wrong Publisher Security Kind or Publisher Security Token`);
+		// 	}
 
-			const publisherModel: Publisher = await this._storage.addPublisherHttp(cancellationToken, publisher);
+		// 	const publisherModel: Publisher = await this._storage.addPublisherHttp(cancellationToken, publisher);
 
-			return publisherModel;
-		} catch (e) {
-			this._log.error(`createHttpPublisher Error: ${e.message}`);
-			throw apiHandledException(e);
-		}
+		// 	return publisherModel;
+		// } catch (e) {
+		// 	this._log.error(`createHttpPublisher Error: ${e.message}`);
+		// 	throw apiHandledException(e);
+		// }
+
+		throw new InvalidOperationError("Not implemented yet");
 	}
 
 	public async destroyPublisher(

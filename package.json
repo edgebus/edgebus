@@ -28,16 +28,16 @@
 		"@zxnode/build": "^0.0.34"
 	},
 	"dependencies": {
-		"@zxteam/cancellation": "^6.0.25",
-		"@zxteam/configuration": "^6.0.37",
+		"@zxteam/cancellation": "^6.0.40",
+		"@zxteam/configuration": "^6.0.40",
 		"@zxteam/contract": "^6.0.40",
-		"@zxteam/disposable": "^6.0.23",
-		"@zxteam/ensure": "^6.0.23",
-		"@zxteam/errors": "^6.0.33",
-		"@zxteam/hosting": "^6.0.41",
+		"@zxteam/disposable": "^6.0.40",
+		"@zxteam/ensure": "^6.0.40",
+		"@zxteam/errors": "^6.0.41",
+		"@zxteam/hosting": "^6.0.42",
 		"@zxteam/launcher": "^6.0.26",
-		"@zxteam/logger": "^6.0.22",
-		"@zxteam/sql-postgres": "^6.0.43",
+		"@zxteam/logger": "^6.0.40",
+		"@zxteam/sql-postgres": "^6.0.48",
 		"lodash": "^4.17.15",
 		"moment": "^2.24.0",
 		"uuid": "^3.3.3"
@@ -56,10 +56,12 @@
 	"homepage": "https://github.com/zxteamorg/node.notifier.service",
 	"scripts": {
 		"clean": "zxbuild clean",
-		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/",
-		"start": "node src/app.js --config=service.config",
+		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/ && cp -a bin .dist/ && cp -a database .dist/",
+		"start": "node bin/notifier-service.js --config=notifier-service.config",
 		"test": "true",
-		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000"
+		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000",
+		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\"",
+		"migrate-database:local": "env persistentStorageMigration.url=\"postgres://postgres:@127.0.0.1:5432/db?schema=notifier\" node bin/migrate-database.js"
 	},
 	"private": true
 }

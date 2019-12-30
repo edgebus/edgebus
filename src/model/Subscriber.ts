@@ -1,23 +1,57 @@
-import { Security as SecurityModel } from "./Security";
+import { SubscriberSecurity } from "./SubscriberSecurity";
+import { Topic } from "./Topic";
 
 export namespace Subscriber {
+	export const enum Kind {
+		Webhook = "Webhook",
+		WebSocketHost = "WebSocketHost"
+	}
+
 	/**
-	 * The ID of the Webhook
+	 * The ID of the Subscriber
 	 */
 	export interface Id {
 		readonly subscriberId: string;
 	}
 
-	export interface Data {
-		//
+	export interface Instance {
+		readonly kind: Kind;
+
+		/**
+		 * Name of the attached topic
+		 */
+		readonly topicName: Topic.Name["topicName"];
+
+		readonly createAt: Date;
 	}
 
-	export interface Security {
+	export interface Webhook {
+		readonly kind: Kind.Webhook;
+
 		/**
-		 * ID of attached topic for the Webhook
+		 * The hook URL
 		 */
-		readonly subscriberSecurity: SecurityModel;
+		readonly url: URL;
+
+		/**
+		 * Trusted ca certificate from client
+		 */
+		readonly trustedCaCertificate: string | null;
+
+		/**
+		 * Header Token from client
+		 */
+		readonly headerToken: string;
+	}
+	export interface WebSocketHost {
+		readonly kind: Kind.Webhook;
+
+		/**
+		 * Trusted ca certificate from client
+		 */
+		readonly trustedCaCertificate: string | null;
 	}
 }
 
-export type Subscriber = Subscriber.Id & Subscriber.Data & Subscriber.Security;
+export type Subscriber<TImpl extends Subscriber.Webhook | Subscriber.WebSocketHost = (Subscriber.Webhook | Subscriber.WebSocketHost)>
+	= Subscriber.Id & Subscriber.Instance & SubscriberSecurity & TImpl;

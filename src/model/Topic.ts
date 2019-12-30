@@ -1,6 +1,6 @@
-import { Security as SecurityModel } from "./Security";
-import { Publisher } from "./Publisher";
-import { Subscriber } from "./Subscriber";
+import { PublisherSecurity } from "./PublisherSecurity";
+import { SubscriberSecurity } from "./SubscriberSecurity";
+import { TopicSecurity } from "./TopicSecurity";
 
 export namespace Topic {
 
@@ -9,6 +9,11 @@ export namespace Topic {
  		* Human readable name defines a `Topic`'s purpose
  		*/
 		readonly topicName: string;
+
+		/**
+		 * Used for domain owned topics
+		 */
+		readonly topicDomain: string | null;
 	}
 	export interface Description {
 		/**
@@ -29,11 +34,8 @@ export namespace Topic {
 		readonly deleteAt: Date | null;
 	}
 
-	export interface Security {
-		readonly topicSecurity: SecurityModel;
-	}
 
 	export type Data = Name & Description & MediaType;
 }
 
-export type Topic = Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security & Topic.Timestamps;
+export type Topic = Topic.Data & TopicSecurity & PublisherSecurity & SubscriberSecurity & Topic.Timestamps;

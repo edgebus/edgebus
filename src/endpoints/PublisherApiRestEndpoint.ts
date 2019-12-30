@@ -108,28 +108,30 @@ export class PublisherApiRestEndpoint extends BaseEndpoint {
 				throw new EnsureError("Сreate publisher http, publisherSecurityKind field is not a TOKEN", kind);
 			}
 
-			const publisherSecurity: Security = { kind, token };
+			// const publisherSecurity: Security = { kind, token };
 
-			const topicData: Topic.Name & Publisher.Security & { sslOption: Publisher.Data["sslOption"] } = {
-				topicName,
-				publisherSecurity,
-				sslOption: {
-					clientTrustedCA,
-					clientCommonName
-				}
-			};
+			// const topicData: Topic.Name & Publisher.Security & { sslOption: Publisher.Data["sslOption"] } = {
+			// 	topicName,
+			// 	publisherSecurity,
+			// 	sslOption: {
+			// 		clientTrustedCA,
+			// 		clientCommonName
+			// 	}
+			// };
 
-			const publisher: Publisher = await this._api.createHttpPublisher(DUMMY_CANCELLATION_TOKEN, topicData);
+			// const publisher: Publisher = await this._api.createHttpPublisher(DUMMY_CANCELLATION_TOKEN, topicData);
 
-			const publisherUrl = new URL(req.protocol + "://" + req.host + req.originalUrl + "/" + publisher.publisherId);
+			// const publisherUrl = new URL(req.protocol + "://" + req.host + req.originalUrl + "/" + publisher.publisherId);
 
-			return res
-				.status(201)
-				.header("Content-Type", "application/json")
-				.end(Buffer.from(JSON.stringify({
-					publisherId: publisher.publisherId,
-					url: publisherUrl
-				}), "utf-8"));
+			// return res
+			// 	.status(201)
+			// 	.header("Content-Type", "application/json")
+			// 	.end(Buffer.from(JSON.stringify({
+			// 		publisherId: publisher.publisherId,
+			// 		url: publisherUrl
+			// 	}), "utf-8"));
+
+			return res.writeHead(500, "Not implemented yet").end();
 
 		} catch (error) {
 			return endpointHandledException(res, error);

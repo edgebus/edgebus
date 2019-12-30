@@ -1,44 +1,52 @@
 import { CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/contract";
 
-import { Publisher } from "../model/Publisher";
+import { PublisherSecurity } from "../model/PublisherSecurity";
 import { Subscriber } from "../model/Subscriber";
-import { Topic } from "../model/Topic";
-import { Webhook } from "../model/Webhook";
+import { SubscriberSecurity } from "../model/SubscriberSecurity";
+import { TopicSecurity } from "../model/TopicSecurity";
 import { Security } from "../model/Security";
+import { Topic } from "../model/Topic";
 
 export interface PersistentStorage extends Initable {
 	addTopic(
 		cancellationToken: CancellationToken,
-		topicData: Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security
+		topicData: Topic.Data & TopicSecurity & PublisherSecurity & SubscriberSecurity
 	): Promise<Topic>;
 
-	addPublisherHttp(
-		cancellationToken: CancellationToken,
-		topicData: Topic.Name & { sslOption: Publisher.Data["sslOption"] }
-	): Promise<Publisher>;
+	// addPublisherHttp(
+	// 	cancellationToken: CancellationToken,
+	// 	topicData: Topic.Name & { sslOption: Publisher.Data["sslOption"] }
+	// ): Promise<Publisher>;
 
 	deleteTopic(cancellationToken: CancellationToken,
-		topicData: Topic.Name & Topic.Security
+		topicData: Topic.Name & TopicSecurity
 	): Promise<void>;
 
 	addSubscriberWebhook(
 		cancellationToken: CancellationToken,
 		topicName: Topic.Name["topicName"],
-		webhookData: Webhook.Data
-	): Promise<Webhook>;
+		webhookData: Subscriber.Webhook
+	): Promise<Subscriber<Subscriber.Webhook>>;
 
-	getSubscriberWebhook(cancellationToken: CancellationToken, webhook: Webhook.Id["webhookId"]): Promise<Webhook>;
-
-	getTopicByWebhookId(cancellationToken: CancellationToken, webhook: Webhook.Id["webhookId"]): Promise<Topic>;
-
-	getTopicByName(cancellationToken: CancellationToken, topicName: Topic.Name["topicName"]): Promise<Topic>;
-
-	getAvailableWebhooks(cancellationToken: CancellationToken, subscriberSecurity: Security): Promise<Array<Webhook>>;
-
-	removeSubscriberWebhook(
+	getSubscriber(
 		cancellationToken: CancellationToken,
-		webhookId: Webhook.Id["webhookId"]
+		subscriberId: Subscriber["subscriberId"]
+	): Promise<Subscriber>;
+
+	getTopicBySubscriber(
+		cancellationToken: CancellationToken,
+		subscriberId: Subscriber["subscriberId"]
+	): Promise<Topic>;
+
+	getTopicByName(
+		cancellationToken: CancellationToken,
+		topicName: Topic.Name["topicName"]
+	): Promise<Topic>;
+
+	removeSubscriber(
+		cancellationToken: CancellationToken,
+		subscriberId: Subscriber["subscriberId"]
 	): Promise<void>;
 }
 

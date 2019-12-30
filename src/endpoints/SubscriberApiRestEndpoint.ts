@@ -8,7 +8,6 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 
 import { SubscriberApi } from "../api/SubscriberApi";
-import { Webhook } from "../model/Webhook";
 
 import { endpointHandledException } from "./errors";
 // TO REMOVE
@@ -16,6 +15,7 @@ import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { Topic } from "../model/Topic";
 import { Subscriber } from "../model/Subscriber";
 import { Security } from "../model/Security";
+import { SubscriberSecurity } from "../model/SubscriberSecurity";
 
 const ensure: Ensure = ensureFactory();
 
@@ -88,9 +88,9 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 			const security: Security = { kind, token };
 
-			const webhooks: Array<Webhook> = await this._api.getAvailableWebhooks(DUMMY_CANCELLATION_TOKEN, security);
-
-			res.end(JSON.stringify(webhooks, null, "\t") + "\n");
+			const subscribers: Array<Subscriber> = await this._api.list(DUMMY_CANCELLATION_TOKEN, security);
+			// TODO: repack response
+			res.end(JSON.stringify(subscribers, null, "\t") + "\n");
 		} catch (e) {
 			this._log.error("getTopics fault", e);
 			res.status(500).end();
@@ -99,6 +99,9 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 	private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 		try {
+			// TODO: Read topicDomain from client's certificate
+			const topicDomain: string | null = null;
+
 			const reqTopic: string = ensure.string(req.body.topic, "subscribeWebhook, request.body.topic field is not a string");
 
 			const subscriberSecurity: any = ensure.object(req.body.subscriberSecurity, "subscribeWebhook, request.body.subscriberSecurity field is not a string");
@@ -113,25 +116,28 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 				throw new EnsureError("subscribeWebhook, subscriberSecurity.kind field is not a TOKEN", kind);
 			}
 
-			const topicData: Topic.Name & Subscriber.Security = {
+			const topicData: Topic.Name = {
 				topicName: reqTopic,
-				subscriberSecurity: { kind, token }
+				topicDomain
 			};
 
-			const webhookData: Webhook.Data = {
+			const webhookData: Subscriber.Webhook & SubscriberSecurity = {
+				kind: Subscriber.Kind.Webhook,
+				subscriberSecurity: { kind, token },
 				url: new URL(reqUrl),
 				trustedCaCertificate: trustedCA,
 				headerToken
 			};
 
-			const webhook: Webhook = await this._api.subscriberWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
+			const webhook: Subscriber<Subscriber.Webhook> = await this._api
+				.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
 
 			return res
 				.status(201)
 				.header("Content-Type", "application/json")
 				.end(Buffer.from(JSON.stringify({
 					kind: "webhook",
-					subscriberId: webhook.webhookId,
+					subscriberId: webhook.subscriberId,
 					topic: webhook.topicName,
 					url: webhook.url,
 					trustedCA: webhook.trustedCaCertificate,
@@ -157,26 +163,29 @@ export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
 				return res.writeHead(400, "Bad subscriberSecurityKind").end();
 			}
 
-			const topicData: Topic.Name & Subscriber.Security = {
+			const topicData: Topic.Name = {
 				topicName: reqTopic,
+				topicDomain: null
+			};
+			const webhookData: Subscriber.Webhook & SubscriberSecurity = {
+				kind: Subscriber.Kind.Webhook,
 				subscriberSecurity: {
 					kind: subscriberSecurityKind,
 					token: subscriberSecurityToken
-				}
-			};
-			const webhookData: Webhook.Data = {
+				},
 				url: new URL(reqUrl),
 				trustedCaCertificate: trustedCA,
 				headerToken
 			};
 
-			const webhook: Webhook = await this._api.subscriberWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
+			const webhook: Subscriber<Subscriber.Webhook> = await this._api
+				.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
 
 			return res
 				.status(201)
 				.header("Content-Type", "application/json")
 				.end(Buffer.from(JSON.stringify({
-					webhookId: webhook.webhookId,
+					webhookId: webhook.subscriberId,
 					url: webhook.url,
 					topicName: webhook.topicName
 				}), "utf-8"));

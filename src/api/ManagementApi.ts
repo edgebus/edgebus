@@ -12,6 +12,9 @@ import { Subscriber } from "../model/Subscriber";
 import { TOKEN_BYTES_LEN } from "../constants";
 import { PersistentStorage } from "../data/PersistentStorage";
 import { apiHandledException, WrongArgumentApiError } from "./errors";
+import { TopicSecurity } from "../model/TopicSecurity";
+import { PublisherSecurity } from "../model/PublisherSecurity";
+import { SubscriberSecurity } from "../model/SubscriberSecurity";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
@@ -27,13 +30,14 @@ export class ManagementApi extends Initable {
 	}
 
 	public async createTopic(
-		cancellationToken: CancellationToken, topic: Topic.Name & Topic.Data
-	): Promise<Topic.Name & Topic.Security & Publisher.Security & Subscriber.Security> {
+		cancellationToken: CancellationToken, topic: Topic.Data
+	): Promise<Topic> {
 		this._log.debug(`Run createTopic with topic: ${topic}`);
 
 		try {
-			const fullTopicData: Topic.Name & Topic.Data & Topic.Security & Publisher.Security & Subscriber.Security = {
-				topicName: topic.topicName, topicDescription: topic.topicDescription, mediaType: topic.mediaType,
+			const fullTopicData: Topic.Name & Topic.Data & TopicSecurity & PublisherSecurity & SubscriberSecurity = {
+				topicName: topic.topicName, topicDomain: topic.topicDomain,
+				topicDescription: topic.topicDescription, mediaType: topic.mediaType,
 				topicSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
 				publisherSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") },
 				subscriberSecurity: { kind: "TOKEN", token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex") }

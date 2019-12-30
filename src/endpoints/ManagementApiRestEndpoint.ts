@@ -9,6 +9,8 @@ import * as bodyParser from "body-parser";
 import { ManagementApi } from "../api/ManagementApi";
 import { endpointHandledException } from "./errors";
 import { Topic } from "../model/Topic";
+import { InvalidOperationError } from "@zxteam/errors";
+import { TopicSecurity } from "../model/TopicSecurity";
 const ensure: Ensure = ensureFactory();
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
@@ -71,32 +73,34 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 			const topicDescription = ensure.string(req.body.description, "Create topic, request.body.description field is not a string");
 			const mediaType = ensure.string(req.body.mediaType, "Create topic, request.body.mediaType field is not a string");
 
-			const topicData: Topic.Data = { topicName, topicDescription, mediaType };
+			// const topicData: Topic.Data = { topicName, topicDescription, mediaType };
 
-			const topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
+			// const topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
 
-			return res
-				.status(201)
-				.header("Content-Type", "application/json")
-				.end(Buffer.from(JSON.stringify({
-					name: topic.topicName,
-					topicSecurity: {
-						kind: topic.topicSecurity.kind,
-						token: topic.topicSecurity.token
+			// return res
+			// 	.status(201)
+			// 	.header("Content-Type", "application/json")
+			// 	.end(Buffer.from(JSON.stringify({
+			// 		name: topic.topicName,
+			// 		topicSecurity: {
+			// 			kind: topic.topicSecurity.kind,
+			// 			token: topic.topicSecurity.token
 
-					},
-					publisherSecurity: {
-						kind: topic.publisherSecurity.kind,
-						token: topic.publisherSecurity.token
+			// 		},
+			// 		publisherSecurity: {
+			// 			kind: topic.publisherSecurity.kind,
+			// 			token: topic.publisherSecurity.token
 
-					},
-					subscriberSecurity: {
-						kind: topic.subscriberSecurity.kind,
-						token: topic.subscriberSecurity.token
+			// 		},
+			// 		subscriberSecurity: {
+			// 			kind: topic.subscriberSecurity.kind,
+			// 			token: topic.subscriberSecurity.token
 
-					}
-				}), "utf-8"));
+			// 		}
+			// 	}), "utf-8"));
 
+
+			throw new InvalidOperationError("Method does not have implementation yet");
 		} catch (error) {
 			return endpointHandledException(res, error);
 		}
@@ -110,7 +114,6 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 		const token = req.body.topicSecurityToken;
 
 		if (!topicName || !kind || !token) {
-
 			const message = {
 				error: "required parameters",
 				message: "[name, topicSecurityKind, topicSecurityToken] is missing"
@@ -122,8 +125,9 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				.end(JSON.stringify(message));
 		}
 
-		const topic: Topic.Name & Topic.Security = {
+		const topic: Topic.Name & TopicSecurity = {
 			topicName,
+			topicDomain: null,
 			topicSecurity: { kind, token }
 		};
 
