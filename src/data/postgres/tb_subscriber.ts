@@ -3,12 +3,81 @@ import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
 import { InvalidOperationError } from "@zxteam/errors";
 
 import { v4 as uuid } from "uuid";
+import * as _ from "lodash";
 
 // Model
 import { Topic } from "../../model/Topic";
-import { Security } from "../../model/Security";
 import { Subscriber } from "../../model/Subscriber";
-import { SubscriberSecurity } from "../../model/SubscriberSecurity";
+
+// SQL Tools
+import * as sqlToolsTopicSubscriberSecurity from "./tb_topic_subscriber_secuity";
+import * as sqlToolsTopic from "./tb_topic";
+import { NoRecordPersistentStorageError } from "../errors";
+import { Security } from "../../model/Security";
+
+export async function create<TVariant extends Subscriber.DataVariant>(
+	cancellationToken: CancellationToken,
+	sqlProvider: SqlProvider,
+	subscriberSecurity: Security,
+	variant: TVariant
+): Promise<Subscriber<TVariant>> {
+	const topicId: Topic.Id = variant.topicId;
+
+	const topicSubscriberSecuityId: number | null = await sqlToolsTopicSubscriberSecurity
+		.findNonDeletedRecordId(cancellationToken, sqlProvider, topicId, subscriberSecurity);
+
+	if (topicSubscriberSecuityId === null) {
+		throw new NoRecordPersistentStorageError("Topic's subscriber security record was not found");
+	}
+
+	const subscriberUuid: string = uuid();
+
+	const sqlCreateAtScalar = await sqlProvider.statement(
+		'INSERT INTO "tb_subscriber" (' +
+		'"subscriber_uuid", "topic_subscriber_secuity_id", "data"' +
+		") VALUES ($1, $2, $4) " +
+		'RETURNING "utc_create_date"'
+	).executeScalar(cancellationToken,
+		subscriberUuid, topicSubscriberSecuityId, JSON.stringify(_.omit(variant, "topicId"))
+	);
+
+	const dirtyCreateAt: Date = sqlCreateAtScalar.asDate;
+	const createAt: Date = new Date(
+		dirtyCreateAt.getTime() - dirtyCreateAt.getTimezoneOffset() * 60000
+	); // convert from UTC
+
+	const subscriber: Subscriber<TVariant> = {
+		...variant,
+		kind: variant.kind,
+		converters: variant.converters,
+		topicId: variant.topicId,
+		subscriberId: subscriberUuid,
+		createAt,
+		deleteAt: null
+	};
+
+	return subscriber;
+}
+
+// export async function setDeleteDate(
+// 	cancellationToken: CancellationToken,
+// 	sqlProvider: SqlProvider,
+// 	subscriberId: Subscriber["subscriberId"]
+// ): Promise<void> {
+// 	const currentDeleteDate = await sqlProvider
+// 		.statement('SELECT "utc_delete_date" FROM "tb_subscriber" WHERE "name" = $1')
+// 		.executeScalar(cancellationToken, subscriberId);
+
+// 	if (currentDeleteDate.asNullableDate !== null) {
+// 		throw new InvalidOperationError(
+// 			`Wrong operation. A delete date of subscriber '${subscriberId}' already set. Update not allowed.`
+// 		);
+// 	}
+
+// 	await sqlProvider.statement(
+// 		`UPDATE "tb_subscriber" SET "utc_delete_date"=(NOW() AT TIME ZONE 'utc') WHERE "name" = $1`
+// 	).execute(cancellationToken, subscriberId);
+// }
 
 // export namespace Webhook {
 // 	export interface Id {

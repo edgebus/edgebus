@@ -10,7 +10,6 @@ import { Topic } from "../model/Topic";
 import { MessageBusProvider } from "../provider/MessageBusProvider";
 
 import { PersistentStorage } from "../data/PersistentStorage";
-import { UnknownApiError, apiHandledException } from "../index";
 
 /**
  * Publisher API allows to send messages to the topics
@@ -28,7 +27,7 @@ export class PublisherApi extends Initable {
 	}
 
 	public async createHttpPublisher(
-		cancellationToken: CancellationToken, topic: Topic.Name & { readonly publisherSecurity: Security }
+		cancellationToken: CancellationToken, topic: Topic.Id & { readonly publisherSecurity: Security }
 	): Promise<Publisher.Id> {
 
 		// try {

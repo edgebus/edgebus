@@ -1,52 +1,64 @@
 import { CancellationToken } from "@zxteam/contract";
 import { Initable } from "@zxteam/contract";
 
-import { PublisherSecurity } from "../model/PublisherSecurity";
+import { Publisher } from "../model/Publisher";
 import { Subscriber } from "../model/Subscriber";
-import { SubscriberSecurity } from "../model/SubscriberSecurity";
-import { TopicSecurity } from "../model/TopicSecurity";
-import { Security } from "../model/Security";
 import { Topic } from "../model/Topic";
+import { Security } from "../model/Security";
 
 export interface PersistentStorage extends Initable {
-	addTopic(
+
+	createPublisher<TDataVariant extends Publisher.DataVariant>(
 		cancellationToken: CancellationToken,
-		topicData: Topic.Data & TopicSecurity & PublisherSecurity & SubscriberSecurity
+		publisherSecurity: Security,
+		variant: TDataVariant
+	): Promise<Publisher<TDataVariant>>;
+
+	createSubscriber<TDataVariant extends Subscriber.DataVariant>(
+		cancellationToken: CancellationToken,
+		subscriberSecurity: Security,
+		variant: TDataVariant
+	): Promise<Subscriber<TDataVariant>>;
+
+	createTopic(
+		cancellationToken: CancellationToken,
+		topicSecurity: Security,
+		topicData: Topic.Id & Topic.Data
 	): Promise<Topic>;
 
-	// addPublisherHttp(
+	listTopics(
+		cancellationToken: CancellationToken,
+		domain: string | null
+	): Promise<Array<Topic>>;
+
+	// getSubscriber(
 	// 	cancellationToken: CancellationToken,
-	// 	topicData: Topic.Name & { sslOption: Publisher.Data["sslOption"] }
-	// ): Promise<Publisher>;
+	// 	subscriberId: Subscriber["subscriberId"]
+	// ): Promise<Subscriber>;
 
-	deleteTopic(cancellationToken: CancellationToken,
-		topicData: Topic.Name & TopicSecurity
-	): Promise<void>;
+	// getTopic(
+	// 	cancellationToken: CancellationToken,
+	// 	topic: Topic.Id
+	// ): Promise<Topic>;
 
-	addSubscriberWebhook(
-		cancellationToken: CancellationToken,
-		topicName: Topic.Name["topicName"],
-		webhookData: Subscriber.Webhook
-	): Promise<Subscriber<Subscriber.Webhook>>;
+	// getTopicBySubscriber(
+	// 	cancellationToken: CancellationToken,
+	// 	subscriberId: Subscriber["subscriberId"]
+	// ): Promise<Topic>;
 
-	getSubscriber(
-		cancellationToken: CancellationToken,
-		subscriberId: Subscriber["subscriberId"]
-	): Promise<Subscriber>;
+	// removePublish(
+	// 	cancellationToken: CancellationToken,
+	// 	publisherId: Publisher["publisherId"]
+	// ): Promise<void>;
 
-	getTopicBySubscriber(
-		cancellationToken: CancellationToken,
-		subscriberId: Subscriber["subscriberId"]
-	): Promise<Topic>;
+	// removeSubscriber(
+	// 	cancellationToken: CancellationToken,
+	// 	subscriberId: Subscriber["subscriberId"]
+	// ): Promise<void>;
 
-	getTopicByName(
-		cancellationToken: CancellationToken,
-		topicName: Topic.Name["topicName"]
-	): Promise<Topic>;
-
-	removeSubscriber(
-		cancellationToken: CancellationToken,
-		subscriberId: Subscriber["subscriberId"]
-	): Promise<void>;
+	// removeTopic(
+	// 	cancellationToken: CancellationToken,
+	// 	topic: Topic.Id
+	// ): Promise<void>;
 }
 

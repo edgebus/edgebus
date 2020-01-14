@@ -35,7 +35,7 @@ export class HttpPublisher extends PublisherBase {
 	}
 
 	public constructor(
-		topic: Topic.Name & Topic.Data,
+		topic: Topic.Id & Topic.Data,
 		publisherId: Publisher["publisherId"],
 		messageBus: MessageBus, opts?: HttpPublisher.Opts
 	) {
@@ -51,7 +51,7 @@ export class HttpPublisher extends PublisherBase {
 		}
 		this.router = Router({ strict: true });
 		//this.router.get("/", ())
-		switch (topic.mediaType) {
+		switch (topic.topicMediaType) {
 			case "application/json":
 				this.router.use(bodyParser.json({
 					// TODO
@@ -59,7 +59,7 @@ export class HttpPublisher extends PublisherBase {
 				this.router.use(this._handleMessageApplicationJson.bind(this));
 				break;
 			default:
-				throw new ArgumentError("topic", `Not supported mediaType: ${topic.mediaType}`);
+				throw new ArgumentError("topic", `Not supported mediaType: ${topic.topicMediaType}`);
 		}
 	}
 

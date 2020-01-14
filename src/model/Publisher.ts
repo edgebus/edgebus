@@ -1,7 +1,6 @@
-import { PublisherSecurity } from "./PublisherSecurity";
 import { Topic } from "./Topic";
-import { DestroySecurity } from "./DestroySecurity";
 import { Converter } from "./Convert";
+import { Security } from "./Security";
 
 export namespace Publisher {
 	export const enum Kind {
@@ -22,7 +21,6 @@ export namespace Publisher {
 		WebSocketHost = "WEB_SOCKET_HOST"
 	}
 
-
 	/**
 	 * The ID of the Webhook
 	 */
@@ -30,22 +28,17 @@ export namespace Publisher {
 		readonly publisherId: string;
 	}
 
-	export interface Instance {
-		readonly kind: Kind;
-
+	export interface Data {
 		/**
 		 * Name of the attached topic
 		 */
-		readonly topicName: Topic.Name["topicName"];
+		readonly topicId: Topic.Id;
 
-		readonly createAt: Date;
+		readonly kind: Kind;
+		readonly converters: ReadonlyArray<Converter>;
 	}
 
-	export interface Base extends DestroySecurity {
-		readonly converts: ReadonlyArray<Converter>;
-	}
-
-	export interface Http extends Base {
+	export interface Http extends Data {
 		readonly kind: Kind.Http;
 
 		/**
@@ -64,31 +57,30 @@ export namespace Publisher {
 		readonly mandatoryHeaders: { readonly [name: string]: string };
 	}
 
-	export interface WebSocketHost extends Base {
+	export interface WebSocketHost extends Data {
 		readonly kind: Kind.WebSocketHost;
 
 		// TBD
 	}
 
-	export interface WebSocketClient extends Base {
+	export interface WebSocketClient extends Data {
 		readonly kind: Kind.WebSocketClient;
 
 		// TBD
 	}
 
-	export interface Timestamps {
+	export type DataVariant = Http | WebSocketClient | WebSocketHost;
+
+	export interface Instance extends Id, Data {
 		readonly createAt: Date;
 		readonly deleteAt: Date | null;
 	}
 }
 
-interface SslModel {
-	readonly clientTrustedCA: string;
-	readonly clientCommonName: string;
-}
+// interface SslModel {
+// 	readonly clientTrustedCA: string;
+// 	readonly clientCommonName: string;
+// }
 
-export type Publisher<
-	TImpl extends Publisher.Http | Publisher.WebSocketClient | Publisher.WebSocketHost =
-	(Publisher.Http | Publisher.WebSocketClient | Publisher.WebSocketHost)
-	>
-	= Publisher.Id & Publisher.Instance & PublisherSecurity & TImpl;
+export type Publisher<TVariant extends Publisher.DataVariant = Publisher.DataVariant>
+	= Publisher.Instance & TVariant;

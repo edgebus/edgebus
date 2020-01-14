@@ -1,8 +1,10 @@
-import { SubscriberSecurity } from "./SubscriberSecurity";
+import { Security } from "./Security";
 import { Topic } from "./Topic";
+import { Converter } from "./Convert";
 
 export namespace Subscriber {
 	export const enum Kind {
+		Telegram = "Telegram",
 		Webhook = "Webhook",
 		WebSocketHost = "WebSocketHost"
 	}
@@ -14,18 +16,21 @@ export namespace Subscriber {
 		readonly subscriberId: string;
 	}
 
-	export interface Instance {
-		readonly kind: Kind;
-
+	export interface Data {
 		/**
 		 * Name of the attached topic
 		 */
-		readonly topicName: Topic.Name["topicName"];
+		readonly topicId: Topic.Id;
 
-		readonly createAt: Date;
+		readonly kind: Kind;
+		readonly converters: ReadonlyArray<Converter>;
 	}
 
-	export interface Webhook {
+	export interface Telegram extends Data {
+		readonly kind: Kind.Telegram;
+		readonly todo: string | null;
+	}
+	export interface Webhook extends Data {
 		readonly kind: Kind.Webhook;
 
 		/**
@@ -43,7 +48,7 @@ export namespace Subscriber {
 		 */
 		readonly headerToken: string;
 	}
-	export interface WebSocketHost {
+	export interface WebSocketHost extends Data {
 		readonly kind: Kind.Webhook;
 
 		/**
@@ -51,7 +56,14 @@ export namespace Subscriber {
 		 */
 		readonly trustedCaCertificate: string | null;
 	}
+
+	export type DataVariant = Telegram | Webhook | WebSocketHost;
+
+	export interface Instance extends Id, Data {
+		readonly createAt: Date;
+		readonly deleteAt: Date | null;
+	}
 }
 
-export type Subscriber<TImpl extends Subscriber.Webhook | Subscriber.WebSocketHost = (Subscriber.Webhook | Subscriber.WebSocketHost)>
-	= Subscriber.Id & Subscriber.Instance & SubscriberSecurity & TImpl;
+export type Subscriber<TVariant extends Subscriber.DataVariant = Subscriber.DataVariant>
+	= Subscriber.Instance & TVariant;

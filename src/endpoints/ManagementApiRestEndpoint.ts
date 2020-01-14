@@ -1,6 +1,7 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
 import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { ensureFactory, Ensure } from "@zxteam/ensure";
+import { InvalidOperationError } from "@zxteam/errors";
 import * as hosting from "@zxteam/hosting";
 
 import * as express from "express";
@@ -9,8 +10,7 @@ import * as bodyParser from "body-parser";
 import { ManagementApi } from "../api/ManagementApi";
 import { endpointHandledException } from "./errors";
 import { Topic } from "../model/Topic";
-import { InvalidOperationError } from "@zxteam/errors";
-import { TopicSecurity } from "../model/TopicSecurity";
+
 const ensure: Ensure = ensureFactory();
 
 export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
@@ -58,8 +58,9 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				return handler;
 			}
 
+			router.get("/topic", safeBinder(this.listTopics.bind(this)));
 			router.post("/topic", safeBinder(this.createTopic.bind(this)));
-			router.delete("/topic/:name", safeBinder(this.destroyTopic.bind(this)));
+			//router.delete("/topic/:name", safeBinder(this.destroyTopic.bind(this)));
 		}
 	}
 
@@ -69,76 +70,89 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
 		try {
-			const topicName = ensure.string(req.body.name, "Create topic, request.body.name field is not a string");
-			const topicDescription = ensure.string(req.body.description, "Create topic, request.body.description field is not a string");
-			const mediaType = ensure.string(req.body.mediaType, "Create topic, request.body.mediaType field is not a string");
+			const topicDomain: string | null = null; // TODO get from CN of the cert
 
-			// const topicData: Topic.Data = { topicName, topicDescription, mediaType };
+			const topicName = ensure.string(req.body.name, "Create topic, 'name' should be a string");
+			const topicDescription = ensure.string(req.body.description, "Create topic, 'description' should be a string");
+			const topicMediaType = ensure.string(req.body.mediaType, "Create topic, 'mediaType' should be a string");
 
-			// const topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
-
-			// return res
-			// 	.status(201)
-			// 	.header("Content-Type", "application/json")
-			// 	.end(Buffer.from(JSON.stringify({
-			// 		name: topic.topicName,
-			// 		topicSecurity: {
-			// 			kind: topic.topicSecurity.kind,
-			// 			token: topic.topicSecurity.token
-
-			// 		},
-			// 		publisherSecurity: {
-			// 			kind: topic.publisherSecurity.kind,
-			// 			token: topic.publisherSecurity.token
-
-			// 		},
-			// 		subscriberSecurity: {
-			// 			kind: topic.subscriberSecurity.kind,
-			// 			token: topic.subscriberSecurity.token
-
-			// 		}
-			// 	}), "utf-8"));
-
-
-			throw new InvalidOperationError("Method does not have implementation yet");
-		} catch (error) {
-			return endpointHandledException(res, error);
-		}
-
-	}
-
-	private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {
-
-		const topicName = req.params.name;
-		const kind = req.body.topicSecurityKind;
-		const token = req.body.topicSecurityToken;
-
-		if (!topicName || !kind || !token) {
-			const message = {
-				error: "required parameters",
-				message: "[name, topicSecurityKind, topicSecurityToken] is missing"
+			const topicData: Topic.Id & Topic.Data = {
+				topicDomain,
+				topicName,
+				topicDescription,
+				topicMediaType
 			};
 
+			const topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
+
 			return res
-				.status(400)
+				.status(201)
 				.header("Content-Type", "application/json")
-				.end(JSON.stringify(message));
+				.end(Buffer.from(JSON.stringify({
+					name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,
+					mediaType: topic.topicMediaType,
+					description: topic.topicDescription,
+					createAt: topic.createAt.toISOString(),
+					deleteAt: topic.deleteAt !== null ? topic.deleteAt.toISOString() : null
+				}), "utf-8"));
+		} catch (error) {
+			return endpointHandledException(res, error);
 		}
 
-		const topic: Topic.Name & TopicSecurity = {
-			topicName,
-			topicDomain: null,
-			topicSecurity: { kind, token }
-		};
+	}
 
+	private async listTopics(req: express.Request, res: express.Response): Promise<void> {
 		try {
+			const domain: string | null = null; // TODO get from CN of the cert
 
-			await this._api.destroyTopic(DUMMY_CANCELLATION_TOKEN, topic);
+			const topics: Array<Topic> = await this._api.listTopics(DUMMY_CANCELLATION_TOKEN, domain);
 
-			return res.writeHead(200, "Delete").end();
+			const responseData = topics.map(topic => ({
+				name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,
+				mediaType: topic.topicMediaType,
+				description: topic.topicDescription,
+				createAt: topic.createAt.toISOString(),
+				deleteAt: topic.deleteAt !== null ? topic.deleteAt.toISOString() : null
+			}));
 
+			res.status(200).end(JSON.stringify(responseData), "utf-8");
 		} catch (error) {
 			return endpointHandledException(res, error);
 		}
 	}
+
+	// private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {
+
+	// 	const topicName = req.params.name;
+	// 	const kind = req.body.topicSecurityKind;
+	// 	const token = req.body.topicSecurityToken;
+
+	// 	if (!topicName || !kind || !token) {
+	// 		const message = {
+	// 			error: "required parameters",
+	// 			message: "[name, topicSecurityKind, topicSecurityToken] is missing"
+	// 		};
+
+	// 		return res
+	// 			.status(400)
+	// 			.header("Content-Type", "application/json")
+	// 			.end(JSON.stringify(message));
+	// 	}
+
+	// 	const topic: Topic.Id & TopicSecurity = {
+	// 		topicName,
+	// 		topicDomain: null,
+	// 		topicSecurity: { kind, token }
+	// 	};
+
+	// 	try {
+
+	// 		await this._api.destroyTopic(DUMMY_CANCELLATION_TOKEN, topic);
+
+	// 		return res.writeHead(200, "Delete").end();
+
+	// 	} catch (error) {
+	// 		return endpointHandledException(res, error);
+	// 	}
+	// }
 }

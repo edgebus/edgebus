@@ -5,7 +5,7 @@ export abstract class PublisherBase {
 	public readonly publisherId: Publisher["publisherId"];
 	private readonly _topicName: Topic["topicName"];
 
-	public constructor(topic: Topic.Name, publisherId: Publisher["publisherId"]) {
+	public constructor(topic: Topic.Id, publisherId: Publisher["publisherId"]) {
 		this.publisherId = publisherId;
 		this._topicName = topic.topicName;
 	}

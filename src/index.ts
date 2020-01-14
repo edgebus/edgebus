@@ -133,7 +133,7 @@ export default async function (cancellationToken: CancellationToken, config: nul
 						topicName: hardcodedPublisherConfiguration.topicName,
 						topicDomain: null,
 						topicDescription: hardcodedPublisherConfiguration.topicDescription,
-						mediaType: "application/json"
+						topicMediaType: "application/json"
 					},
 					hardcodedPublisherConfiguration.publisherId,
 					messageBusProvider,

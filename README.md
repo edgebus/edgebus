@@ -23,30 +23,30 @@ Release from tag
 
 | Title                                       | URL                                                     |
 |---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org/docs                    |
-| Managment API                               | https://notifier.zxteam.org/management              |
-| Publisher API                               | https://notifier.zxteam.org/publisher               |
-| Subscriber API                              | https://notifier.zxteam.org/subscriber              |
+| Self-hosted docs                            | https://notifier.zxteam.org/docs                        |
+| Managment API                               | https://notifier.zxteam.org/management                  |
+| Publisher API                               | https://notifier.zxteam.org/publisher                   |
+| Subscriber API                              | https://notifier.zxteam.org/subscriber                  |
 
 ### Presentation
 Usually latest tag (sometimes `master` branch)
 
 | Title                                       | URL                                                     |
 |---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org:10443/docs              |
-| Managment API                               | https://notifier.zxteam.org:10443/management        |
-| Publisher API                               | https://notifier.zxteam.org:10443/publisher         |
-| Subscriber API                              | https://notifier.zxteam.org:10443/subscriber        |
+| Self-hosted docs                            | https://notifier.zxteam.org:10443/docs                  |
+| Managment API                               | https://notifier.zxteam.org:10443/management            |
+| Publisher API                               | https://notifier.zxteam.org:10443/publisher             |
+| Subscriber API                              | https://notifier.zxteam.org:10443/subscriber            |
 
 ### Evolution
 Usually `master` branch (sometimes `dev` branch)
 
 | Title                                       | URL                                                     |
 |---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org:20443/docs              |
-| Managment API                               | https://notifier.zxteam.org:20443/management        |
-| Publisher API                               | https://notifier.zxteam.org:20443/publisher         |
-| Subscriber API                              | https://notifier.zxteam.org:20443/subscriber        |
+| Self-hosted docs                            | https://notifier.zxteam.org:20443/docs                  |
+| Managment API                               | https://notifier.zxteam.org:20443/management            |
+| Publisher API                               | https://notifier.zxteam.org:20443/publisher             |
+| Subscriber API                              | https://notifier.zxteam.org:20443/subscriber            |
 
 
 ## General information
@@ -175,7 +175,40 @@ graph TD
 
 ### Setup
 
+#### List Topics
+##### Request for public topic
+```bash
+$ curl --verbose --request GET https://notifier.zxteam.org/management/topic
+```
+
+##### Request for private topic
+```bash
+$ curl --verbose --key ./admin-key.pem --cert ./admin-cert.pem --request GET https://notifier.zxteam.org/management/topic
+```
+
+##### Response
+```json
+[
+	{
+		"name": "MyGitLabPushTopic.yourdomain.ltd",
+		"mediaType":"application/json",
+		"description":"...",
+		"createAt":"2020-01-14T22:17:32.324Z",
+		"deleteAt":null
+	},
+	{
+		"name": "MyGitLabPushTopic2.yourdomain.ltd",
+		"mediaType":"application/json",
+		"description":"...",
+		"createAt":"2020-01-14T22:17:32.324Z",
+		"deleteAt":null
+	},
+	...
+]
+```
+
 #### Create Topic
+##### Body
 ```bash
 $ cat docs/topic/create-topic.json
 ```
@@ -189,21 +222,22 @@ $ cat docs/topic/create-topic.json
 	}
 }
 ```
+
+##### Request for public topic
+```bash
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/management/topic --data @docs/topic/create-topic.json
+```
+
+##### Request for private topic
 ```bash
 $ curl --verbose --key ./admin-key.pem --cert ./admin-cert.pem --request POST --header 'Content-Type: application/json'  https://notifier.zxteam.org/management/topic --data @docs/topic/create-topic.json
 ```
+
+##### Response
 ```json
 {
 	"name": "MyGitLabPushTopic.yourdomain.ltd",
-	"topicSecurity": {
-		"kind": "TOKEN",
-		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	},
-	"publisherSecurity": {
-		"kind": "TOKEN",
-		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	},
-	"subscriberSecurity": {
+	"security": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	}
@@ -252,7 +286,7 @@ $ cat docs/publisher/delete-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
 ```
 ```json
 {
@@ -280,7 +314,7 @@ $ cat docs/publisher/create-http-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/http --data @docs/publisher/create-http-publisher.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/management/publisher/http --data @docs/publisher/create-http-publisher.json
 ```
 ```json
 {
@@ -297,7 +331,7 @@ curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam
 ## Subscribers
 ### List subscribers (GET)
 ```bash
-$ curl --verbose --request GET 'https://notifier.zxteam.org/subscriber?subscriberSecurity.kind=TOKEN&subscriberSecurity.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+$ curl --verbose --request GET 'https://notifier.zxteam.org/management/subscriber?security.kind=TOKEN&security.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 ```json
 [
@@ -326,14 +360,14 @@ $ cat docs/subscriber/delete-subscriber.json
 ```
 ```json
 {
-	"subscriberSecurity": {
+	"security": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	}
 }
 ```
 ```bash
-$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
 ```
 ```json
 {

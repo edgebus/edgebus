@@ -1,13 +1,11 @@
-import { PublisherSecurity } from "./PublisherSecurity";
-import { SubscriberSecurity } from "./SubscriberSecurity";
-import { TopicSecurity } from "./TopicSecurity";
+import { Security } from "./Security";
 
 export namespace Topic {
 
-	export interface Name {
+	export interface Id {
 		/**
- 		* Human readable name defines a `Topic`'s purpose
- 		*/
+ 		 * Human readable name defines a `Topic`'s purpose
+ 		 */
 		readonly topicName: string;
 
 		/**
@@ -15,27 +13,24 @@ export namespace Topic {
 		 */
 		readonly topicDomain: string | null;
 	}
-	export interface Description {
+	export interface Data {
 		/**
 		 * Human readable (long) description defines a `Topic`'s purpose
 		 */
 		readonly topicDescription: string;
-	}
-	export interface MediaType {
+
 		/**
 		 * Message media type
 		 * https://en.wikipedia.org/wiki/Media_type
 		 */
-		readonly mediaType: string;
+		readonly topicMediaType: string;
 	}
 
-	export interface Timestamps {
+	export interface Instance extends Id, Data {
+
 		readonly createAt: Date;
 		readonly deleteAt: Date | null;
 	}
-
-
-	export type Data = Name & Description & MediaType;
 }
 
-export type Topic = Topic.Data & TopicSecurity & PublisherSecurity & SubscriberSecurity & Topic.Timestamps;
+export type Topic = Topic.Instance;

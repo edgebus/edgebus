@@ -104,7 +104,7 @@ export async function configurationFactory(cancellationToken: CancellationToken)
 		const configFileDir = path.dirname(configFile);
 		const configFileExtension = path.extname(configFile);
 		const configFileName = path.basename(configFile, configFileExtension);
-		const develConfigFile = path.join(configFileDir, `${configFileName}-dev${configFileExtension}`);
+		const develConfigFile = path.join(configFileDir, `${configFileName}.dev-${configFileExtension.substring(1)}`);
 		if (await exists(develConfigFile)) {
 			const develFileConf = fileConfiguration(develConfigFile);
 			chainItems.push(develFileConf);

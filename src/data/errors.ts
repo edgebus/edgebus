@@ -1,5 +1,5 @@
 import { InnerError } from "@zxteam/errors";
-import { SqlNoSuchRecordError } from "@zxteam/sql";
+import { SqlConstraintError, SqlNoSuchRecordError } from "@zxteam/sql";
 
 export abstract class PersistentStorageError extends InnerError { }
 
@@ -7,6 +7,8 @@ export abstract class PersistentStorageError extends InnerError { }
  * There is no connection with the database (miss network, lags, disconnection)
  */
 export class ConnectionPersistentStorageError extends PersistentStorageError { }
+
+export class DataIntegrityPersistentStorageError extends PersistentStorageError { }
 
 /**
  * Unknown error type.
@@ -19,6 +21,10 @@ export class UnknownPersistentStorageError extends PersistentStorageError { }
 export class NoRecordPersistentStorageError extends PersistentStorageError { }
 
 export function storageHandledException(error: any): Error {
+
+	if (error instanceof SqlConstraintError) {
+		throw new DataIntegrityPersistentStorageError("Data integrity violation detected.", error);
+	}
 
 	if (error instanceof Error) {
 		const innerError: any = error;

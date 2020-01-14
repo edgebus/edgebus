@@ -28,11 +28,8 @@ endpoints = management publisher subscriber
 # Cache URL (Redis only at the moment)
 cacheStorage.url = redis://localhost:6379/4
 
-# Cache storage URL (Redis only at the moment)
-cacheStorage.url = redis://localhost:6379/4
+# Persistent storage URL (Postgres only at the moment)
+persistentStorage.url = postgres://postgres:@localhost:5432/emptytestdb?schema=notifier
 
 # Persistent storage URL (Postgres only at the moment)
-persistentStorage.url = postgres://localhost:5432/notifier
-
-# Persistent storage URL (Postgres only at the moment)
-persistentStorageMigration.url = postgres://localhost:5432/notifier
+persistentStorageMigration.url = postgres://postgres:@localhost:5432/emptytestdb?schema=notifier

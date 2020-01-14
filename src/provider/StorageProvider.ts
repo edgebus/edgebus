@@ -7,7 +7,7 @@ import * as _ from "lodash";
 
 import { ConfigurationProvider } from "./ConfigurationProvider";
 import { PersistentStorage } from "../data/PersistentStorage";
-//import { PostgresPersistentStorage } from "../data/PostgresPersistentStorage";
+import { PostgresPersistentStorage } from "../data/PostgresPersistentStorage";
 
 @Singleton
 export abstract class StorageProvider extends Initable {
@@ -39,7 +39,7 @@ class StorageProviderImpl extends StorageProvider {
 		this._configProvider = Container.get(ConfigurationProvider);
 
 		this._cacheStorage = null; //RedisCacheStorage(this.configProvider.cacheStorageURL, this.log);
-		this._persistentStorage = null as any; //new PostgresPersistentStorage(this._configProvider.persistentStorageURL, this.log);
+		this._persistentStorage = new PostgresPersistentStorage(this._configProvider.persistentStorageURL, this.log);
 	}
 
 	public get cacheStorage() { return this._cacheStorage; }

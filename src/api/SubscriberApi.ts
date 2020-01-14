@@ -4,12 +4,12 @@ import { InvalidOperationError } from "@zxteam/errors";
 
 // Models
 import { Topic } from "../model/Topic";
+import { Subscriber } from "../model/Subscriber";
 import { Security } from "../model/Security";
 
 import { PersistentStorage } from "../data/PersistentStorage";
-import { Subscriber } from "../model/Subscriber";
+
 import { UnknownApiError, apiHandledException } from "./errors";
-import { SubscriberSecurity } from "../model/SubscriberSecurity";
 
 /**
  * Subscriber API allows subscribe/unsibscribe for events via webhooks and other subscriber's type
@@ -47,34 +47,36 @@ export class SubscriberApi extends Initable {
 	/**
 	 * Subscribe topic as Webhook
 	 * @param cancellationToken Allows you to try to cancel execution
-	 * @param topic Describes message source topic (includes topic security)
+	 * @param topicId Describes message source topic (includes topic security)
 	 * @param opts Webhook specific options
 	 */
 	public async subscribeWebhook(
-		cancellationToken: CancellationToken, topic: Topic.Name, webhookData: Subscriber.Webhook & SubscriberSecurity
+		cancellationToken: CancellationToken, topicId: Topic.Id,
+		topicSubscriberSecurity: Security, webhookData: Subscriber.Webhook
 	): Promise<Subscriber<Subscriber.Webhook>> {
 
-		this._log.debug(`Run subscriberWebhook with topic: ${topic} and webhookData ${webhookData}`);
+		this._log.debug(`Run subscriberWebhook with topic: ${topicId} and webhookData ${webhookData}`);
+		throw new InvalidOperationError("Not implemented yet");
+		// try {
+		// 	const topicSubscriberSecurityRecord: Topic = await this._storage
+		// 		.getTopicSubscriberSecurity(cancellationToken, topicSubscriberSecurity);
 
-		try {
-			const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, topic.topicName);
+		// 	const subscriberSecurityKind = topicRecord.security.kind;
+		// 	const subscriberSecurityToken = topicRecord.security.token;
 
-			const subscriberSecurityKind = topicRecord.subscriberSecurity.kind;
-			const subscriberSecurityToken = topicRecord.subscriberSecurity.token;
+		// 	if (topicSubscriberSecurity.kind !== subscriberSecurityKind
+		// 		|| topicSubscriberSecurity.token !== subscriberSecurityToken) {
+		// 		throw new UnknownApiError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
+		// 	}
 
-			if (webhookData.subscriberSecurity.kind !== subscriberSecurityKind
-				|| webhookData.subscriberSecurity.token !== subscriberSecurityToken) {
-				throw new UnknownApiError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
-			}
+		// 	const webhookId: Subscriber<Subscriber.Webhook> = await this._storage
+		// 		.addSubscriberWebhook(cancellationToken, topicId.topicName, webhookData);
 
-			const webhookId: Subscriber<Subscriber.Webhook> = await this._storage
-				.addSubscriberWebhook(cancellationToken, topic.topicName, webhookData);
-
-			return webhookId;
-		} catch (e) {
-			this._log.error(`subscriberWebhook Error: ${e.message}`);
-			throw apiHandledException(e);
-		}
+		// 	return webhookId;
+		// } catch (e) {
+		// 	this._log.error(`subscriberWebhook Error: ${e.message}`);
+		// 	throw apiHandledException(e);
+		// }
 	}
 
 	/**
@@ -84,18 +86,18 @@ export class SubscriberApi extends Initable {
 	 * @returns Deleted date
 	 */
 	public async unsubscribe(
-		cancellationToken: CancellationToken, subscriberInfo: Subscriber.Id & SubscriberSecurity
+		cancellationToken: CancellationToken, subscriber: Subscriber.Id
 	): Promise<Date> {
+		throw new InvalidOperationError("Not implemented yet");
 		//this._log.debug(`Run subscriberWebhook with webhook: ${webhook}`);
 
-		try {
-			//const topic: Topic = await this._storage.getTopicByWebhookId(cancellationToken, webhook.subscriberId);
+		// try {
+		// 	//const topic: Topic = await this._storage.getTopicByWebhookId(cancellationToken, webhook.subscriberId);
 
-		} catch (e) {
-			this._log.error(`unsubscribeWebhook Error: ${e.message}`);
-			throw apiHandledException(e);
-		}
-		throw new InvalidOperationError("Method does not have implementation yet");
+		// } catch (e) {
+		// 	this._log.error(`unsubscribeWebhook Error: ${e.message}`);
+		// 	throw apiHandledException(e);
+		// }
 	}
 
 
