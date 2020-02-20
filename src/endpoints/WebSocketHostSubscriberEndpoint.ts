@@ -1,4 +1,5 @@
 import { CancellationToken, Logger } from "@zxteam/contract";
+import { SubscriberChannelMixin } from "@zxteam/channels";
 import { Configuration as HostingConfiguration, WebServer, WebSocketChannelFactoryEndpoint } from "@zxteam/hosting";
 
 import { EventEmitter } from "events";
@@ -7,6 +8,7 @@ import * as WebSocket from "ws";
 import { Message } from "../model/Message";
 import { SubscriberChannelBase } from "../utils/SubscriberChannelBase";
 import { Topic } from "../model/Topic";
+import { wrapErrorIfNeeded, AggregateError } from "@zxteam/errors";
 
 export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndpoint {
 	private readonly _emmiter: EventEmitter;
@@ -29,7 +31,10 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 		return this._textChannels.length/* + this._binaryChannels.length*/;
 	}
 
-	public on(event: "consumersCountChanged", listener: () => void): this {
+	public on(event: "firstConsumerAdded", listener: () => void): this;
+	public on(event: "lastConsumerRemoved", listener: () => void): this;
+	public on(event: "consumersCountChanged", listener: () => void): this;
+	public on(event: string, listener: () => void): this {
 		this._emmiter.on(event, listener);
 		return this;
 	}
@@ -58,11 +63,16 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 				this._textChannels.splice(indexToDelete, 1);
 				this._emmiter.emit("consumersCountChanged");
 			}
+			if (this._textChannels.length === 0) {
+				this._emmiter.emit("lastConsumerRemoved");
+			}
 		});
 
 		this._textChannels.push(channel);
 		this._emmiter.emit("consumersCountChanged");
-
+		if (this._textChannels.length === 1) {
+			this._emmiter.emit("firstConsumerAdded");
+		}
 		return channel;
 	}
 
@@ -88,9 +98,17 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 			id: message.messageId,
 			params: { mediaType, data }
 		});
+
+		const textChannelDeliveryErrors: Array<Error> = [];
 		for (const textChannel of this._textChannels) {
-			await textChannel.rpcDelivery(cancellationToken, messageStr);
+			try {
+				await textChannel.rpcDelivery(cancellationToken, messageStr);
+			} catch (e) {
+				textChannelDeliveryErrors.push(wrapErrorIfNeeded(e));
+			}
 		}
+		if (textChannelDeliveryErrors.length > 0) { throw new AggregateError(textChannelDeliveryErrors); }
+
 		// if (this._binaryChannels.length > 0) {
 		// 	const messageBinary = Buffer.from(messageStr);
 		// 	for (const binaryChannel of this._binaryChannels) {

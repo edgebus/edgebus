@@ -29,18 +29,19 @@
 	},
 	"dependencies": {
 		"@zxteam/cancellation": "^6.0.40",
-		"@zxteam/configuration": "^6.0.40",
-		"@zxteam/contract": "^6.0.40",
-		"@zxteam/disposable": "^6.0.40",
-		"@zxteam/ensure": "^6.0.40",
+		"@zxteam/channels": "^6.0.53",
+		"@zxteam/configuration": "^6.0.56",
+		"@zxteam/contract": "^6.0.56",
+		"@zxteam/disposable": "^6.0.56",
+		"@zxteam/ensure": "^6.0.41",
 		"@zxteam/errors": "^6.0.41",
 		"@zxteam/hosting": "^6.0.42",
 		"@zxteam/launcher": "^6.0.26",
 		"@zxteam/logger": "^6.0.40",
-		"@zxteam/sql-postgres": "^6.0.50",
+		"@zxteam/sql-postgres": "^6.0.53",
 		"lodash": "^4.17.15",
 		"moment": "^2.24.0",
-		"uuid": "^3.3.3"
+		"uuid": "^3.4.0"
 	},
 	"engines": {
 		"node": ">=11"

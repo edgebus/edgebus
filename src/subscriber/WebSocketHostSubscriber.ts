@@ -53,15 +53,14 @@ export class WebSocketHostSubscriber extends Initable {
 
 		const onMessageBound = this._onMessage.bind(this);
 
-		this._webSocketHostSubscriberEndpoint.on("consumersCountChanged", () => {
-			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
-				this._channels.forEach(channel => channel.removeHandler(onMessageBound));
-			} else if (this._webSocketHostSubscriberEndpoint.consumersCount === 1) {
-				this._channels.forEach(channel => {
-					channel.addHandler(onMessageBound);
-					channel.wakeUp();
-				});
-			}
+		this._webSocketHostSubscriberEndpoint.on("firstConsumerAdded", () => {
+			this._channels.forEach(channel => {
+				channel.addHandler(onMessageBound);
+				channel.wakeUp();
+			});
+		});
+		this._webSocketHostSubscriberEndpoint.on("lastConsumerRemoved", () => {
+			this._channels.forEach(channel => channel.removeHandler(onMessageBound));
 		});
 	}
 
@@ -81,7 +80,6 @@ export class WebSocketHostSubscriber extends Initable {
 		}
 
 		try {
-
 			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
 				event.delivered = false;
 				return;
