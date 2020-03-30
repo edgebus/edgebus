@@ -56,67 +56,65 @@ export default async function (cancellationToken: CancellationToken, config: nul
 		const harcodedItemsToDispose: Array<DisposableLike> = [];
 		try {
 			const hardcodedPublisherConfigurations = [
-				{
-					topicName: "GITLAB",
-					topicDescription: "GITLAB Webhooks test topic",
-					publisherId: "publisher.http.5034c67f-f1cb-4fab-aed3-d2cd3b3d50ad"
-				},
-				{
-					topicName: "WTF1_WALLET_CREATE_TX",
-					topicDescription: "WALLET_CREATE_TX уведомление о создании транзакции, либо подписи существующей (происходит при вызове таких методов как sendtoaddress, signtx)",
-					publisherId: "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-					publisherPath: "/v1/notifications/wallet_create_tx",
-					publisherSuccessResponseGenerator: function () {
-						return {
-							headers: {
-								"Content-Type": "application/json"
-							},
-							body: Buffer.from(JSON.stringify({
-								success: true,
-								timestamp: Date.now()
-							})),
-							status: 200,
-							statusDescription: "OK"
-						};
-					}
-				},
-				{
-					topicName: "WTF1_WALLET_TX",
-					topicDescription: "WALLET_TX уведомление о поступлении транзакции, на которую мы подписаны, имеется возможность подписаться только на приходящие(receive) или исходящие(send) транзакции.",
-					publisherId: "publisher.http.991b9ba2-7a76-4de9-8149-3489412a1288",
-					publisherPath: "/v1/notifications/wallet_tx",
-					publisherSuccessResponseGenerator: function () {
-						return {
-							headers: {
-								"Content-Type": "application/json"
-							},
-							body: Buffer.from(JSON.stringify({
-								success: true,
-								timestamp: Date.now()
-							})),
-							status: 200,
-							statusDescription: "OK"
-						};
-					}
-				},
+				// {
+				// 	topicName: "GITLAB",
+				// 	topicDescription: "GITLAB Webhooks test topic",
+				// 	publisherId: "publisher.http.5034c67f-f1cb-4fab-aed3-d2cd3b3d50ad"
+				// },
+				// {
+				// 	topicName: "WTF1_WALLET_CREATE_TX",
+				// 	topicDescription: "WALLET_CREATE_TX уведомление о
+				//создании транзакции, либо подписи существующей (происходит при вызове таких методов как sendtoaddress, signtx)",
+				// 	publisherId: "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+				// 	publisherPath: "/v1/notifications/wallet_create_tx",
+				// 	publisherSuccessResponseGenerator: function () {
+				// 		return {
+				// 			headers: {
+				// 				"Content-Type": "application/json"
+				// 			},
+				// 			body: Buffer.from(JSON.stringify({
+				// 				success: true,
+				// 				timestamp: Date.now()
+				// 			})),
+				// 			status: 200,
+				// 			statusDescription: "OK"
+				// 		};
+				// 	}
+				// },
+				// {
+				// 	topicName: "WTF1_WALLET_TX",
+				// 	topicDescription: "WALLET_TX уведомление о поступлении транзакции,
+				//на которую мы подписаны, имеется возможность подписаться только на приходящие(receive) или исходящие(send) транзакции.",
+				// 	publisherId: "publisher.http.991b9ba2-7a76-4de9-8149-3489412a1288",
+				// 	publisherPath: "/v1/notifications/wallet_tx",
+				// 	publisherSuccessResponseGenerator: function () {
+				// 		return {
+				// 			headers: {
+				// 				"Content-Type": "application/json"
+				// 			},
+				// 			body: Buffer.from(JSON.stringify({
+				// 				success: true,
+				// 				timestamp: Date.now()
+				// 			})),
+				// 			status: 200,
+				// 			statusDescription: "OK"
+				// 		};
+				// 	}
+				// },
 				{
 					topicName: "WTF2PSS_EVENTS",
 					topicDescription: "WTF2 PSS Provider's callbacks",
-					publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e"
+					publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
+					publisherPath: "/v2/callback/cryptoproviders/cex/wtf2pss"
 				}
 			];
 			const hardcodedSubscriberConfigurations = [
 				{
-					topicNames: ["GITLAB"],
-					subscriberIds: ["subscriber.websockethost.41dd9c66-09ae-473d-a694-1dcfe347e8af"]
-				},
-				{
-					topicNames: ["WTF1_WALLET_CREATE_TX", "WTF1_WALLET_TX", "WTF2PSS_EVENTS"],
+					topicNames: ["WTF2PSS_EVENTS"],
 					subscriberIds: [
 						"subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3",
 						"subscriber.websockethost.serg4683-a00d-4269-b116-6959fb9ac889",
 						"subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889",
-						"subscriber.websockethost.roma4683-a00d-4269-b116-6959fb9ac889",
 						"subscriber.websockethost.maks4683-a00d-4269-b116-6959fb9ac889"
 					]
 				}
@@ -139,8 +137,8 @@ export default async function (cancellationToken: CancellationToken, config: nul
 					messageBusProvider,
 					{
 						transformers: [],
-						bindPath: hardcodedPublisherConfiguration.publisherPath,
-						successResponseGenerator: hardcodedPublisherConfiguration.publisherSuccessResponseGenerator
+						bindPath: hardcodedPublisherConfiguration.publisherPath
+						//successResponseGenerator: hardcodedPublisherConfiguration.publisherSuccessResponseGenerator
 					}
 				);
 				//harcodedItemsToDispose.push(httpPublisherInstance);
