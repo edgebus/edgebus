@@ -105,7 +105,7 @@ export default async function (cancellationToken: CancellationToken, config: nul
 					topicName: "WTF2PSS_EVENTS",
 					topicDescription: "WTF2 PSS Provider's callbacks",
 					publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
-					publisherPath: "/v2/callback/cryptoproviders/cex/wtf2pss"
+					publisherPath: "/v2/callback/cryptoproviders/pss-provider-wtf2"
 				}
 			];
 			const hardcodedSubscriberConfigurations = [
