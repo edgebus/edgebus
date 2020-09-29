@@ -102,20 +102,35 @@ export default async function (cancellationToken: CancellationToken, config: nul
 				// 	}
 				// },
 				{
-					topicName: "WTF2PSS_EVENTS",
-					topicDescription: "WTF2 PSS Provider's callbacks",
+					topicName: "pss-provider-wtf2",
+					topicDescription: "PSS Provider WTF2 callbacks",
 					publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
 					publisherPath: "/v2/callback/cryptoproviders/pss-provider-wtf2"
+				},
+				{
+					topicName: "wtf2",
+					topicDescription: "WTF2 callbacks",
+					publisherId: "publisher.http.afb0ff9b-217d-4a5c-8b33-d76291bb7d81",
+					publisherPath: "/v2/callback/cryptoproviders/wtf2"
 				}
 			];
 			const hardcodedSubscriberConfigurations = [
 				{
-					topicNames: ["WTF2PSS_EVENTS"],
+					topicNames: ["pss-provider-wtf2"],
 					subscriberIds: [
 						"subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3",
 						"subscriber.websockethost.serg4683-a00d-4269-b116-6959fb9ac889",
 						"subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889",
 						"subscriber.websockethost.maks4683-a00d-4269-b116-6959fb9ac889"
+					]
+				},
+				{
+					topicNames: ["wtf2"],
+					subscriberIds: [
+						"subscriber.websockethost.19ee1bff-d469-4b8c-b5a8-0fd66a8b4b96",
+						"subscriber.websockethost.serge263-11f9-4df6-acc8-88faee098c99",
+						"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
+						"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
 					]
 				}
 			];

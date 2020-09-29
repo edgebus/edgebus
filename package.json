@@ -22,10 +22,10 @@
 	],
 	"license": "MIT",
 	"devDependencies": {
-		"@types/lodash": "^4.14.149",
-		"@types/node": "^11.15.3",
+		"@types/lodash": "^4.14.155",
+		"@types/node": "^11.15.15",
 		"@types/uuid": "^3.4.6",
-		"@zxnode/build": "^0.0.34"
+		"@zxnode/build": "^0.0.38"
 	},
 	"dependencies": {
 		"@zxteam/cancellation": "^6.0.40",
@@ -40,8 +40,8 @@
 		"@zxteam/logger": "^6.0.40",
 		"@zxteam/sql-postgres": "^6.0.53",
 		"lodash": "^4.17.15",
-		"moment": "^2.24.0",
-		"uuid": "^3.4.0"
+		"moment": "^2.26.0",
+		"uuid": "^8.1.0"
 	},
 	"engines": {
 		"node": ">=11"
