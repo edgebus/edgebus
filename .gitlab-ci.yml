@@ -1,1 +1,1 @@
-include: 'http://dev.zxteam.net/pub/gitlab-pipelines/raw/v3/node/public-service.yml'
+include: 'http://dev.zxteam.net/pub/gitlab-pipelines/raw/v1/node/public-service.yml'
