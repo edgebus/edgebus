@@ -118,20 +118,21 @@ export default async function (cancellationToken: CancellationToken, config: nul
 				{
 					topicNames: ["pss-provider-wtf2", "wtf2"],
 					subscriberIds: [
-						"subscriber.websockethost.8ed7cb38-1b9d-41bc-b3d4-8fc8aae324b3",
+						"subscriber.websockethost.devel",
+						"subscriber.websockethost.evolution",
+						"subscriber.websockethost.presentation",
 						"subscriber.websockethost.serg4683-a00d-4269-b116-6959fb9ac889",
-						"subscriber.websockethost.vova4683-a00d-4269-b116-6959fb9ac889",
 						"subscriber.websockethost.maks4683-a00d-4269-b116-6959fb9ac889"
 					]
-				// },
-				// {
-				// 	topicNames: ["wtf2"],
-				// 	subscriberIds: [
-				// 		"subscriber.websockethost.19ee1bff-d469-4b8c-b5a8-0fd66a8b4b96",
-				// 		"subscriber.websockethost.serge263-11f9-4df6-acc8-88faee098c99",
-				// 		"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
-				// 		"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
-				// 	]
+					// },
+					// {
+					// 	topicNames: ["wtf2"],
+					// 	subscriberIds: [
+					// 		"subscriber.websockethost.19ee1bff-d469-4b8c-b5a8-0fd66a8b4b96",
+					// 		"subscriber.websockethost.serge263-11f9-4df6-acc8-88faee098c99",
+					// 		"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
+					// 		"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
+					// 	]
 				}
 			];
 
