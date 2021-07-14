@@ -70,7 +70,8 @@ export class HttpPublisher extends PublisherBase {
 			let messageBody = {
 				method: req.method,
 				httpVersion: req.httpVersion,
-				path: req.path as string,
+				path: req.baseUrl + req.path,
+				query: req.query,
 				ips: req.ips,
 				headers: { ...req.headers },
 				body
