@@ -1,6 +1,6 @@
 {
 	"name": "@zxteam/notifier.service",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "ZXTeam's Notifier Service. Main responsibility is to deliver callback messages via WebHooks, AMQP, JMS, Slack, Telegram and other messaging solutions.",
 	"main": "./src/index.js",
 	"types": "./src/index.d.ts",

@@ -113,6 +113,10 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 
 	public get topicName(): Topic["topicName"] { return this._topicName; }
 
+	public onAddFirstHandler() {
+		super.onAddFirstHandler();
+	}
+
 	public wakeUp(): void {
 		if (this._tickInterval === null && this._queue.length > 0) {
 			this._tickInterval = setInterval(this._tick.bind(this), 500);
