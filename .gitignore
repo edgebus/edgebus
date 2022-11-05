@@ -1,0 +1,7 @@
+docs/
+src-csharp/
+src-dart/
+src-python/
+src-typescript/
+
+.DS_Store

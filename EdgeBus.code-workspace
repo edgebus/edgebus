@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"name": "EdgeBus Documentation",
+			"path": "docs"
+		},
+		{
+			"name": "EdgeBus Console",
+			"path": "src/dart/console"
+		},
+		{
+			"name": "EdgeBus Service",
+			"path": "src/typescript/service"
+		},
+		{
+			"name": "Workspace",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.autoSave": "afterDelay",
+		"files.autoSaveDelay": 3000
+	}
+}
+
+
