@@ -1,0 +1,35 @@
+{
+	"$schema": "https://zxteamorg.github.io/edgebus/schemas/v1/topic/topic.json",
+	"name": "MyGitHubEventsTopic",
+	"description": "My first topic to handle GitHub's push events. See https://developer.github.com/webhooks/",
+	"mediaType": "application/json",
+	"schema": {
+		"$schema": "http://json-schema.org/draft-07/schema",
+		"type": "object",
+		"properties": {
+			"headers": {
+				"type": "object"
+			},
+			"body": {
+				"type": "object",
+				"properties": {
+					"project_id": {
+						"type": "integer",
+						"minimum": 1
+					},
+					"user_name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"project_id",
+					"user_name"
+				]
+			}
+		},
+		"required": [
+			"project_id",
+			"user_name"
+		]
+	}
+}

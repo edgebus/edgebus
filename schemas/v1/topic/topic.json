@@ -1,0 +1,29 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"$id": "https://zxteamorg.github.io/edgebus/schemas/v1/topic/topic.json",
+	"title": "",
+	"description": "",
+	"properties": {
+		"$schema": {
+			"type": "string"
+		},
+		"name": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string"
+		},
+		"mediaType": {
+			"type": "string"
+		},
+		"schema": {
+			"$ref": "http://json-schema.org/draft-07/schema"
+		}
+	},
+	"required": [
+		"name",
+		"description",
+		"mediaType"
+	],
+	"additionalProperties": false
+}

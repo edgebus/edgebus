@@ -1,0 +1,7 @@
+{
+	"$schema": "https://zxteamorg.github.io/edgebus/schemas/v1/topic/topic.delete-request.json",
+	"topicSecurity": {
+		"kind": "TOKEN",
+		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	}
+}
