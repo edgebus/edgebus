@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema",
-	"$id": "https://zxteamorg.github.io/edgebus/schemas/v1/topic/topic.json",
+	"$id": "https://docs.edgebus.io/schemas/v2/topic/topic.json",
 	"title": "",
 	"description": "",
 	"properties": {

@@ -1,0 +1,24 @@
+{
+	"$schema": "https://docs.edgebus.io/schemas/v2/topic/topic-list.json",
+	"limit": 2,
+	"prevId": null,
+	"nextId": "EBT-53e482daa5c2423892a2d26b0544371e",
+	"items": [
+		{
+			"topicId": "EBT-d59d07b1e5da42d6bcb46fb2658c5aaf",
+			"name": "topic1.yourdomain.ltd",
+			"mediaType": "application/vnd.edgebus.http",
+			"description": "...",
+			"createAt": "2020-01-14T22:17:32.324Z",
+			"deleteAt": null
+		},
+		{
+			"topicId": "EBT-e4b4fc066cbf4f568ef1d7d15f91a742",
+			"name": "topic2.yourdomain.ltd",
+			"mediaType":"application/json",
+			"description": "...",
+			"createAt": "2020-01-14T22:17:32.324Z",
+			"deleteAt": null
+		}
+	]
+}

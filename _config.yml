@@ -23,7 +23,7 @@ title: EdgeBus Documentation
 #email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   The EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
-baseurl: "/edgebus" # the subpath of your site, e.g. /blog
+baseurl: "/" # the subpath of your site, e.g. /blog
 #url: "" # the base hostname & protocol for your site, e.g. http://example.com
 
 
@@ -136,6 +136,15 @@ color_scheme: light
 # A paragraph...
 #
 callouts:
+  important:
+    title: Important
+    color: purple
+  note:
+    title: Note
+    color: blue
+  note-title:
+    title: Note
+    color: blue
   warning:
     title: Warning
     color: red

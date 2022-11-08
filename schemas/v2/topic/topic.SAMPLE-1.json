@@ -1,5 +1,5 @@
 {
-	"$schema": "https://zxteamorg.github.io/edgebus/schemas/v1/topic/topic.json",
+	"$schema": "https://docs.edgebus.io/schemas/v2/topic/topic.json",
 	"name": "MyGitHubEventsTopic",
 	"description": "My first topic to handle GitHub's push events. See https://developer.github.com/webhooks/",
 	"mediaType": "application/json",

@@ -1,0 +1,7 @@
+{
+	"$schema": "https://docs.edgebus.io/schemas/v2/topic/topic.json",
+	"id": "EBT-27f41f8be2f243d094c42d9649742c42",
+	"name": "MyGitHubEventsTopic",
+	"description": "My first topic to handle GitHub's push events. See https://developer.github.com/webhooks/",
+	"mediaType": "application/vnd.edgebus.http"
+}

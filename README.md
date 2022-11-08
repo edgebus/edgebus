@@ -1,6 +1,6 @@
 # EdgeBus
 
-[EdgeBus](https://zxteamorg.github.io/edgebus) is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
+[EdgeBus](https://docs.edgebus.io) is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
 
 ## Documentation
 
