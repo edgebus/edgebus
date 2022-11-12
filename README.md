@@ -1,6 +1,6 @@
 # EdgeBus
 
-[EdgeBus](https://zxteamorg.github.io/edgebus) is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
+[EdgeBus](https://docs.edgebus.io) is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
 
 ## Workspace
 
@@ -10,7 +10,7 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 
 | Branch                                                       | Description                                                               |
 |--------------------------------------------------------------|---------------------------------------------------------------------------|
-| [docs](../../tree/docs)                                      | Sources of [EdgeBus documentation](https://zxteamorg.github.io/edgebus).  |
+| [docs](../../tree/docs)                                      | Sources of [EdgeBus documentation](https://docs.edgebus.io).  |
 | [src/dart/console](../../tree/src/dart/console)              | Dart sources of an Administrator Console Web Application.                 |
 | [src/typescript/service](../../tree/src/typescript/service)  | TypeScript sources of a Service Application.                              |
 
@@ -18,7 +18,7 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 
 1. Clone the repository
 	```shell
-	git clone git@github.com:zxteamorg/edgebus.git
+	git clone --branch workspace git@github.com:edgebus/edgebus.git
 	```
 1. Enter into cloned directory
 	```shell

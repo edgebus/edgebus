@@ -13,7 +13,7 @@
 			"path": "src/typescript/service"
 		},
 		{
-			"name": "Workspace",
+			"name": "EdgeBus Workspace",
 			"path": "."
 		}
 	],
