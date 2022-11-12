@@ -12,11 +12,11 @@ permalink: /
     <img src="assets/images/edgebus-overview-architecture.png" alt="EdgeBus Overview Architecture">
 </p>
 
-EdgeBus is an open-source server application that makes your life easy in production integration of different systems and make development a fun and easy experience.
+EdgeBus is a library and standalone server application that makes your life easy in production integration of different systems and make development a fun and easy experience.
 
 There are two main goals:
-* manage, audit, transform and guarantee delivery asynchronous messages
-* audit, transform and retry synchronous calls
+* **Asynchronous Messages** - manage, audit, transform, guarantee delivery
+* **Synchronous Calls** - audit, transform, retry
 
 ## Asynchronous Messages
 

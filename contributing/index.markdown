@@ -11,7 +11,7 @@ has_toc: false
 
 _You_ Made It
 
-EdgeBus truly is an [open-source project](https://github.com/zxteamorg/edgebus), and wouldn't have become what it is today without the help of our [many contributors](https://github.com/zxteamorg/edgebus/graphs/contributors) (at the time of writing this), not accounting for people having helped with issues, tests, comments, articles, ... or just enjoy using EdgeBus and share with others.
+EdgeBus truly is an [open-source project](https://github.com/edgebus/edgebus), and wouldn't have become what it is today without the help of our [many contributors](https://github.com/edgebus/edgebus/graphs/contributors) (at the time of writing this), not accounting for people having helped with issues, tests, comments, articles, ... or just enjoy using EdgeBus and share with others.
 
 So once again, thank you for your invaluable help in making EdgeBus such a good product!
 

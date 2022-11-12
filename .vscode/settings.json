@@ -21,6 +21,5 @@
 		"_site": true,
 		".jekyll-cache": true,
 	},
-	"git.enabled": true,
 	"git.rebaseWhenSync": true
 }
