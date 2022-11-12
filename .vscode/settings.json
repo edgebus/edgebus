@@ -1,8 +1,8 @@
 {
 	"editor.detectIndentation": false,
+	"editor.guides.indentation": true,
 	"editor.insertSpaces": false,
 	"editor.lineNumbers": "on",
-	"editor.renderIndentGuides": true,
 	"editor.renderWhitespace": "all",
 	"editor.rulers": [
 		80,
@@ -32,5 +32,4 @@
 		"test/**/*.map": true,
 		"test/**/*.js": true,
 	},
-	"git.enabled": true
 }
