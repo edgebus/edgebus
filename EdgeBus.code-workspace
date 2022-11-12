@@ -5,7 +5,7 @@
 			"path": "docs"
 		},
 		{
-			"name": "EdgeBus Console",
+			"name": "EdgeBus Dart Console",
 			"path": "src/dart/console"
 		},
 		{
@@ -19,7 +19,18 @@
 	],
 	"settings": {
 		"files.autoSave": "afterDelay",
-		"files.autoSaveDelay": 3000
+		"files.autoSaveDelay": 3000,
+		"git.rebaseWhenSync": true,
+		"cSpell.words": [
+			"worktree"
+		]
+	},
+	"extensions": {
+		"recommendations": [
+			"mhutchie.git-graph",
+			"streetsidesoftware.code-spell-checker",
+			"bierner.markdown-mermaid"
+		]
 	}
 }
 

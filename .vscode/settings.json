@@ -21,10 +21,10 @@
 		"docs": true,
 		"src": true,
 	},
-	"git.enabled": true,
 	"git.rebaseWhenSync": true,
 	"editor.guides.indentation": true,
 	"cSpell.words": [
-		"auditability"
+		"auditability",
+		"worktree"
 	]
 }

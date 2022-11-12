@@ -8,11 +8,11 @@ This is `workspace` branch of **EdgeBus** multi project repository based on [orp
 
 The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/editor/workspaces).
 
-| Branch                                                       | Description                                                               |
-|--------------------------------------------------------------|---------------------------------------------------------------------------|
-| [docs](../../tree/docs)                                      | Sources of [EdgeBus documentation](https://docs.edgebus.io).  |
-| [src/dart/console](../../tree/src/dart/console)              | Dart sources of an Administrator Console Web Application.                 |
-| [src/typescript/service](../../tree/src/typescript/service)  | TypeScript sources of a Service Application.                              |
+| Branch                                                                     | Description                                                               |
+|----------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| [docs](../../tree/docs)                                                    | Sources of [EdgeBus documentation](https://docs.edgebus.io).              |
+| [src-dart-console-master](../../tree/src-dart-console-master)              | Dart sources of an Administrator Console Web Application.                 |
+| [src-typescript-service-master](../../tree/src-typescript-service-master)  | TypeScript sources of a Service Application.                              |
 
 ## Get Started
 
@@ -26,7 +26,7 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 	```
 1. Initialize [worktree](https://git-scm.com/docs/git-worktree) by execute following commands
 	```shell
-	for BRANCH in $(cat README.md | tail -n +11 | grep -E '^\| \[([a-z\-\/]+)\]' | awk -F'[][]' '{print $2}'); do git worktree add "${BRANCH}" "${BRANCH}"; done
+	for BRANCH in $(cat README.md | tail -n +13 | head -n 3 | grep -E '^\| \[([a-z\-]+)\]' | awk -F'[][]' '{print $2}'); do git worktree add "${BRANCH}" "${BRANCH}"; done
 	```
 1. Open VSCode Workspace
 	```shell
