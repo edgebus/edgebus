@@ -1,5 +1,5 @@
-# Notifier
-`Notifier` is a Notification Server that implements [Publish–Subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) Pattern. Main responsibility is to deliver callback messages via Webhooks and other messaging providers.
+# EdgeBus
+`EdgeBus` is a Notification Server that implements [Publish–Subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) Pattern. Main responsibility is to deliver callback messages via Webhooks and other messaging providers.
 
 !!! note "Recommendation"
 	Although notification includes real and valid data, we recommend to use notifications just as notifications and retvieve data via appropriate method of Pull API ([REST API](../api) for example).
@@ -13,41 +13,41 @@
 sequenceDiagram
 	participant Subscriber1
 	participant Subscriber2
-	participant `Notifier`
+	participant `EdgeBus`
 	participant Publisher
 	opt Event A happend
-		Publisher->>`Notifier`: Message A for "my" topic
-		`Notifier`->>`Notifier`: Skip, just audit
+		Publisher->>`EdgeBus`: Message A for "my" topic
+		`EdgeBus`->>`EdgeBus`: Skip, just audit
 	end
-	Subscriber2->>+`Notifier`: Subscribe "my" topic
-	`Notifier`-->>-Subscriber2: OK
+	Subscriber2->>+`EdgeBus`: Subscribe "my" topic
+	`EdgeBus`-->>-Subscriber2: OK
 	opt Event B happend
-		Publisher->>`Notifier`: Message B for "my" topic
-		`Notifier`->>+Subscriber2: Message B for "my" topic
-		Subscriber2-->>-`Notifier`: OK
+		Publisher->>`EdgeBus`: Message B for "my" topic
+		`EdgeBus`->>+Subscriber2: Message B for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
 	end
-	Subscriber1->>+`Notifier`: Subscribe "my" topic
-	`Notifier`-->>-Subscriber1: OK
+	Subscriber1->>+`EdgeBus`: Subscribe "my" topic
+	`EdgeBus`-->>-Subscriber1: OK
 	opt Event C happend
-		Publisher->>`Notifier`: Message C for "my" topic
-		`Notifier`->>+Subscriber2: Message C for "my" topic
-		Subscriber2-->>-`Notifier`: OK
-		`Notifier`->>+Subscriber1: Message C for "my" topic
-		Subscriber1-->>-`Notifier`: OK
+		Publisher->>`EdgeBus`: Message C for "my" topic
+		`EdgeBus`->>+Subscriber2: Message C for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
+		`EdgeBus`->>+Subscriber1: Message C for "my" topic
+		Subscriber1-->>-`EdgeBus`: OK
 	end
-	Subscriber1->>+`Notifier`: UNsubscribe "my" topic
-	`Notifier`-->>-Subscriber1: OK
+	Subscriber1->>+`EdgeBus`: UNsubscribe "my" topic
+	`EdgeBus`-->>-Subscriber1: OK
 	opt Event D happend
-		Publisher->>`Notifier`: Message D for "my" topic
-		`Notifier`->>+Subscriber2: Message D for "my" topic
-		Subscriber2-->>-`Notifier`: OK
+		Publisher->>`EdgeBus`: Message D for "my" topic
+		`EdgeBus`->>+Subscriber2: Message D for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
 	end
 ```
 
 ### Delivery
 Messages are sent immediately after an operation was performed.
 
-`Notifier` records the fact of message delivery to your system after receiving the response from your system.
+`EdgeBus` records the fact of message delivery to your system after receiving the response from your system.
 
 If message delivery is failed the server will retry with delay between attempts according to a scale was choosen at subscription phase.
 
@@ -69,10 +69,10 @@ Using JSON-RPC in notification manner
 Using Protocol Buffers for message serialization. See definition .proto file for details.
 
 ### Message security
-`Notifier` provides Signing and Encrypt methods to verify that the request is legitimate.
+`EdgeBus` provides Signing and Encrypt methods to verify that the request is legitimate.
 
 #### Signing message
-Message signature provides by a `Publisher` service. `Notifier` does not modify provided signature, just deliver it along with message. See for details in events documentation.
+Message signature provides by a `Publisher` service. `EdgeBus` does not modify provided signature, just deliver it along with message. See for details in events documentation.
 
 #### Encrypt message (Optional)
 Optionally (along with signing), you may setup(via Management API) an `encrypt password`, messages will be encrypted.
@@ -92,10 +92,10 @@ TBD
 ## Webhooks
 [Webhooks](https://en.wikipedia.org/wiki/Webhook) are "user-defined HTTP
 callbacks".
-When an event occurs, `Notifier` makes an HTTP request to the URI configured for the webhook.
+When an event occurs, `EdgeBus` makes an HTTP request to the URI configured for the webhook.
 
 !!! warning
-    Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then Notifier will think the hook failed and [retry](#delivery) it.
+    Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then EdgeBus will think the hook failed and [retry](#delivery) it.
 
 ### Headers
 Notification server will include following headers to each request:

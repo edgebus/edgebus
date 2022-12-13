@@ -1,12 +1,11 @@
-import { Logger, CancellationToken } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { Container, Provides, Singleton } from "@zxteam/launcher";
-import { logger } from "@zxteam/logger";
-import * as hosting from "@zxteam/hosting";
+import { FInitable, FInitableBase, FLogger } from "@freemework/common";
+import { FWebServer } from "@freemework/hosting";
+
+import { Container, Provides, Singleton } from "typescript-ioc";
 
 import * as _ from "lodash";
 
-import { Configuration, ConfigurationError } from "../Configuration";
+import { Configuration, ConfigurationException } from "../Configuration";
 
 // Providers
 import { ConfigurationProvider } from "./ConfigurationProvider";
@@ -18,14 +17,15 @@ import { ManagementApiRestEndpoint } from "../endpoints/ManagementApiRestEndpoin
 import { PublisherApiRestEndpoint } from "../endpoints/PublisherApiRestEndpoint";
 import { SubscriberApiRestEndpoint } from "../endpoints/SubscriberApiRestEndpoint";
 import { WebSocketHostSubscriberEndpoint } from "../endpoints/WebSocketHostSubscriberEndpoint";
+import { InfoRestEndpoint } from "../endpoints/InfoRestEndpoint";
 
 @Singleton
-export abstract class EndpointsProvider extends Initable {
-	protected readonly log: Logger;
+export abstract class EndpointsProvider extends FInitableBase {
+	protected readonly log: FLogger;
 
 	public constructor() {
 		super();
-		this.log = logger.getLogger("Endpoints");
+		this.log = FLogger.Console.getLogger("Endpoints");
 		if (this.log.isDebugEnabled) {
 			this.log.debug(`Implementation: ${this.constructor.name}`);
 		}
@@ -42,7 +42,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 	private readonly _apiProvider: ApiProvider;
 	private readonly _hostingProvider: HostingProvider;
 
-	private readonly _endpointInstances: Array<Initable>;
+	private readonly _endpointInstances: Array<FInitable>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
 	private readonly _publisherApiRestEndpoints: ReadonlyArray<PublisherApiRestEndpoint>;
 	private readonly _subscriberApiRestEndpoints: ReadonlyArray<SubscriberApiRestEndpoint>;
@@ -70,16 +70,25 @@ class EndpointsProviderImpl extends EndpointsProvider {
 			const serversMap: Map<HostingProvider.ServerInstance["name"], HostingProvider.ServerInstance> = new Map();
 			this._hostingProvider.serverInstances.forEach(s => serversMap.set(s.name, s));
 
-			const endpointServers: Array<hosting.WebServer> = [];
+			const endpointServers: Array<FWebServer> = [];
 			for (const bindServer of endpoint.servers) {
 				const serverInstance: HostingProvider.ServerInstance | undefined = serversMap.get(bindServer);
 				if (serverInstance === undefined) {
-					throw new ConfigurationError(`Cannot bind an endpoint '${endpoint.type}' to a server '${bindServer}'. The server is not defined.`);
+					throw new ConfigurationException(`Cannot bind an endpoint '${endpoint.type}' to a server '${bindServer}'. The server is not defined.`);
 				}
 				endpointServers.push(serverInstance.server);
 			}
 
 			switch (endpoint.type) {
+				case "rest-info": {
+					const friendlyEndpoint: Configuration.RestInfoEndpoint = endpoint;
+					const endpointInstance = new InfoRestEndpoint(
+						endpointServers, endpoint,
+						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+					);
+					this._endpointInstances.push(endpointInstance);
+					break;
+				}
 				case "rest-management": {
 					const friendlyEndpoint: Configuration.RestManagementEndpoint = endpoint;
 					const endpointInstance = new ManagementApiRestEndpoint(
@@ -128,11 +137,11 @@ class EndpointsProviderImpl extends EndpointsProvider {
 		return this._subscriberApiRestEndpoints;
 	}
 
-	protected async onInit(cancellationToken: CancellationToken): Promise<void> {
+	protected async onInit(): Promise<void> {
 		this.log.info("Initializing endpoints...");
 		try {
 			for (const endpointInstance of this._endpointInstances) {
-				await endpointInstance.init(cancellationToken);
+				await endpointInstance.init(this.initExecutionContext);
 				this._destroyHandlers.push(() => endpointInstance.dispose());
 			}
 		} catch (e) {

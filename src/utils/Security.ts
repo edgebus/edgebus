@@ -1,4 +1,4 @@
-import { ArgumentError } from "@zxteam/errors";
+import { FEnsureException, FExceptionArgument } from "@freemework/common";
 
 import * as  crypto from "crypto";
 import { promisify } from "util";
@@ -6,22 +6,26 @@ import { promisify } from "util";
 const pbkdf2Async = promisify(crypto.pbkdf2);
 
 export class Encrypter {
-	private readonly _key: Buffer;
+	private readonly _key: Uint8Array;
 
-	public constructor(key: Buffer | string) {
-		if (key instanceof Buffer) {
+	public constructor(key: Uint8Array | string) {
+		if (key instanceof Uint8Array) {
 			if (key.length !== 32) {
-				throw new ArgumentError("key", "Wrong encryption key length. Expected exactly 32 bytes.");
+				throw new FExceptionArgument("Wrong encryption key length. Expected exactly 32 bytes.", "key");
 			}
 			this._key = key;
 		} else {
 			if (key.length !== 64) {
-				throw new ArgumentError("key", "Wrong encryption key length. Expected HEX-string with length exactly 64 symbols.");
+				throw new FExceptionArgument("Wrong encryption key length. Expected HEX-string with length exactly 64 symbols.", "key");
 			}
 			try {
 				this._key = Buffer.from(key, "hex");
 			} catch (e) {
-				throw new ArgumentError("key", "Wrong encryption key. Expected hex-string with length exactly 64 symbols", e);
+				throw new FExceptionArgument(
+					"Wrong encryption key. Expected hex-string with length exactly 64 symbols",
+					"key",
+					FEnsureException.wrapIfNeeded(e)
+				);
 			}
 		}
 	}
@@ -61,7 +65,7 @@ export class Encrypter {
 export async function passwordDerivation(
 	password: string, iterations: number = 10, keylen: number = 32, digest: string = "sha512"
 ): Promise<Buffer> {
-	const salt: Buffer = new Buffer([0x22, 0x9d, 0xcf, 0xdd, 0x8d, 0xa1, 0x52, 0x0f]);
-	const encriptionKey: Buffer = await pbkdf2Async(Buffer.from(password), salt, 10, 32, "sha512");
-	return encriptionKey;
+	const salt: Buffer = Buffer.from([0x22, 0x9d, 0xcf, 0xdd, 0x8d, 0xa1, 0x52, 0x0f]);
+	const encryptionKey: Buffer = await pbkdf2Async(Buffer.from(password), salt, iterations, keylen, "sha512");
+	return encryptionKey;
 }

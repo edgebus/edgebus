@@ -1,7 +1,6 @@
-import { CancellationToken } from "@zxteam/contract";
-import { Initable, Disposable } from "@zxteam/disposable";
-import { Container, Provides, Singleton } from "@zxteam/launcher";
-import { logger } from "@zxteam/logger";
+import { FDisposable, FInitable, FInitableBase, FLogger } from "@freemework/common";
+
+import { Container, Provides, Singleton } from "typescript-ioc";
 
 // Providers
 import { StorageProvider } from "./StorageProvider";
@@ -13,7 +12,7 @@ import { SubscriberApi } from "../api/SubscriberApi";
 import { MessageBusProvider } from "./MessageBusProvider";
 
 @Singleton
-export abstract class ApiProvider extends Initable {
+export abstract class ApiProvider extends FInitableBase {
 	abstract get managementApi(): ManagementApi;
 	abstract get publisherApi(): PublisherApi;
 	abstract get subscriberApi(): SubscriberApi;
@@ -35,6 +34,8 @@ class ApiProviderImpl extends ApiProvider {
 		this._storageProvider = Container.get(StorageProvider);
 		this._messageBusProvider = Container.get(MessageBusProvider);
 
+		const logger = FLogger.Console;
+
 		this._managementApi
 			= new ManagementApi(this._storageProvider.persistentStorage, logger.getLogger("ManagementApi"));
 		this._publisherApi
@@ -47,11 +48,11 @@ class ApiProviderImpl extends ApiProvider {
 	public get publisherApi() { return this._publisherApi; }
 	public get subscriberApi() { return this._subscriberApi; }
 
-	protected async onInit(cancellationToken: CancellationToken): Promise<void> {
-		await Initable.initAll(cancellationToken, this._managementApi, this._publisherApi, this._subscriberApi);
+	protected async onInit(): Promise<void> {
+		await FInitable.initAll(this.initExecutionContext, this._managementApi, this._publisherApi, this._subscriberApi);
 	}
 
 	protected async onDispose(): Promise<void> {
-		await Disposable.disposeAll(this._subscriberApi, this._publisherApi, this._managementApi);
+		await FDisposable.disposeAll(this._subscriberApi, this._publisherApi, this._managementApi);
 	}
 }

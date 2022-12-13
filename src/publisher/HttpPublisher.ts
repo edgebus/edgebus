@@ -1,4 +1,3 @@
-import { ArgumentError, InvalidOperationError } from "@zxteam/errors";
 
 import * as bodyParser from "body-parser";
 import { Request, Response, Router } from "express";
@@ -12,13 +11,14 @@ import { Message } from "../model/Message";
 import { Publisher } from "../model/Publisher";
 
 import { PublisherBase } from "./PublisherBase";
-import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
+import { FExceptionArgument, FExceptionInvalidOperation } from "@freemework/common";
 
 const _supportedMediaTypes: Set<string> = new Set();
 _supportedMediaTypes.add("application/json");
 
 
 export class HttpPublisher extends PublisherBase {
+
 	public readonly router: Router;
 	public readonly bindPath: string | null;
 	private readonly _successResponseGenerator: (() => {
@@ -37,7 +37,8 @@ export class HttpPublisher extends PublisherBase {
 	public constructor(
 		topic: Topic.Id & Topic.Data,
 		publisherId: Publisher["publisherId"],
-		messageBus: MessageBus, opts?: HttpPublisher.Opts
+		messageBus: MessageBus,
+		opts?: HttpPublisher.Opts
 	) {
 		super(topic, publisherId);
 		this._messageBus = messageBus;
@@ -59,8 +60,15 @@ export class HttpPublisher extends PublisherBase {
 				this.router.use(this._handleMessageApplicationJson.bind(this));
 				break;
 			default:
-				throw new ArgumentError("topic", `Not supported mediaType: ${topic.topicMediaType}`);
+				throw new FExceptionArgument( `Not supported mediaType: ${topic.topicMediaType}`, "topic");
 		}
+	}
+
+	protected onInit(): void | Promise<void> {
+		// NOP
+	}
+	protected onDispose(): void | Promise<void> {
+		// NOP
 	}
 
 	private async _handleMessageApplicationJson(req: Request, res: Response): Promise<void> {
@@ -102,7 +110,7 @@ export class HttpPublisher extends PublisherBase {
 			};
 
 			await this._messageBus.publish(
-				DUMMY_CANCELLATION_TOKEN, this.topicName, message
+				this.initExecutionContext, this.topicName, message
 			);
 
 			if (this._successResponseGenerator !== null) {
@@ -125,7 +133,7 @@ export class HttpPublisher extends PublisherBase {
 	private static _applyTransformer(message: any, transformer: HttpPublisher.Transformer): any {
 		switch (transformer.kind) {
 			default:
-				throw new InvalidOperationError("Not supported yet");
+				throw new FExceptionInvalidOperation("Not supported yet");
 		}
 	}
 }

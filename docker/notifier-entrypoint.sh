@@ -2,7 +2,7 @@
 #
 
 echo
-echo "Enter to Notifier Entrypoint..."
+echo "Enter to EdgeBus Entrypoint..."
 
 case "${1}" in
 	"/bin/sh"|"/bin/bash"|shell)
@@ -20,12 +20,12 @@ case "${1}" in
 		echo "Starting migrate-database script..."
 		/usr/local/bin/node /usr/local/org.zxteam.notifier/bin/migrate-database.js
 		echo
-		echo "Starting Notifier..."
+		echo "Starting EdgeBus..."
 		exec /usr/local/bin/node /usr/local/org.zxteam.notifier/bin/notifier-service.js --config=/etc/org.zxteam.notifier/notifier-service.config
 		;;
 	"notifier")
 		echo
-		echo "Starting Notifier..."
+		echo "Starting EdgeBus..."
 		exec /usr/local/bin/node /usr/local/org.zxteam.notifier/bin/notifier-service.js --config=/etc/org.zxteam.notifier/notifier-service.config
 		;;
 	*)

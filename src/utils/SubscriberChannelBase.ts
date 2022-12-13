@@ -1,10 +1,9 @@
-import { CancellationToken, SubscriberChannel } from "@zxteam/contract";
-import { CancelledError, AggregateError, InvalidOperationError } from "@zxteam/errors";
-import { Disposable } from "@zxteam/disposable";
+import { FCancellationToken, FDisposableBase, FException, FExecutionContext, FInitableBase, FSubscriberChannel } from "@freemework/common";
+import { FExceptionCancelled, FExceptionAggregate, FExceptionInvalidOperation } from "@freemework/common";
 
-export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChannel.Event<TData> = SubscriberChannel.Event<TData>>
-	extends Disposable implements SubscriberChannel<TData, TEvent> {
-	private readonly _callbacks: Array<SubscriberChannel.Callback<TData, TEvent>>;
+export abstract class SubscriberChannelBase<TData, TEvent extends FSubscriberChannel.Event<TData> = FSubscriberChannel.Event<TData>>
+	extends FInitableBase implements FSubscriberChannel<TData, TEvent> {
+	private readonly _callbacks: Array<FSubscriberChannel.Callback<TData, TEvent>>;
 	private _broken: boolean;
 
 	public constructor() {
@@ -13,7 +12,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChan
 		this._broken = false;
 	}
 
-	public addHandler(cb: SubscriberChannel.Callback<TData, TEvent>): void {
+	public addHandler(cb: FSubscriberChannel.Callback<TData, TEvent>): void {
 		this.verifyBrokenChannel();
 
 		this._callbacks.push(cb);
@@ -22,7 +21,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChan
 		}
 	}
 
-	public removeHandler(cb: SubscriberChannel.Callback<TData, TEvent>): void {
+	public removeHandler(cb: FSubscriberChannel.Callback<TData, TEvent>): void {
 		const index = this._callbacks.indexOf(cb);
 		if (index !== -1) {
 			this._callbacks.splice(index, 1);
@@ -36,11 +35,11 @@ export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChan
 
 	protected verifyBrokenChannel(): void {
 		if (this.isBroken) {
-			throw new InvalidOperationError("Wrong operation on broken channel");
+			throw new FExceptionInvalidOperation("Wrong operation on broken channel");
 		}
 	}
 
-	protected notify(event: TEvent | Error): void | Promise<void> {
+	protected notify(executionContext: FExecutionContext, event: TEvent | FException): void | Promise<void> {
 		if (this._callbacks.length === 0) {
 			return;
 		}
@@ -50,18 +49,18 @@ export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChan
 			this._callbacks.splice(0, this._callbacks.length);
 		}
 		if (callbacks.length === 1) {
-			return callbacks[0](event);
+			return callbacks[0](executionContext, event);
 		}
 		const promises: Array<Promise<void>> = [];
-		const errors: Array<Error> = [];
+		const errors: Array<FException> = [];
 		for (const callback of callbacks) {
 			try {
-				const result = callback(event);
+				const result = callback(executionContext,event);
 				if (result instanceof Promise) {
 					promises.push(result);
 				}
 			} catch (e) {
-				errors.push(e);
+				errors.push(FException.wrapIfNeeded( e));
 			}
 		}
 
@@ -77,8 +76,8 @@ export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChan
 				.then(function () {
 					if (errors.length > 0) {
 						for (const error of errors) {
-							if (!(error instanceof CancelledError)) {
-								throw new AggregateError(errors);
+							if (!(error instanceof FExceptionCancelled)) {
+								throw new FExceptionAggregate(errors);
 							}
 						}
 						// So, all errors are CancelledError instances, throw first
@@ -88,8 +87,8 @@ export abstract class SubscriberChannelBase<TData, TEvent extends SubscriberChan
 		} else {
 			if (errors.length > 0) {
 				for (const error of errors) {
-					if (!(error instanceof CancelledError)) {
-						throw new AggregateError(errors);
+					if (!(error instanceof FExceptionCancelled)) {
+						throw new FExceptionAggregate(errors);
 					}
 				}
 				// So, all errors are CancelledError instances, throw first

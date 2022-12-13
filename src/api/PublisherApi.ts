@@ -1,6 +1,4 @@
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { InvalidOperationError } from "@zxteam/errors";
+import {  FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
 // Models
 import { Publisher } from "../model/Publisher";
@@ -14,12 +12,12 @@ import { PersistentStorage } from "../data/PersistentStorage";
 /**
  * Publisher API allows to send messages to the topics
  */
-export class PublisherApi extends Initable {
+export class PublisherApi extends FInitableBase {
 	private readonly _storage: PersistentStorage;
 	private readonly _messageBusProvider: MessageBusProvider;
-	private readonly _log: Logger;
+	private readonly _log: FLogger;
 
-	public constructor(storage: PersistentStorage, messageBusProvider: MessageBusProvider, log: Logger) {
+	public constructor(storage: PersistentStorage, messageBusProvider: MessageBusProvider, log: FLogger) {
 		super();
 		this._storage = storage;
 		this._messageBusProvider = messageBusProvider;
@@ -27,7 +25,7 @@ export class PublisherApi extends Initable {
 	}
 
 	public async createHttpPublisher(
-		cancellationToken: CancellationToken, topic: Topic.Id & { readonly publisherSecurity: Security }
+		executionContext: FExecutionContext, topic: Topic.Id & { readonly publisherSecurity: Security }
 	): Promise<Publisher.Id> {
 
 		// try {
@@ -49,11 +47,11 @@ export class PublisherApi extends Initable {
 		// 	throw apiHandledException(e);
 		// }
 
-		throw new InvalidOperationError("Not implemented yet");
+		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
 	public async destroyPublisher(
-		cancellationToken: CancellationToken, publisher: Publisher.Id & { readonly publisherSecurity: Security }
+		executionContext: FExecutionContext, publisher: Publisher.Id & { readonly publisherSecurity: Security }
 	): Promise<void> {
 
 		// >>>>
@@ -70,7 +68,7 @@ export class PublisherApi extends Initable {
 		// 	"deleteDate": "2019-10-10T12:00:01.223Z"
 		// }
 
-		throw new InvalidOperationError("Not implemented yet");
+		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
 	protected async onInit() {

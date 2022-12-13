@@ -111,7 +111,7 @@ function createPostgresSqlProviderFactory(postgresConfig, log) {
 	const applicationName = `${packageName}@${packageVersion}`;
 	if (!hasSSL) {
 		log.info("--------------------------------------------------");
-		log.info("WARNING: Using insecured connection to Postgres...");
+		log.info("WARNING: Using unsecured connection to Postgres...");
 		log.info("--------------------------------------------------");
 		return new PostgresProviderFactory({
 			url: postgresConfig.getURL("url"),

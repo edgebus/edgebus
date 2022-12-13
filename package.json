@@ -1,7 +1,8 @@
 {
-	"name": "@zxteam/notifier.service",
-	"version": "0.0.4",
-	"description": "ZXTeam's Notifier Service. Main responsibility is to deliver callback messages via WebHooks, AMQP, JMS, Slack, Telegram and other messaging solutions.",
+	"name": "@edgebus/service",
+	"version": "0.1.0",
+	"title": "EdgeBus Service",
+	"description": "EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.",
 	"main": "./src/index.js",
 	"types": "./src/index.d.ts",
 	"author": {
@@ -22,43 +23,37 @@
 	],
 	"license": "MIT",
 	"devDependencies": {
-		"@types/lodash": "^4.14.155",
-		"@types/node": "^11.15.15",
-		"@types/uuid": "^3.4.6",
-		"@zxnode/build": "^0.0.38"
+		"@types/lodash": "^4.14.189",
+		"@types/node": "^18.11.9",
+		"@types/uuid": "^8.3.4",
+		"dotenv": "^16.0.3",
+		"source-map-support": "^0.5.21",
+		"typescript": "^4.9.3"
 	},
 	"dependencies": {
-		"@zxteam/cancellation": "^6.0.40",
-		"@zxteam/channels": "^6.0.53",
-		"@zxteam/configuration": "^6.0.56",
-		"@zxteam/contract": "^6.0.56",
-		"@zxteam/disposable": "^6.0.56",
-		"@zxteam/ensure": "^6.0.41",
-		"@zxteam/errors": "^6.0.41",
-		"@zxteam/hosting": "^6.0.42",
-		"@zxteam/launcher": "^6.0.26",
-		"@zxteam/logger": "^6.0.40",
-		"@zxteam/sql-postgres": "^6.0.53",
-		"lodash": "^4.17.15",
-		"moment": "^2.26.0",
-		"uuid": "^8.1.0"
+		"@freemework/common": "^0.6.2",
+		"@freemework/hosting": "^0.6.3",
+		"@freemework/sql.postgres": "^0.6.1",
+		"lodash": "^4.17.21",
+		"typescript-ioc": "^1.2.6",
+		"uuid": "^9.0.0"
 	},
 	"engines": {
-		"node": ">=11"
+		"node": ">=12.0.0 <19"
 	},
 	"keywords": [],
 	"repository": {
 		"type": "git",
-		"url": "git@github.com:zxteamorg/node.notifier.service.git"
+		"url": "git@github.com:edgebus/edgebus.git"
 	},
 	"bugs": {
-		"url": "https://github.com/zxteamorg/node.notifier.service/issues"
+		"url": "https://github.com/edgebus/edgebus/issues"
 	},
-	"homepage": "https://github.com/zxteamorg/node.notifier.service",
+	"homepage": "https://github.com/edgebus/edgebus",
 	"scripts": {
-		"clean": "zxbuild clean",
-		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/ && cp -a bin .dist/ && cp -a database .dist/",
-		"start": "node bin/notifier-service.js --config=notifier-service.config",
+		"clean": "find src \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\; ; find test \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\;",
+		"build": "tsc",
+		"start": "node --require=dotenv/config bin/app.js --config-file=edgebus.config --config-env",
 		"test": "true",
 		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000",
 		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\"",

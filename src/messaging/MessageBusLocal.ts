@@ -1,16 +1,12 @@
-import { CancellationToken } from "@zxteam/contract";
-import { InvalidOperationError, CancelledError, AggregateError } from "@zxteam/errors";
-import { Initable, Disposable } from "@zxteam/disposable";
-
-
 import { MessageBus } from "./MessageBus";
 
 import { Message } from "../model/Message";
 import { Topic } from "../model/Topic";
 import { Subscriber } from "../model/Subscriber";
 import { SubscriberChannelBase } from "../utils/SubscriberChannelBase";
+import { FException, FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
 
-export class MessageBusLocal extends Initable implements MessageBus {
+export class MessageBusLocal extends FInitableBase implements MessageBus {
 	private readonly _messageQueues: Map<Topic["topicName"], Map<Subscriber["subscriberId"], Array<Message>>>;
 	private readonly _channels: Map<Subscriber["subscriberId"], MessageBusLocalChannel>;
 
@@ -21,7 +17,7 @@ export class MessageBusLocal extends Initable implements MessageBus {
 	}
 
 	public async publish(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
+		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message
 	): Promise<void> {
 		const messageId = message.messageId;
 
@@ -43,12 +39,12 @@ export class MessageBusLocal extends Initable implements MessageBus {
 	}
 
 	public async retainChannel(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
+		executionContext: FExecutionContext, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
 	): Promise<MessageBus.Channel> {
 		const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
 
 		if (this._channels.has(channelId)) {
-			throw new InvalidOperationError("Wrong operation. Cannot retain chanel twice.");
+			throw new FExceptionInvalidOperation("Wrong operation. Cannot retain chanel twice.");
 		}
 
 		let topicQueuesMap: Map<Subscriber["subscriberId"], Array<Message>> | undefined = this._messageQueues.get(topicName);
@@ -64,12 +60,13 @@ export class MessageBusLocal extends Initable implements MessageBus {
 		}
 
 		const channel = new MessageBusLocalChannel(topicName, subscriberId, queue);
+		await channel.init(executionContext);
 		this._channels.set(channelId, channel);
 
 		return channel;
 	}
 
-	protected onInit(cancellationToken: CancellationToken): void | Promise<void> {
+	protected onInit(): void | Promise<void> {
 		// TODO
 	}
 
@@ -123,6 +120,10 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 		}
 	}
 
+	protected onInit(): void | Promise<void> {
+		// NOP
+	}
+
 	protected onDispose() {
 		// NOP
 	}
@@ -145,12 +146,13 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 					source: this,
 					data: message
 				};
-				await this.notify(event);
+				await this.notify(this.initExecutionContext, event);
 				if (event.delivered === true) {
 					this._queue.shift(); // OK, going to next message
 				}
 			} catch (e) {
-				console.error(`Cannot deliver message '${message.messageId}' to subscriber '${this._subscriberId}'`);
+				const ex: FException = FException.wrapIfNeeded(e);
+				console.error(`Cannot deliver message '${message.messageId}' to subscriber '${this._subscriberId}'. ${ex.message}`);
 			}
 		} finally {
 			this._insideTick = false;

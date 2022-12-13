@@ -1,5 +1,4 @@
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
+import { FException, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
 import * as crypto from "crypto";
 
@@ -13,24 +12,22 @@ import { TOKEN_BYTES_LEN } from "../constants";
 import { PersistentStorage } from "../data/PersistentStorage";
 import { apiHandledException, WrongArgumentApiError } from "./errors";
 import { Security } from "../model/Security";
-import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
-import { wrapErrorIfNeeded } from "@zxteam/errors";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
  */
-export class ManagementApi extends Initable {
+export class ManagementApi extends FInitableBase {
 	private readonly _storage: PersistentStorage;
-	private readonly _log: Logger;
+	private readonly _log: FLogger;
 
-	constructor(storage: PersistentStorage, log: Logger) {
+	constructor(storage: PersistentStorage, log: FLogger) {
 		super();
 		this._storage = storage;
 		this._log = log;
 	}
 
 	public async createTopic(
-		cancellationToken: CancellationToken, topicData: Topic.Id & Topic.Data
+		executionContext: FExecutionContext, topicData: Topic.Id & Topic.Data
 	): Promise<Topic> {
 		if (this._log.isDebugEnabled) { this._log.debug(`Enter createTopic with topicData: ${JSON.stringify(topicData)}`); }
 
@@ -43,7 +40,7 @@ export class ManagementApi extends Initable {
 			};
 
 			const topic: Topic = await this._storage.createTopic(
-				cancellationToken,
+				executionContext,
 				{
 					kind: "TOKEN",
 					token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex")
@@ -55,7 +52,7 @@ export class ManagementApi extends Initable {
 			return topic;
 		} catch (e) {
 			if (this._log.isErrorEnabled || this._log.isTraceEnabled) {
-				const err: Error = wrapErrorIfNeeded(e);
+				const err: FException = FException.wrapIfNeeded(e);
 				if (this._log.isErrorEnabled) { this._log.error(`Failure createTopic: ${err.message}`); }
 				this._log.trace("Failure createTopic", err);
 			}
@@ -64,17 +61,17 @@ export class ManagementApi extends Initable {
 	}
 
 	public async listTopics(
-		cancellationToken: CancellationToken, domain: string | null
+		executionContext: FExecutionContext, domain: string | null
 	): Promise<Array<Topic>> {
 		const topics: Array<Topic> = await this._storage.listTopics(
-			cancellationToken, domain
+			executionContext, domain
 		);
 
 		return topics;
 	}
 
 	// public async destroyTopic(
-	// 	cancellationToken: CancellationToken, topicId: Topic.Id, security: Security
+	// 	executionContext: FExecutionContext, topicId: Topic.Id, security: Security
 	// ): Promise<void> {
 	// 	this._log.debug(`Run destroyTopic with topic: ${topicId}`);
 

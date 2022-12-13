@@ -1,7 +1,5 @@
-import { Logger, CancellationToken } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { Container, Provides } from "@zxteam/launcher";
-import { logger } from "@zxteam/logger";
+import { FLogger, FCancellationToken, FInitableBase, FExecutionContext } from "@freemework/common";
+import { Container, Provides } from "typescript-ioc";
 
 import * as _ from "lodash";
 
@@ -14,26 +12,26 @@ import { Topic } from "../model/Topic";
 import { Message } from "../model/Message";
 import { MessageBusLocal } from "../messaging/MessageBusLocal";
 
-export abstract class MessageBusProvider extends Initable implements MessageBus {
+export abstract class MessageBusProvider extends FInitableBase implements MessageBus {
 
-	protected readonly log: Logger;
+	protected readonly log: FLogger;
 
 	public constructor() {
 		super();
-		this.log = logger.getLogger("MessageBus");
+		this.log = FLogger.None.getLogger("MessageBus");
 		if (this.log.isDebugEnabled) {
 			this.log.debug(`Implementation: ${this.constructor.name}`);
 		}
 	}
 
 	public publish(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
+		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message
 	): Promise<void> {
-		return this.messageBus.publish(cancellationToken, topicName, message);
+		return this.messageBus.publish(executionContext, topicName, message);
 	}
 
-	public retainChannel(cancellationToken: CancellationToken, topicName: string, subscriberId: string): Promise<MessageBus.Channel> {
-		return this.messageBus.retainChannel(cancellationToken, topicName, subscriberId);
+	public retainChannel(executionContext: FExecutionContext, topicName: string, subscriberId: string): Promise<MessageBus.Channel> {
+		return this.messageBus.retainChannel(executionContext, topicName, subscriberId);
 	}
 
 	protected abstract get messageBus(): MessageBus;
@@ -62,8 +60,8 @@ class MessageBusProviderImpl extends MessageBusProvider {
 
 	protected get messageBus() { return this._messageBus; }
 
-	protected async onInit(cancellationToken: CancellationToken) {
-		await this._messageBus.init(cancellationToken);
+	protected async onInit() {
+		await this._messageBus.init(this.initExecutionContext);
 	}
 
 	protected async onDispose() {

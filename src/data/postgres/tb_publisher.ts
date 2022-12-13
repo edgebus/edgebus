@@ -1,5 +1,4 @@
-import { CancellationToken } from "@zxteam/contract";
-import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
+import { FExecutionContext, FSqlProvider, FSqlResultRecord } from "@freemework/common";
 
 import { v4 as uuid } from "uuid";
 import * as _ from "lodash";
@@ -10,8 +9,8 @@ import { Converter } from "../../model/Convert";
 import { Security } from "../../model/Security";
 
 export async function create<TVariant extends Publisher.DataVariant>(
-	cancellationToken: CancellationToken,
-	sqlProvider: SqlProvider,
+	executionContext: FExecutionContext,
+	sqlProvider: FSqlProvider,
 	publisherSecurity: Security,
 	variant: TVariant
 ): Promise<Publisher<TVariant>> {
@@ -24,7 +23,7 @@ export async function create<TVariant extends Publisher.DataVariant>(
 		'"publisher_uuid", "topic_id", "data"' +
 		') VALUES ($1, (SELECT "id" FROM "topic" WHERE "name" = $2 AND ($3 IS NULL OR "domain" = $3)), $4) ' +
 		'RETURNING "utc_create_date"'
-	).executeScalar(cancellationToken,
+	).executeScalar(executionContext,
 		publisherUuid, topicId.topicName, topicId.topicDomain, JSON.stringify(_.omit(variant, "topicId"))
 	);
 
@@ -47,7 +46,7 @@ export async function create<TVariant extends Publisher.DataVariant>(
 }
 
 // export async function getById(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	id: Publisher["publisherId"]
 // ): Publisher {

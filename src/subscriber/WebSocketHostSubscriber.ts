@@ -1,23 +1,22 @@
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { Configuration as HostingConfiguration, WebServer, WebSocketChannelFactoryEndpoint } from "@zxteam/hosting";
-
-import * as uuid from "uuid";
+import { FExceptionArgument, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
 import { MessageBus } from "../messaging/MessageBus";
 import { WebSocketHostSubscriberEndpoint } from "../endpoints/WebSocketHostSubscriberEndpoint";
 import { Subscriber } from "../model/Subscriber";
-import { InvalidOperationError, ArgumentError } from "@zxteam/errors";
-import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
 import { Message } from "../model/Message";
 import { Topic } from "../model/Topic";
+import { FWebServer } from "@freemework/hosting";
 
-export class WebSocketHostSubscriber extends Initable {
+export class WebSocketHostSubscriber extends FInitableBase {
 
 	private readonly _webSocketHostSubscriberEndpoint: WebSocketHostSubscriberEndpoint;
 	private readonly _channels: ReadonlyArray<MessageBus.Channel>;
 
-	public constructor(opts: WebSocketHostSubscriber.Opts, ...channels: ReadonlyArray<MessageBus.Channel>) {
+	public constructor(
+		opts: WebSocketHostSubscriber.Opts,
+		private readonly _log: FLogger,
+		...channels: ReadonlyArray<MessageBus.Channel>
+	) {
 		super();
 
 		this._channels = channels;
@@ -30,15 +29,17 @@ export class WebSocketHostSubscriber extends Initable {
 		const [prefix, kind, id] = opts.subscriberId.split(".");
 
 		if (prefix !== "subscriber") {
-			throw new ArgumentError("opts.subscriberId", `Wrong subscriberId prefix: '${prefix}'. Expected: 'subscriber'`);
+			throw new FExceptionArgument(`Wrong subscriberId prefix: '${prefix}'. Expected: 'subscriber'`, "opts.subscriberId");
 		}
 		if (kind !== "websockethost") {
-			throw new ArgumentError("opts.subscriberId", `Wrong subscriberId kind: '${kind}'. Expected: 'websockethost'`);
+			throw new FExceptionArgument(`Wrong subscriberId kind: '${kind}'. Expected: 'websockethost'`, "opts.subscriberId");
 		}
 
 		// TODO validate "id" for UUID
 
 		const bindPath = `${baseBindPath}/websockethost/${id}`;
+
+		this._log.debug(`Construct ${WebSocketHostSubscriber.name} with bind path '${bindPath}'.`);
 
 		this._webSocketHostSubscriberEndpoint = new WebSocketHostSubscriberEndpoint(
 			//messagesChannel.topicName,
@@ -48,7 +49,7 @@ export class WebSocketHostSubscriber extends Initable {
 				defaultProtocol: "jsonrpc",
 				bindPath
 			},
-			opts.log
+			_log.getLogger(WebSocketHostSubscriberEndpoint.name)
 		);
 
 		const onMessageBound = this._onMessage.bind(this);
@@ -64,14 +65,14 @@ export class WebSocketHostSubscriber extends Initable {
 		});
 	}
 
-	protected async onInit(cancellationToken: CancellationToken): Promise<void> {
-		await this._webSocketHostSubscriberEndpoint.init(cancellationToken);
+	protected async onInit(): Promise<void> {
+		await this._webSocketHostSubscriberEndpoint.init(this.initExecutionContext);
 	}
 	protected async onDispose(): Promise<void> {
 		await this._webSocketHostSubscriberEndpoint.dispose();
 	}
 
-	private async _onMessage(event: MessageBus.Channel.Event | Error): Promise<void> {
+	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event | Error): Promise<void> {
 		//
 		if (event instanceof Error) {
 			//
@@ -88,7 +89,7 @@ export class WebSocketHostSubscriber extends Initable {
 			const topicName: Topic["topicName"] = event.source.topicName;
 			const message: Message.Id & Message.Data = event.data;
 
-			await this._webSocketHostSubscriberEndpoint.delivery(DUMMY_CANCELLATION_TOKEN, topicName, message);
+			await this._webSocketHostSubscriberEndpoint.delivery(this.initExecutionContext, topicName, message);
 			event.delivered = true;
 		} catch (e) {
 			event.delivered = false;
@@ -100,8 +101,7 @@ export class WebSocketHostSubscriber extends Initable {
 export namespace WebSocketHostSubscriber {
 	export interface Opts {
 		readonly subscriberId: Subscriber["subscriberId"];
-		readonly bindServers: ReadonlyArray<WebServer>;
+		readonly bindServers: ReadonlyArray<FWebServer>;
 		readonly baseBindPath: string;
-		readonly log: Logger;
 	}
 }
