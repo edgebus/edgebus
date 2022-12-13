@@ -22,7 +22,6 @@ test/**/*.js
 test/**/*.map
 
 # Dev files
-temp/
 tmp/
 .env
 config-dev.json

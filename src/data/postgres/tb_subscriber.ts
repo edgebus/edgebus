@@ -1,6 +1,4 @@
-import { CancellationToken } from "@zxteam/contract";
-import { SqlProvider, SqlResultRecord } from "@zxteam/sql";
-import { InvalidOperationError } from "@zxteam/errors";
+import { FExecutionContext, FSqlProvider, FSqlResultRecord } from "@freemework/common";
 
 import { v4 as uuid } from "uuid";
 import * as _ from "lodash";
@@ -16,15 +14,15 @@ import { NoRecordPersistentStorageError } from "../errors";
 import { Security } from "../../model/Security";
 
 export async function create<TVariant extends Subscriber.DataVariant>(
-	cancellationToken: CancellationToken,
-	sqlProvider: SqlProvider,
+	executionContext: FExecutionContext,
+	sqlProvider: FSqlProvider,
 	subscriberSecurity: Security,
 	variant: TVariant
 ): Promise<Subscriber<TVariant>> {
 	const topicId: Topic.Id = variant.topicId;
 
 	const topicSubscriberSecuityId: number | null = await sqlToolsTopicSubscriberSecurity
-		.findNonDeletedRecordId(cancellationToken, sqlProvider, topicId, subscriberSecurity);
+		.findNonDeletedRecordId(executionContext, sqlProvider, topicId, subscriberSecurity);
 
 	if (topicSubscriberSecuityId === null) {
 		throw new NoRecordPersistentStorageError("Topic's subscriber security record was not found");
@@ -37,7 +35,7 @@ export async function create<TVariant extends Subscriber.DataVariant>(
 		'"subscriber_uuid", "topic_subscriber_secuity_id", "data"' +
 		") VALUES ($1, $2, $4) " +
 		'RETURNING "utc_create_date"'
-	).executeScalar(cancellationToken,
+	).executeScalar(executionContext,
 		subscriberUuid, topicSubscriberSecuityId, JSON.stringify(_.omit(variant, "topicId"))
 	);
 
@@ -60,7 +58,7 @@ export async function create<TVariant extends Subscriber.DataVariant>(
 }
 
 // export async function setDeleteDate(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	subscriberId: Subscriber["subscriberId"]
 // ): Promise<void> {
@@ -119,14 +117,14 @@ export async function create<TVariant extends Subscriber.DataVariant>(
 
 
 // export async function getByWebhookId(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	subscriberId: Subscriber["subscriberId"]
 // ): Promise<Webhook> {
 // 	throw new InvalidOperationError("Method does not have implementation yet");
 // }
 // export async function getByTopicIdActive(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	topicName: Webhook.Instance["topicName"],
 // 	url: Webhook.Data["url"]
@@ -140,7 +138,7 @@ export async function create<TVariant extends Subscriber.DataVariant>(
 // 	return mapDbRow(record);
 // }
 // export async function getBySecurity(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	security: Security
 // ): Promise<Array<Webhook>> {
@@ -155,14 +153,14 @@ export async function create<TVariant extends Subscriber.DataVariant>(
 // 	return records.map((record) => mapDbRow(record));
 // }
 // export async function getAll(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	filter?: { enabled?: boolean }
 // ): Promise<Array<Webhook>> {
 // 	throw new InvalidOperationError("Method does not have implementation yet");
 // }
 // export async function save(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	topicName: Topic.Name["topicName"],
 // 	webhookData: Webhook.Data

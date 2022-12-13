@@ -1,8 +1,8 @@
 export namespace Message {
-	/**
-	 * The ID of the `Message`
-	 */
 	export interface Id {
+		/**
+		 * An identifier of the `Message`
+		 */
 		readonly messageId: string;
 	}
 

@@ -1,6 +1,4 @@
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { InvalidOperationError } from "@zxteam/errors";
+import { FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
 // Models
 import { Topic } from "../model/Topic";
@@ -12,20 +10,20 @@ import { PersistentStorage } from "../data/PersistentStorage";
 import { UnknownApiError, apiHandledException } from "./errors";
 
 /**
- * Subscriber API allows subscribe/unsibscribe for events via webhooks and other subscriber's type
+ * Subscriber API allows subscribe/unsubscribe for events via webhooks and other subscriber's type
  */
-export class SubscriberApi extends Initable {
-	private readonly _log: Logger;
+export class SubscriberApi extends FInitableBase {
+	private readonly _log: FLogger;
 	private readonly _storage: PersistentStorage;
 
-	constructor(_storage: PersistentStorage, log: Logger) {
+	constructor(_storage: PersistentStorage, log: FLogger) {
 		super();
 		this._storage = _storage;
 		this._log = log;
 	}
 
 	public async list(
-		cancellationToken: CancellationToken,
+		executionContext: FExecutionContext,
 		subscriberSecurity: Security
 	): Promise<Array<Subscriber>> {
 		this._log.debug(`Run subscriberWebhook with subscriberSecurity: ${subscriberSecurity}`);
@@ -41,7 +39,7 @@ export class SubscriberApi extends Initable {
 		// 	throw apiHandledException(e);
 		// }
 
-		throw new InvalidOperationError("Method does not have implementation yet");
+		throw new FExceptionInvalidOperation("Method does not have implementation yet");
 	}
 
 	/**
@@ -51,12 +49,12 @@ export class SubscriberApi extends Initable {
 	 * @param opts Webhook specific options
 	 */
 	public async subscribeWebhook(
-		cancellationToken: CancellationToken, topicId: Topic.Id,
+		executionContext: FExecutionContext, topicId: Topic.Id,
 		topicSubscriberSecurity: Security, webhookData: Subscriber.Webhook
 	): Promise<Subscriber<Subscriber.Webhook>> {
 
 		this._log.debug(`Run subscriberWebhook with topic: ${topicId} and webhookData ${webhookData}`);
-		throw new InvalidOperationError("Not implemented yet");
+		throw new FExceptionInvalidOperation("Not implemented yet");
 		// try {
 		// 	const topicSubscriberSecurityRecord: Topic = await this._storage
 		// 		.getTopicSubscriberSecurity(cancellationToken, topicSubscriberSecurity);
@@ -86,9 +84,9 @@ export class SubscriberApi extends Initable {
 	 * @returns Deleted date
 	 */
 	public async unsubscribe(
-		cancellationToken: CancellationToken, subscriber: Subscriber.Id
+		executionContext: FExecutionContext, subscriber: Subscriber.Id
 	): Promise<Date> {
-		throw new InvalidOperationError("Not implemented yet");
+		throw new FExceptionInvalidOperation("Not implemented yet");
 		//this._log.debug(`Run subscriberWebhook with webhook: ${webhook}`);
 
 		// try {

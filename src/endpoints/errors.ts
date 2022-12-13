@@ -1,15 +1,15 @@
+import { FEnsureException, FException } from "@freemework/common";
+
 import * as express from "express";
-import { EnsureError } from "@zxteam/ensure";
-import { InnerError } from "@zxteam/errors";
 
 import { DataIntegrityPersistentStorageError } from "../data/errors";
 import { ApiError } from "../api/errors";
 
-export abstract class EndpointError extends InnerError { }
+export abstract class EndpointError extends FException { }
 
 export function endpointHandledException(res: express.Response, error: any) {
 
-	if (error instanceof EnsureError) {
+	if (error instanceof FEnsureException) {
 		return res.writeHead(400, `Bad Request: ${error.message}`).end();
 	}
 	// if (error instanceof SqlNoSuchRecordError) {
@@ -17,7 +17,7 @@ export function endpointHandledException(res: express.Response, error: any) {
 	// }
 	if (
 		error instanceof ApiError &&
-		error.innerError instanceof DataIntegrityPersistentStorageError
+		error.innerException instanceof DataIntegrityPersistentStorageError
 	) {
 		return res.writeHead(400, "Bad request").end();
 	}

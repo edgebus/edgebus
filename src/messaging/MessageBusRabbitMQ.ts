@@ -1,6 +1,4 @@
-import { CancellationToken } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { InvalidOperationError } from "@zxteam/errors";
+import { FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
 
 import { MessageBus } from "./MessageBus";
 
@@ -8,7 +6,7 @@ import { Message } from "../model/Message";
 import { Topic } from "../model/Topic";
 import { Subscriber } from "../model/Subscriber";
 
-export class MessageBusRabbitMQ extends Initable implements MessageBus {
+export class MessageBusRabbitMQ extends FInitableBase implements MessageBus {
 	public constructor(opts: MessageBusRabbitMQ.Opts) {
 		super();
 
@@ -16,18 +14,18 @@ export class MessageBusRabbitMQ extends Initable implements MessageBus {
 	}
 
 	public async publish(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message
+		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message
 	): Promise<void> {
-		throw new InvalidOperationError("Not implemented yet");
+		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
 	public async retainChannel(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
+		executionContext: FExecutionContext, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
 	): Promise<MessageBus.Channel> {
-		throw new InvalidOperationError("Not implemented yet");
+		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
-	protected onInit(cancellationToken: CancellationToken): void | Promise<void> {
+	protected onInit(): void | Promise<void> {
 		// TODO
 	}
 

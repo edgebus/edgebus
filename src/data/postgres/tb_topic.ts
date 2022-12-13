@@ -1,22 +1,20 @@
-import { CancellationToken } from "@zxteam/contract";
-import { InvalidOperationError } from "@zxteam/errors";
-import { SqlProvider, SqlResultRecord, SqlData } from "@zxteam/sql";
+import { FSqlProvider, FSqlResultRecord, FSqlData, FExecutionContext } from "@freemework/common";
 
 import { Security } from "../../model/Security";
 import { Topic } from "../../model/Topic";
 
 export async function create(
-	cancellationToken: CancellationToken,
-	sqlProvider: SqlProvider,
+	executionContext: FExecutionContext,
+	sqlProvider: FSqlProvider,
 	topicSecurity: Security,
 	data: Topic.Id & Topic.Data
 ): Promise<Topic> {
-	const sqlCreateAtScalar: SqlData = await sqlProvider.statement(
+	const sqlCreateAtScalar: FSqlData = await sqlProvider.statement(
 		'INSERT INTO "tb_topic" (' +
 		'"domain", "name", "description", "media_type", "topic_security"' +
 		") VALUES ($1, $2, $3, $4, $5) " +
 		'RETURNING "utc_create_date"'
-	).executeScalar(cancellationToken,
+	).executeScalar(executionContext,
 		data.topicDomain, // 1
 		data.topicName, // 2
 		data.topicDescription, // 3
@@ -40,22 +38,22 @@ export async function create(
 }
 
 export async function list(
-	cancellationToken: CancellationToken,
-	sqlProvider: SqlProvider,
+	executionContext: FExecutionContext,
+	sqlProvider: FSqlProvider,
 	domain: string | null
 	//	filter?: { enabled?: boolean }
 ): Promise<Array<Topic>> {
-	const sqlRows: ReadonlyArray<SqlResultRecord> = await sqlProvider.statement(
+	const sqlRows: ReadonlyArray<FSqlResultRecord> = await sqlProvider.statement(
 		'SELECT "id", "domain", "name", "description", "media_type", ' +
 		'"utc_create_date", "utc_delete_date" ' +
 		'FROM "tb_topic" WHERE $1::varchar IS NULL OR "domain" = $1::varchar'
-	).executeQuery(cancellationToken, domain);
+	).executeQuery(executionContext, domain);
 
 	return sqlRows.map(mapDbRow);
 }
 
 // export async function getByName(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	topicName: Topic["topicName"]
 // ): Promise<Topic> {
@@ -69,7 +67,7 @@ export async function list(
 // }
 
 // export async function setDeleteDate(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	topicName: Topic.Id["topicName"]
 // ): Promise<void> {
@@ -88,7 +86,7 @@ export async function list(
 // 	).execute(cancellationToken, topicName);
 // }
 // export async function isExsistByName(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	topicName: Topic.Id["topicName"]
 // ): Promise<boolean> {
@@ -99,7 +97,7 @@ export async function list(
 // 	return sqlRow ? true : false;
 // }
 // export async function getTopicByWebhookId(
-// 	cancellationToken: CancellationToken,
+// 	executionContext: FExecutionContext,
 // 	sqlProvider: SqlProvider,
 // 	subscriberId: Subscriber["subscriberId"]
 // ): Promise<Topic> {
@@ -112,7 +110,7 @@ export async function list(
 // 	return mapDbRow(sqlRow);
 // }
 
-function mapDbRow(sqlRow: SqlResultRecord): Topic {
+function mapDbRow(sqlRow: FSqlResultRecord): Topic {
 	const topicDomain: string | null = sqlRow.get("domain").asNullableString;
 	const topicName: string = sqlRow.get("name").asString;
 	const topicDescription: string = sqlRow.get("description").asString;

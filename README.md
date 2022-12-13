@@ -1,52 +1,31 @@
-# ZXTeam's Notification Service
+# EdgeBus
+
+[EdgeBus](https://docs.edgebus.io) is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
+
+# TypeScript of EdgeBus Service
+
 [![npm version badge](https://img.shields.io/npm/v/@zxteam/identity.service.svg)](https://www.npmjs.com/package/@zxteam/notification.service)
 [![downloads badge](https://img.shields.io/npm/dm/@zxteam/identity.service.svg)](https://www.npmjs.org/package/@zxteam/notification.service)
 [![commit activity badge](https://img.shields.io/github/commit-activity/m/zxteamorg/node.notification.service)](https://github.com/zxteamorg/node.notification.service/pulse)
 [![last commit badge](https://img.shields.io/github/last-commit/zxteamorg/node.notification.service)](https://github.com/zxteamorg/node.notification.service/graphs/commit-activity)
 [![twitter badge](https://img.shields.io/twitter/follow/zxteamorg?style=social&logo=twitter)](https://twitter.com/zxteamorg)
 
-# Notifier
-`Notifier` is a Notification Server that implements [Publish–Subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) Pattern. Main responsibility is to deliver callback messages via Webhooks and other messaging providers.
+This is `src-typescript-service` branch of **EdgeBus** multi project repository based on [orphan](https://git-scm.com/docs/git-checkout#Documentation/git-checkout.txt---orphanltnew-branchgt) branches.
 
->>>
-**Recommendation:** Although notification includes real and valid data, we recommend to use notifications just as notifications and retvieve data via appropriate method of Pull API.
-In general, any notifications system by design may delay messages. Good practice for end-application is to check status via Pull API if expected message was not received in expected time frame.
->>>
+## Developer Notes
 
-## Our instances
-We are hosting sereval public instances. You can use its for dry-run, integration development, etc...
+### Start locally
 
-Currently **PRODUCTION** instance does not provide any guarantees and may be shut-down, wipe-data, etc... Use it just for testing.
+```shell
+cp .env-example .env
+nvm use 18
+npm install
+npm run build
+npm start
+```
 
-### Production
-Release from tag
+Check 
 
-| Title                                       | URL                                                     |
-|---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org/docs                        |
-| Managment API                               | https://notifier.zxteam.org/management                  |
-| Publisher API                               | https://notifier.zxteam.org/publisher                   |
-| Subscriber API                              | https://notifier.zxteam.org/subscriber                  |
-
-### Presentation
-Usually latest tag (sometimes `master` branch)
-
-| Title                                       | URL                                                     |
-|---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org:10443/docs                  |
-| Managment API                               | https://notifier.zxteam.org:10443/management            |
-| Publisher API                               | https://notifier.zxteam.org:10443/publisher             |
-| Subscriber API                              | https://notifier.zxteam.org:10443/subscriber            |
-
-### Evolution
-Usually `master` branch (sometimes `dev` branch)
-
-| Title                                       | URL                                                     |
-|---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org:20443/docs                  |
-| Managment API                               | https://notifier.zxteam.org:20443/management            |
-| Publisher API                               | https://notifier.zxteam.org:20443/publisher             |
-| Subscriber API                              | https://notifier.zxteam.org:20443/subscriber            |
 
 
 ## General information
@@ -57,41 +36,41 @@ Usually `master` branch (sometimes `dev` branch)
 sequenceDiagram
 	participant Subscriber1
 	participant Subscriber2
-	participant `Notifier`
+	participant `EdgeBus`
 	participant Publisher
 	opt Event A happend
-		Publisher->>`Notifier`: Message A for "my" topic
-		`Notifier`->>`Notifier`: Skip, just audit
+		Publisher->>`EdgeBus`: Message A for "my" topic
+		`EdgeBus`->>`EdgeBus`: Skip, just audit
 	end
-	Subscriber2->>+`Notifier`: Subscribe "my" topic
-	`Notifier`-->>-Subscriber2: OK
+	Subscriber2->>+`EdgeBus`: Subscribe "my" topic
+	`EdgeBus`-->>-Subscriber2: OK
 	opt Event B happend
-		Publisher->>`Notifier`: Message B for "my" topic
-		`Notifier`->>+Subscriber2: Message B for "my" topic
-		Subscriber2-->>-`Notifier`: OK
+		Publisher->>`EdgeBus`: Message B for "my" topic
+		`EdgeBus`->>+Subscriber2: Message B for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
 	end
-	Subscriber1->>+`Notifier`: Subscribe "my" topic
-	`Notifier`-->>-Subscriber1: OK
+	Subscriber1->>+`EdgeBus`: Subscribe "my" topic
+	`EdgeBus`-->>-Subscriber1: OK
 	opt Event C happend
-		Publisher->>`Notifier`: Message C for "my" topic
-		`Notifier`->>+Subscriber2: Message C for "my" topic
-		Subscriber2-->>-`Notifier`: OK
-		`Notifier`->>+Subscriber1: Message C for "my" topic
-		Subscriber1-->>-`Notifier`: OK
+		Publisher->>`EdgeBus`: Message C for "my" topic
+		`EdgeBus`->>+Subscriber2: Message C for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
+		`EdgeBus`->>+Subscriber1: Message C for "my" topic
+		Subscriber1-->>-`EdgeBus`: OK
 	end
-	Subscriber1->>+`Notifier`: UNsubscribe "my" topic
-	`Notifier`-->>-Subscriber1: OK
+	Subscriber1->>+`EdgeBus`: UNsubscribe "my" topic
+	`EdgeBus`-->>-Subscriber1: OK
 	opt Event D happend
-		Publisher->>`Notifier`: Message D for "my" topic
-		`Notifier`->>+Subscriber2: Message D for "my" topic
-		Subscriber2-->>-`Notifier`: OK
+		Publisher->>`EdgeBus`: Message D for "my" topic
+		`EdgeBus`->>+Subscriber2: Message D for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
 	end
 ```
 
 ### Delivery
 Messages are sent immediately after an operation was performed.
 
-`Notifier` records the fact of message delivery to your system after receiving the response from your system.
+`EdgeBus` records the fact of message delivery to your system after receiving the response from your system.
 
 If message delivery is failed the server will retry with delay between attempts according to a scale was choosen at subscription phase.
 
@@ -113,7 +92,7 @@ Using JSON-RPC in notification manner
 Using Protocol Buffers for message serialization. See definition .proto file for details.
 
 ### Message security
-`Notifier` does tranfer messages as-is. There is `Publisher`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
+`EdgeBus` does tranfer messages as-is. There is `Publisher`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
 
 However implementation of **subscribers** may provide additional security. For example Webhook provides a token header and SSL validation. See a subscriber documentation for details.
 
@@ -122,11 +101,11 @@ However implementation of **subscribers** may provide additional security. For e
 sequenceDiagram
 	participant Admin
 	participant Publisher
-	participant Notifier
+	participant EdgeBus
 	participant Subscriber
 	opt Setup topic
-		Admin->>Notifier: Create topic "my-topic"
-		Notifier-->>Admin: Create topic "my-topic"
+		Admin->>EdgeBus: Create topic "my-topic"
+		EdgeBus-->>Admin: Create topic "my-topic"
 	end
 	opt Security
 		Admin->>Subscriber: Subscribe Token: XXXX
@@ -137,16 +116,16 @@ sequenceDiagram
 		Publisher-->>Admin: Thanks
 	end
 	opt Setup
-	Subscriber->>Notifier: Setup subscriber
-	Notifier-->>Subscriber: Subscription details
+	Subscriber->>EdgeBus: Setup subscriber
+	EdgeBus-->>Subscriber: Subscription details
 	end
 	opt Setup
-	Publisher->>Notifier: Setup publisher
-	Notifier-->>Publisher: Publication details
+	Publisher->>EdgeBus: Setup publisher
+	EdgeBus-->>Publisher: Publication details
 	end
 	opt General use
-		Publisher->>Notifier: Publish a message
-		Notifier->>Subscriber: Deliver the message
+		Publisher->>EdgeBus: Publish a message
+		EdgeBus->>Subscriber: Deliver the message
 	end
 ```
 
@@ -379,10 +358,10 @@ $ curl --verbose --request DELETE --header 'Content-Type: application/json' http
 ### Webhook
 [Webhooks](https://en.wikipedia.org/wiki/Webhook) are "user-defined HTTP
 callbacks".
-When an event occurs, `Notifier` makes an HTTP request to the URI configured for the webhook.
+When an event occurs, `EdgeBus` makes an HTTP request to the URI configured for the webhook.
 
 >>>
-**Warning:** Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then Notifier will think the hook failed and [retry](#delivery) it.
+**Warning:** Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then EdgeBus will think the hook failed and [retry](#delivery) it.
 >>>
 
 #### SSL verification
@@ -432,7 +411,7 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 
 
 ### WebSocket (Host Mode)
-This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `Notifier` as client.
+This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `EdgeBus` as client.
 
 #### Create subscriber endpoint
 ```bash
@@ -486,7 +465,7 @@ curl -v -X POST --header "Content-Type: application/json" --data '{"chat_id":"-3
 curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/getMe
 ```
 ```json
-{"ok":true,"result":{"id":1036097604,"is_bot":true,"first_name":"ZXTeam\u2019s Notifier","username":"zxteam_notifier_bot"}}
+{"ok":true,"result":{"id":1036097604,"is_bot":true,"first_name":"ZXTeam\u2019s EdgeBus","username":"zxteam_notifier_bot"}}
 ```
 
 ```bash
@@ -508,7 +487,7 @@ curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/
 					"username":"theanurin"
 				},
 				"chat":{
-					"id":-347824729,"title":"ZXTeam\u2019s Notifier",
+					"id":-347824729,"title":"ZXTeam\u2019s EdgeBus",
 					"type":"group",
 					"all_members_are_administrators":true
 				},
@@ -521,7 +500,7 @@ curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/
 			"message":{
 				"message_id":2,
 				"from":{"id":277364372,"is_bot":false,"first_name":"Serhii","last_name":"Zghama","username":"serhiizghama"},
-				"chat":{"id":-347824729,"title":"ZXTeam\u2019s Notifier","type":"group","all_members_are_administrators":true},
+				"chat":{"id":-347824729,"title":"ZXTeam\u2019s EdgeBus","type":"group","all_members_are_administrators":true},
 				"date":1577452697,
 				"text":"/hello",
 				"entities":[{"offset":0,"length":6,"type":"bot_command"}]

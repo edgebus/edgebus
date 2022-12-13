@@ -1,8 +1,6 @@
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
-import { ensureFactory, Ensure } from "@zxteam/ensure";
-import { InvalidOperationError } from "@zxteam/errors";
-import * as hosting from "@zxteam/hosting";
+import { FEnsure, FExecutionContext, FExecutionContextLogger, FLogger } from "@freemework/common";
+import { FHostingConfiguration, FServersBindEndpoint, FWebServer } from "@freemework/hosting";
+
 
 import * as express from "express";
 import * as bodyParser from "body-parser";
@@ -11,18 +9,18 @@ import { ManagementApi } from "../api/ManagementApi";
 import { endpointHandledException } from "./errors";
 import { Topic } from "../model/Topic";
 
-const ensure: Ensure = ensureFactory();
+const ensure: FEnsure = FEnsure.create();
 
-export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
+export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 	private readonly _api: ManagementApi;
 
 	public constructor(
-		servers: ReadonlyArray<hosting.WebServer>,
+		servers: ReadonlyArray<FWebServer>,
 		api: ManagementApi,
-		opts: hosting.Configuration.BindEndpoint,
-		log: Logger
+		opts: FHostingConfiguration.BindEndpoint,
+		log: FLogger
 	) {
-		super(servers, opts, log);
+		super(servers, opts);
 		this._api = api;
 	}
 
@@ -83,9 +81,9 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 				topicMediaType
 			};
 
-			const topic = await this._api.createTopic(DUMMY_CANCELLATION_TOKEN, topicData);
+			const topic = await this._api.createTopic(FExecutionContext.None, topicData);
 
-			return res
+			res
 				.status(201)
 				.header("Content-Type", "application/json")
 				.end(Buffer.from(JSON.stringify({
@@ -95,8 +93,10 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 					createAt: topic.createAt.toISOString(),
 					deleteAt: topic.deleteAt !== null ? topic.deleteAt.toISOString() : null
 				}), "utf-8"));
+			return;
 		} catch (error) {
-			return endpointHandledException(res, error);
+			endpointHandledException(res, error);
+			return;
 		}
 
 	}
@@ -105,7 +105,7 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 		try {
 			const domain: string | null = null; // TODO get from CN of the cert
 
-			const topics: Array<Topic> = await this._api.listTopics(DUMMY_CANCELLATION_TOKEN, domain);
+			const topics: Array<Topic> = await this._api.listTopics(FExecutionContext.None, domain);
 
 			const responseData = topics.map(topic => ({
 				name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,
@@ -117,7 +117,8 @@ export class ManagementApiRestEndpoint extends hosting.ServersBindEndpoint {
 
 			res.status(200).end(JSON.stringify(responseData), "utf-8");
 		} catch (error) {
-			return endpointHandledException(res, error);
+			endpointHandledException(res, error);
+			return;
 		}
 	}
 

@@ -32,4 +32,13 @@
 		"test/**/*.map": true,
 		"test/**/*.js": true,
 	},
+	"cSpell.words": [
+		"auditability",
+		"devel",
+		"edgebus",
+		"Encrypter",
+		"freemework",
+		"Initable",
+		"websockethost"
+	],
 }

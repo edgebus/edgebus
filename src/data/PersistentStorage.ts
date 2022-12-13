@@ -1,63 +1,62 @@
-import { CancellationToken } from "@zxteam/contract";
-import { Initable } from "@zxteam/contract";
+import { FExecutionContext, FInitableBase } from "@freemework/common";
 
 import { Publisher } from "../model/Publisher";
 import { Subscriber } from "../model/Subscriber";
 import { Topic } from "../model/Topic";
 import { Security } from "../model/Security";
 
-export interface PersistentStorage extends Initable {
+export interface PersistentStorage extends FInitableBase {
 
 	createPublisher<TDataVariant extends Publisher.DataVariant>(
-		cancellationToken: CancellationToken,
+		executionContext: FExecutionContext,
 		publisherSecurity: Security,
 		variant: TDataVariant
 	): Promise<Publisher<TDataVariant>>;
 
 	createSubscriber<TDataVariant extends Subscriber.DataVariant>(
-		cancellationToken: CancellationToken,
+		executionContext: FExecutionContext,
 		subscriberSecurity: Security,
 		variant: TDataVariant
 	): Promise<Subscriber<TDataVariant>>;
 
 	createTopic(
-		cancellationToken: CancellationToken,
+		executionContext: FExecutionContext,
 		topicSecurity: Security,
 		topicData: Topic.Id & Topic.Data
 	): Promise<Topic>;
 
 	listTopics(
-		cancellationToken: CancellationToken,
+		executionContext: FExecutionContext,
 		domain: string | null
 	): Promise<Array<Topic>>;
 
 	// getSubscriber(
-	// 	cancellationToken: CancellationToken,
+		// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
 	// ): Promise<Subscriber>;
 
 	// getTopic(
-	// 	cancellationToken: CancellationToken,
+		// executionContext: FExecutionContext,
 	// 	topic: Topic.Id
 	// ): Promise<Topic>;
 
 	// getTopicBySubscriber(
-	// 	cancellationToken: CancellationToken,
+		// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
 	// ): Promise<Topic>;
 
 	// removePublish(
-	// 	cancellationToken: CancellationToken,
+		// executionContext: FExecutionContext,
 	// 	publisherId: Publisher["publisherId"]
 	// ): Promise<void>;
 
 	// removeSubscriber(
-	// 	cancellationToken: CancellationToken,
+		// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
 	// ): Promise<void>;
 
 	// removeTopic(
-	// 	cancellationToken: CancellationToken,
+		// executionContext: FExecutionContext,
 	// 	topic: Topic.Id
 	// ): Promise<void>;
 }

@@ -1,6 +1,5 @@
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { SubscriberChannelMixin } from "@zxteam/channels";
-import { Configuration as HostingConfiguration, WebServer, WebSocketChannelFactoryEndpoint } from "@zxteam/hosting";
+import { FCancellationToken, FLogger, FSubscriberChannelMixin, FExceptionAggregate, FException, FExecutionContext } from "@freemework/common";
+import { FHostingConfiguration, FWebServer, FWebSocketChannelFactoryEndpoint } from "@freemework/hosting";
 
 import { EventEmitter } from "events";
 import * as WebSocket from "ws";
@@ -8,23 +7,22 @@ import * as WebSocket from "ws";
 import { Message } from "../model/Message";
 import { SubscriberChannelBase } from "../utils/SubscriberChannelBase";
 import { Topic } from "../model/Topic";
-import { wrapErrorIfNeeded, AggregateError } from "@zxteam/errors";
 
-export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndpoint {
-	private readonly _emmiter: EventEmitter;
+export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEndpoint {
+	private readonly _emitter: EventEmitter;
 	//private readonly _binaryChannels: Array<BinaryChannel> = [];
 	private readonly _textChannels: Array<TextChannel> = [];
 	//private readonly _topicNames: ReadonlyArray<string>;
 
 	public constructor(
 		//topicNames: ReadonlyArray<string>,
-		servers: ReadonlyArray<WebServer>,
-		opts: HostingConfiguration.WebSocketEndpoint,
-		log: Logger
+		servers: ReadonlyArray<FWebServer>,
+		opts: FHostingConfiguration.WebSocketEndpoint,
+		log: FLogger
 	) {
-		super(servers, opts, log, { text: true });
+		super(servers, opts, { text: true });
 		//this._topicNames = topicNames;
-		this._emmiter = new EventEmitter();
+		this._emitter = new EventEmitter();
 	}
 
 	public get consumersCount(): number {
@@ -35,12 +33,12 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 	public on(event: "lastConsumerRemoved", listener: () => void): this;
 	public on(event: "consumersCountChanged", listener: () => void): this;
 	public on(event: string, listener: () => void): this {
-		this._emmiter.on(event, listener);
+		this._emitter.on(event, listener);
 		return this;
 	}
 
 	// public async createBinaryChannel(
-	// 	cancellationToken: CancellationToken, webSocket: WebSocket, subProtocol: string
+	// 	executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
 	// ): Promise<WebSocketChannelFactoryEndpoint.BinaryChannel> {
 	// 	const channel = new BinaryChannel(() => {
 	// 		const indexToDelete = this._binaryChannels.indexOf(channel);
@@ -55,30 +53,30 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 	// }
 
 	public async createTextChannel(
-		cancellationToken: CancellationToken, webSocket: WebSocket, subProtocol: string
-	): Promise<WebSocketChannelFactoryEndpoint.TextChannel> {
+		executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
+	): Promise<FWebSocketChannelFactoryEndpoint.TextChannel> {
 		const channel = new TextChannel(() => {
 			const indexToDelete = this._textChannels.indexOf(channel);
 			if (indexToDelete !== -1) {
 				this._textChannels.splice(indexToDelete, 1);
-				this._emmiter.emit("consumersCountChanged");
+				this._emitter.emit("consumersCountChanged");
 			}
 			if (this._textChannels.length === 0) {
-				this._emmiter.emit("lastConsumerRemoved");
+				this._emitter.emit("lastConsumerRemoved");
 			}
 		});
 
 		this._textChannels.push(channel);
-		this._emmiter.emit("consumersCountChanged");
+		this._emitter.emit("consumersCountChanged");
 		if (this._textChannels.length === 1) {
-			this._emmiter.emit("firstConsumerAdded");
+			this._emitter.emit("firstConsumerAdded");
 		}
 		return channel;
 	}
 
 
 	public async delivery(
-		cancellationToken: CancellationToken, topicName: Topic["topicName"], message: Message.Id & Message.Data
+		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message.Id & Message.Data
 	): Promise<void> {
 		const mediaType: string = message.mediaType;
 		const messageBody: Buffer = message.messageBody;
@@ -99,15 +97,15 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 			params: { mediaType, data }
 		});
 
-		const textChannelDeliveryErrors: Array<Error> = [];
+		const textChannelDeliveryErrors: Array<FException> = [];
 		for (const textChannel of this._textChannels) {
 			try {
-				await textChannel.rpcDelivery(cancellationToken, messageStr);
+				await textChannel.rpcDelivery(executionContext, messageStr);
 			} catch (e) {
-				textChannelDeliveryErrors.push(wrapErrorIfNeeded(e));
+				textChannelDeliveryErrors.push(FException.wrapIfNeeded(e));
 			}
 		}
-		if (textChannelDeliveryErrors.length > 0) { throw new AggregateError(textChannelDeliveryErrors); }
+		if (textChannelDeliveryErrors.length > 0) { throw new FExceptionAggregate(textChannelDeliveryErrors); }
 
 		// if (this._binaryChannels.length > 0) {
 		// 	const messageBinary = Buffer.from(messageStr);
@@ -118,7 +116,7 @@ export class WebSocketHostSubscriberEndpoint extends WebSocketChannelFactoryEndp
 	}
 }
 
-class TextChannel extends SubscriberChannelBase<string> implements WebSocketChannelFactoryEndpoint.TextChannel {
+class TextChannel extends SubscriberChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
 	private readonly _disposer: () => void | Promise<void>;
 
 	public constructor(disposer: () => void | Promise<void>) {
@@ -126,14 +124,18 @@ class TextChannel extends SubscriberChannelBase<string> implements WebSocketChan
 		this._disposer = disposer;
 	}
 
-	public async send(cancellationToken: CancellationToken, data: string): Promise<void> {
+	public async send(executionContext: FExecutionContext, data: string): Promise<void> {
 		// Echo any message from client
-		return this.notify({ data });
+		return this.notify(executionContext, { data });
 	}
 
-	public async rpcDelivery(cancellationToken: CancellationToken, messageStr: string) {
-		await this.notify({ data: messageStr });
+	public async rpcDelivery(executionContext: FExecutionContext, messageStr: string) {
+		await this.notify(executionContext, { data: messageStr });
 		// TODO wait for deliver ACK message
+	}
+
+	protected onInit(): void | Promise<void> {
+		// NOP
 	}
 
 	protected onDispose(): void | Promise<void> {
@@ -149,7 +151,7 @@ class TextChannel extends SubscriberChannelBase<string> implements WebSocketChan
 // 		this._disposer = disposer;
 // 	}
 
-// 	public async send(cancellationToken: CancellationToken, data: Uint8Array): Promise<void> {
+// 	public async send(executionContext: FExecutionContext, data: Uint8Array): Promise<void> {
 // 		// Echo any message from client
 // 		return this.notify({ data });
 // 	}

@@ -1,8 +1,5 @@
-import { DUMMY_CANCELLATION_TOKEN } from "@zxteam/cancellation";
-import { CancellationToken, Logger } from "@zxteam/contract";
-import { InvalidOperationError } from "@zxteam/errors";
-import { ensureFactory, Ensure, EnsureError } from "@zxteam/ensure";
-import * as hosting from "@zxteam/hosting";
+import { FEnsure, FLogger } from "@freemework/common";
+import { FHostingConfiguration, FServersBindEndpoint, FWebServer } from "@freemework/hosting";
 
 import * as crypto from "crypto";
 import * as express from "express";
@@ -16,23 +13,23 @@ import { Topic } from "../model/Topic";
 import { Subscriber } from "../model/Subscriber";
 import { Security } from "../model/Security";
 
-const ensure: Ensure = ensureFactory();
+const ensure: FEnsure = FEnsure.create();
 
-export class SubscriberApiRestEndpoint extends hosting.ServersBindEndpoint {
+export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	private readonly _api: SubscriberApi;
 
 	public constructor(
-		servers: ReadonlyArray<hosting.WebServer>,
+		servers: ReadonlyArray<FWebServer>,
 		api: SubscriberApi,
-		opts: hosting.Configuration.BindEndpoint,
-		log: Logger
+		opts: FHostingConfiguration.BindEndpoint,
+		log: FLogger
 	) {
-		super(servers, opts, log);
+		super(servers, opts);
 		this._api = api;
 	}
 
 	public get bindPath(): string { return this._bindPath; }
-	public get servers(): ReadonlyArray<hosting.WebServer> { return this._servers; }
+	public get servers(): ReadonlyArray<FWebServer> { return this._servers; }
 
 	protected onInit(): void {
 		for (const server of this._servers) {

@@ -1,8 +1,6 @@
-import { Logger, CancellationToken } from "@zxteam/contract";
-import { Initable } from "@zxteam/disposable";
-import { Container, Provides, Singleton } from "@zxteam/launcher";
-import { logger } from "@zxteam/logger";
-import * as hosting from "@zxteam/hosting";
+import { FLogger, FCancellationToken, FInitableBase } from "@freemework/common";
+import { Container, Provides, Singleton } from "typescript-ioc";
+import * as hosting from "@freemework/hosting";
 
 import * as express from "express";
 import * as _ from "lodash";
@@ -10,14 +8,14 @@ import * as _ from "lodash";
 import { ConfigurationProvider } from "./ConfigurationProvider";
 
 @Singleton
-export abstract class HostingProvider extends Initable {
+export abstract class HostingProvider extends FInitableBase {
 	public abstract get serverInstances(): ReadonlyArray<HostingProvider.ServerInstance>;
 
-	protected readonly log: Logger;
+	protected readonly log: FLogger;
 
 	public constructor() {
 		super();
-		this.log = logger.getLogger("Hosting");
+		this.log = FLogger.None;
 		if (this.log.isDebugEnabled) {
 			this.log.debug(`Implementation: ${this.constructor.name}`);
 		}
@@ -26,7 +24,7 @@ export abstract class HostingProvider extends Initable {
 export namespace HostingProvider {
 	export interface ServerInstance {
 		readonly name: string;
-		readonly server: hosting.WebServer;
+		readonly server: hosting.FWebServer;
 		readonly isOwnInstance: boolean;
 	}
 }
@@ -36,7 +34,7 @@ class HostingProviderImpl extends HostingProvider {
 	// Do not use Inject inside providers to prevents circular dependency
 	private readonly _configProvider: ConfigurationProvider;
 
-	private readonly _serverInstances: Array<{ name: string, server: hosting.WebServer, isOwnInstance: boolean }>;
+	private readonly _serverInstances: Array<{ name: string, server: hosting.FWebServer, isOwnInstance: boolean }>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
 
 	public constructor() {
@@ -51,7 +49,7 @@ class HostingProviderImpl extends HostingProvider {
 				return { name: serverOpts.name, server: serverOpts, isOwnInstance: false };
 			}
 
-			const ownServerInstance = hosting.createWebServer(serverOpts, this.log);
+			const ownServerInstance = hosting.createWebServer(serverOpts);
 
 			const expressApplication = ownServerInstance.rootExpressApplication;
 			expressApplication.enable("case sensitive routing"); // "/Foo" and "/foo" should be different routes
@@ -74,10 +72,10 @@ class HostingProviderImpl extends HostingProvider {
 	}
 
 
-	protected async onInit(cancellationToken: CancellationToken): Promise<void> {
+	protected async onInit(): Promise<void> {
 		this.log.info("Initializing Web servers...");
 
-		const serversMap: { readonly [serverName: string]: { server: hosting.WebServer, isOwnInstance: boolean } }
+		const serversMap: { readonly [serverName: string]: { server: hosting.FWebServer, isOwnInstance: boolean } }
 			= _.keyBy(this._serverInstances, "name");
 
 		try {
@@ -88,7 +86,7 @@ class HostingProviderImpl extends HostingProvider {
 				if (serverInfo.isOwnInstance === true) {
 					setupExpressErrorHandles(serverInfo.server.rootExpressApplication, this.log);
 				}
-				await serverInfo.server.init(cancellationToken);
+				await serverInfo.server.init(this.initExecutionContext);
 				this._destroyHandlers.push(() => serverInfo.server.dispose());
 			}
 		} catch (e) {
@@ -102,7 +100,7 @@ class HostingProviderImpl extends HostingProvider {
 	}
 
 	protected async onDispose(): Promise<void> {
-		this.log.info("Disposinig Web servers...");
+		this.log.info("Disposing Web servers...");
 		let destroyHandler;
 		while ((destroyHandler = this._destroyHandlers.pop()) !== undefined) {
 			await destroyHandler();
@@ -112,7 +110,7 @@ class HostingProviderImpl extends HostingProvider {
 
 
 
-export function setupExpressErrorHandles(app: express.Application, log: Logger): void {
+export function setupExpressErrorHandles(app: express.Application, log: FLogger): void {
 	// 404 Not found (bad URL)
 	app.use(function (req: express.Request, res: express.Response) { res.status(404).end("404 Not Found"); });
 

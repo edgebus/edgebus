@@ -10,13 +10,13 @@ export namespace Publisher {
 		Http = "HTTP",
 
 		/**
-		 * Allows to publish messages via WebSocket. `Notifier` will connect to your WebSocket server to get messages.
+		 * Allows to publish messages via WebSocket. `EdgeBus` will connect to your WebSocket server to get messages.
 		 */
 		WebSocketClient = "WEB_SOCKET_CLIENT",
 
 
 		/**
-		 * Allows to publish messages via WebSocket. `Notifier` will listen for client's connections.
+		 * Allows to publish messages via WebSocket. `EdgeBus` will listen for client's connections.
 		 */
 		WebSocketHost = "WEB_SOCKET_HOST"
 	}
