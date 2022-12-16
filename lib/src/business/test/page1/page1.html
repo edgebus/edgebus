@@ -1,0 +1,37 @@
+<div class="row">
+    <div class="col-12 col-xl-6">
+        <metronicapp-portlet title="Information table">
+            <template toolbar>
+                <span>Table 1</span>
+            </template>
+            <template body>
+                <metronicapp-basic-table [hover]="true" [itemsSource]="data">
+                    <template header>
+                        <tr>
+                            <th>Data 1</th>
+                            <th class="text-center">Data 2</th>
+                            <th class="text-center">Data 3</th>
+                            <th class="text-center">Data 4</th>
+                        </tr>
+                    </template>
+                    <template row let-item>
+                        <tr>
+                            <td>{{item.column1}}</td>
+                            <td class="text-center">{{item.column2}}</td>
+                            <td class="text-center">{{item.column3}}</td>
+                            <td class="text-center">{{item.column4}}</td>
+                        </tr>
+                    </template>
+                </metronicapp-basic-table>
+            </template>
+            <template footer>
+                <tr class="row">
+                    <td class="col-12 text-right">
+                        <metronicapp-button class="mx-1" label="Set" [action]="handleButtonClick" type="success">
+                        </metronicapp-button>
+                    </td>
+                </tr>
+            </template>
+        </metronicapp-portlet>
+    </div>
+</div>

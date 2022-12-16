@@ -1,0 +1,6 @@
+<div class="kt-section">
+	<span *ngIf="title!=null" class="kt-section__info">{{title}}</span>
+	<div [ngClass]="sectionClass">
+		<ng-content></ng-content>
+	</div>
+</div>

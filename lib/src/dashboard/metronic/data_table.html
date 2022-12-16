@@ -1,0 +1,18 @@
+<div class="kt-datatable kt-datatable--default kt-datatable--brand kt-datatable--error kt-datatable--loaded"
+	id="kt_apps_user_list_datatable">
+	<table class="kt-datatable__table" style="display: block;">
+		<thead *ngIf="header!=null" class="kt-datatable__head">
+			<template [ngTemplateOutlet]="header"></template>
+		</thead>
+		<tbody class="kt-datatable__body">
+			<ng-container *ngIf="itemsSource != null && itemsSource.length > 0">
+				<ng-container *ngFor="let item of itemsSource">
+					<template [ngTemplateOutlet]="row" [ngTemplateOutletValue]="item"></template>
+				</ng-container>
+			</ng-container>
+			<ng-container *ngIf="itemsSource == null || itemsSource.length == 0">
+				<span class="kt-datatable--error">No records found</span>
+			</ng-container>
+		</tbody>
+	</table>
+</div>

@@ -1,0 +1,22 @@
+<table [ngClass]="tableClass">
+	<thead *ngIf="header!=null">
+		<template [ngTemplateOutlet]="header"></template>
+	</thead>
+	<tbody>
+		<ng-container *ngIf="itemsSource != null && itemsSource.length > 0">
+			<ng-container *ngFor="let item of itemsSource">
+				<template [ngTemplateOutlet]="row" [ngTemplateOutletValue]="item"></template>
+			</ng-container>
+		</ng-container>
+		<ng-container *ngIf="itemsSource == null || itemsSource.length == 0">
+			<tr>
+				<td colspan="999" class="text-center py-4">
+					<span class="kt-datatable--error">No records found</span>
+				</td>
+			</tr>
+		</ng-container>
+	</tbody>
+	<tfoot *ngIf="footer!=null">
+		<template [ngTemplateOutlet]="footer"></template>
+	</tfoot>
+</table>

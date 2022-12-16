@@ -1,0 +1,8 @@
+<div class="dropdown">
+	<button @skipSchemaValidationFor="[data-toggle]"  [ngClass]="dropdownClass" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		{{title}}
+	</button>
+	<div *ngIf="items!=null" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+		<template [ngTemplateOutlet]="items"></template>
+	</div>
+</div>

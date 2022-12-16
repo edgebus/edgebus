@@ -1,0 +1,30 @@
+<metronicapp applicationVersion="applicationVersion">
+	<template metronicapp-side-menu>
+		<metronicapp-side-menu-section title="Left section 1"></metronicapp-side-menu-section>
+		<metronicapp-side-menu-link title="Left 1 1" [route]="testPage1Url" icon="flaticon-list-2">
+		</metronicapp-side-menu-link>
+		<metronicapp-side-menu-link title="Left 1 2" [route]="testPage2Url" icon="flaticon2-download-1">
+		</metronicapp-side-menu-link>
+
+		<metronicapp-side-menu-section title="Left section 2"></metronicapp-side-menu-section>
+	</template>
+
+	<template metronicapp-header-menu>
+		<h2>test</h2>
+	</template>
+
+	<template metronicapp-header-bar>
+		<metronicapp-header-bar-expand-button icon="flaticon2-search-1" title="Search" [tooltip]="'Test tooltip'">
+		</metronicapp-header-bar-expand-button>
+		<metronicapp-header-bar-quickpanel-button class="header-bar-quickpanel-button"
+			icon="flaticon-event-calendar-symbol" title="Schedule" [tooltip]="'Test tooltip 3'">
+			<template metronicapp-quickpanel-content>
+				<h1>To Do</h1>
+			</template>
+		</metronicapp-header-bar-quickpanel-button>
+	</template>
+
+	<template metronicapp-content>
+		<router-outlet [routes]="allRoutes"></router-outlet>
+	</template>
+</metronicapp>

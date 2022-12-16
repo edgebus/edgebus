@@ -1,0 +1,17 @@
+<div class="card">
+	<div class="card-header" id="heading{{id}}" (click)="showContent">
+		<div @skipSchemaValidationFor="[data-toggle]" [ngClass]="accordionItemTitleClass" data-toggle="collapse" attr.data-target="#collapseOne{{id}}"
+			aria-expanded="true">
+			<i *ngIf="icon!=null" [ngClass]="icon"></i>
+			{{title}}
+			<template [ngTemplateOutlet]="titleTemplate"></template>
+		</div>
+	</div>
+	<div id="collapseOne{{id}}" [ngClass]="accordionItemBodyClass" attr.aria-labelledby="heading{{id}}">
+		<div class="card-body">
+			<ng-container *ngIf="contentShow">
+				<template [ngTemplateOutlet]="body"></template>
+			</ng-container>
+		</div>
+	</div>
+</div>

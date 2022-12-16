@@ -1,0 +1,21 @@
+<div [ngClass]="portletClass">
+	<div *ngIf="showHeader" [ngClass]="portletHeaderClass">
+		<div class="kt-portlet__head-label">
+			<span *ngIf="icon!=null" class="kt-portlet__head-icon">
+				<i [ngClass]="icon"></i>
+			</span>
+			<h3 *ngIf="showTitle" class="kt-portlet__head-title">
+				{{title}} <small *ngIf="subTitle">{{subTitle}}</small>
+			</h3>
+		</div>
+		<div *ngIf="toolbar!=null" class="kt-portlet__head-toolbar">
+			<template [ngTemplateOutlet]="toolbar"></template>
+		</div>
+	</div>
+	<div *ngIf="body!=null" [ngClass]="portletBodyClass">
+		<template [ngTemplateOutlet]="body"></template>
+	</div>
+	<div *ngIf="footer!=null" class="kt-portlet__foot">
+		<template [ngTemplateOutlet]="footer"></template>
+	</div>
+</div>
