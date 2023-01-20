@@ -19,7 +19,7 @@
 	"files.eol": "\n",
 	"files.exclude": {
 		"docs": true,
-		"src": true,
+		"src-*": true,
 	},
 	"git.rebaseWhenSync": true,
 	"editor.guides.indentation": true,

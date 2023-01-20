@@ -11,22 +11,21 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 | Branch                                                                     | Description                                                               |
 |----------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [docs](../../tree/docs)                                                    | Sources of [EdgeBus documentation](https://docs.edgebus.io).              |
-| [src-dart-console-master](../../tree/src-dart-console-master)              | Dart sources of an Administrator Console Web Application.                 |
-| [src-typescript-service-master](../../tree/src-typescript-service-master)  | TypeScript sources of a Service Application.                              |
+| [src-dart-console](../../tree/src-dart-console-master)              | Dart sources of an Administrator Console Web Application.                 |
+| [src-typescript-service](../../tree/src-typescript-service-master)  | TypeScript sources of a Service Application.                              |
 
 ## Get Started
 
 1. Clone the repository
 	```shell
 	git clone --branch workspace git@github.com:edgebus/edgebus.git
-	```
-1. Enter into cloned directory
-	```shell
 	cd edgebus
 	```
 1. Initialize [worktree](https://git-scm.com/docs/git-worktree) by execute following commands
 	```shell
-	for BRANCH in $(cat README.md | tail -n +13 | head -n 3 | grep -E '^\| \[([a-z\-]+)\]' | awk -F'[][]' '{print $2}'); do git worktree add "${BRANCH}" "${BRANCH}"; done
+	git worktree add docs docs
+	git worktree add src-dart-console src-dart-console-master
+	git worktree add src-typescript-service src-typescript-service-master
 	```
 1. Open VSCode Workspace
 	```shell

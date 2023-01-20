@@ -6,11 +6,11 @@
 		},
 		{
 			"name": "EdgeBus Dart Console",
-			"path": "src/dart/console"
+			"path": "src-dart-console"
 		},
 		{
-			"name": "EdgeBus Service",
-			"path": "src/typescript/service"
+			"name": "EdgeBus TypeScript Service",
+			"path": "src-typescript-service"
 		},
 		{
 			"name": "EdgeBus Workspace",
