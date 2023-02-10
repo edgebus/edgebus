@@ -1,11 +1,11 @@
-import { FSqlProvider, FSqlResultRecord, FSqlData, FExecutionContext } from "@freemework/common";
+import { FSqlConnection, FSqlResultRecord, FSqlData, FExecutionContext } from "@freemework/common";
 
 import { Security } from "../../model/Security";
 import { Topic } from "../../model/Topic";
 
 export async function create(
 	executionContext: FExecutionContext,
-	sqlProvider: FSqlProvider,
+	sqlProvider: FSqlConnection,
 	topicId: Topic.Id,
 	subscriberSecurity: Security
 ): Promise<void> {
@@ -33,7 +33,7 @@ export async function create(
 
 export async function findNonDeletedRecordId(
 	executionContext: FExecutionContext,
-	sqlProvider: FSqlProvider,
+	sqlProvider: FSqlConnection,
 	topicId: Topic.Id,
 	subscriberSecurity: Security
 ): Promise<number | null> {

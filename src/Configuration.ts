@@ -31,14 +31,14 @@ export class Configuration {
 	public static parse(configuration: FConfiguration): Configuration {
 		const servers: ReadonlyArray<FHostingConfiguration.WebServer> = Object.freeze(FHostingConfiguration.parseWebServers(configuration));
 
-		const endpoints: ReadonlyArray<Configuration.Endpoint> = Object.freeze(configuration.getString("endpoints").split(" ").map(
+		const endpoints: ReadonlyArray<Configuration.Endpoint> = Object.freeze(configuration.get("endpoints").asString.split(" ").map(
 			(endpointIndex: string): Configuration.Endpoint => {
 				return parseEndpoint(configuration, endpointIndex);
 			}
 		));
 
-		const cacheStorageURL: URL = configuration.getURL("cacheStorage.url");
-		const persistentStorageURL: URL = configuration.getURL("persistentStorage.url");
+		const cacheStorageURL: URL = configuration.get("cacheStorage.url").asUrl;
+		const persistentStorageURL: URL = configuration.get("persistentStorage.url").asUrl;
 
 		const appConfig: Configuration = new Configuration(
 			servers,
@@ -111,7 +111,7 @@ export class ConfigurationException extends FException { }
 
 function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Configuration.Endpoint {
 	const endpointConfiguration: FConfiguration = configuration.getNamespace(`endpoint.${endpointIndex}`);
-	const endpointType: Configuration.Endpoint["type"] = endpointConfiguration.getString("type") as Configuration.Endpoint["type"];
+	const endpointType: Configuration.Endpoint["type"] = endpointConfiguration.get("type").asString as Configuration.Endpoint["type"];
 	switch (endpointType) {
 		case "rest-info": {
 			const cors = endpointConfiguration.hasNamespace("cors")
@@ -119,8 +119,8 @@ function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Co
 
 			const httpEndpoint: Configuration.RestInfoEndpoint = Object.freeze({
 				type: endpointType,
-				servers: endpointConfiguration.getString("servers").split(" "),
-				bindPath: endpointConfiguration.getString("bindPath", "/"),
+				servers: endpointConfiguration.get("servers").asString.split(" "),
+				bindPath: endpointConfiguration.get("bindPath", "/").asString,
 				cors
 			});
 			return httpEndpoint;
@@ -131,8 +131,8 @@ function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Co
 
 			const httpEndpoint: Configuration.RestManagementEndpoint = Object.freeze({
 				type: endpointType,
-				servers: endpointConfiguration.getString("servers").split(" "),
-				bindPath: endpointConfiguration.getString("bindPath", "/"),
+				servers: endpointConfiguration.get("servers").asString.split(" "),
+				bindPath: endpointConfiguration.get("bindPath", "/").asString,
 				cors
 			});
 			return httpEndpoint;
@@ -143,8 +143,8 @@ function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Co
 
 			const httpEndpoint: Configuration.RestPublisherEndpoint = Object.freeze({
 				type: endpointType,
-				servers: endpointConfiguration.getString("servers").split(" "),
-				bindPath: endpointConfiguration.getString("bindPath", "/"),
+				servers: endpointConfiguration.get("servers").asString.split(" "),
+				bindPath: endpointConfiguration.get("bindPath", "/").asString,
 				cors
 			});
 			return httpEndpoint;
@@ -155,8 +155,8 @@ function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Co
 
 			const httpEndpoint: Configuration.RestSubscriberEndpoint = Object.freeze({
 				type: endpointType,
-				servers: endpointConfiguration.getString("servers").split(" "),
-				bindPath: endpointConfiguration.getString("bindPath", "/"),
+				servers: endpointConfiguration.get("servers").asString.split(" "),
+				bindPath: endpointConfiguration.get("bindPath", "/").asString,
 				cors
 			});
 			return httpEndpoint;
@@ -170,9 +170,9 @@ function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Co
 }
 
 function parseCors(configuration: FConfiguration): Configuration.Cors {
-	const methods: ReadonlyArray<string> = Object.freeze(configuration.getString("methods").split(" "));
-	const whiteList: ReadonlyArray<string> = Object.freeze(configuration.getString("whiteList").split(" "));
-	const allowedHeaders: ReadonlyArray<string> = Object.freeze(configuration.getString("allowedHeaders").split(" "));
+	const methods: ReadonlyArray<string> = Object.freeze(configuration.get("methods").asString.split(" "));
+	const whiteList: ReadonlyArray<string> = Object.freeze(configuration.get("whiteList").asString.split(" "));
+	const allowedHeaders: ReadonlyArray<string> = Object.freeze(configuration.get("allowedHeaders").asString.split(" "));
 	return Object.freeze({ methods, whiteList, allowedHeaders });
 }
 

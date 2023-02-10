@@ -1,4 +1,4 @@
-import { FDisposable, FExecutionContext, FExecutionContextLogger, FInitable, FLogger } from "@freemework/common";
+import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger } from "@freemework/common";
 import { FLauncherRuntime } from "@freemework/hosting";
 
 import * as _ from "lodash";
@@ -32,20 +32,19 @@ export { HostingProvider } from "./provider/HostingProvider";
 const { name: serviceName, version: serviceVersion } = require("../package.json");
 
 export default async function (executionContext: FExecutionContext, configuration: Configuration): Promise<FLauncherRuntime> {
-	executionContext = new FExecutionContextLogger(executionContext, FLogger.Console);
-	executionContext = new FExecutionContextLogger(executionContext, {serviceName, serviceVersion});
+	executionContext = new FLoggerLabelsExecutionContext(executionContext, { serviceName, serviceVersion });
 
-	const log: FLogger = FExecutionContextLogger.of(executionContext).logger;
+	const log: FLogger = FLogger.create("EdgeBus");
 
 	{
-		log.info("Initializing ConfigurationProvider...");
+		log.info(executionContext, "Initializing ConfigurationProvider...");
 		// const dbEncriptionKey = await passwordDerivation(configuration.dbEncryptionPassword);
 		const ownProvider: ConfigurationProvider = new ConfigurationProviderImpl(configuration);
 		Container.bind(ConfigurationProvider).provider({ get() { return ownProvider; } });
 	}
 
 
-	log.info("Initializing DI runtime...");
+	log.info(executionContext, "Initializing DI runtime...");
 	await FInitable.initAll(executionContext,
 		Container.get(StorageProvider),
 		Container.get(MessageBusProvider),
@@ -162,7 +161,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 			);
 			//harcodedItemsToDispose.push(httpPublisherInstance);
 			for (const publisherApiRestEndpoint of endpointsProvider.publisherApiRestEndpoints) {
-				publisherApiRestEndpoint.addHttpPublisher(httpPublisherInstance);
+				publisherApiRestEndpoint.addHttpPublisher(executionContext, httpPublisherInstance);
 			}
 			await httpPublisherInstance.init(executionContext);
 			itemsToDispose.push(httpPublisherInstance);
@@ -185,7 +184,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 							bindServers: subscriberApiRestEndpoint.servers,
 							subscriberId: subscriberId
 						},
-						log.getLogger(WebSocketHostSubscriber.name),
+						FLogger.create(log.name + "." + WebSocketHostSubscriber.name),
 						...channels
 					);
 					await webSocketHostSubscriber.init(executionContext);
@@ -194,7 +193,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 			}
 		}
 	} catch (e) {
-		for (const hardcodedItem of itemsToDispose) { await FDisposable.safeDispose(hardcodedItem); }
+		for (const hardcodedItem of itemsToDispose) { await hardcodedItem.dispose(); }
 
 		await FDisposable.disposeAll(
 			// Endpoints should dispose first (reply 503, while finishing all active requests)
@@ -209,10 +208,10 @@ export default async function (executionContext: FExecutionContext, configuratio
 
 	return {
 		async destroy() {
-			log.info("Destroying DI runtime...");
+			log.info(executionContext, "Destroying DI runtime...");
 
 			for (const hardcodedItem of itemsToDispose.reverse()) {
-				await FDisposable.safeDispose(hardcodedItem);
+				await hardcodedItem.dispose();
 			}
 
 			await FDisposable.disposeAll(

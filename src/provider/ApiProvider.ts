@@ -34,14 +34,14 @@ class ApiProviderImpl extends ApiProvider {
 		this._storageProvider = Container.get(StorageProvider);
 		this._messageBusProvider = Container.get(MessageBusProvider);
 
-		const logger = FLogger.Console;
+		const logger = FLogger.create(this.constructor.name);
 
 		this._managementApi
-			= new ManagementApi(this._storageProvider.persistentStorage, logger.getLogger("ManagementApi"));
+			= new ManagementApi(this._storageProvider.persistentStorage, FLogger.create("ManagementApi"));
 		this._publisherApi
-			= new PublisherApi(this._storageProvider.persistentStorage, this._messageBusProvider, logger.getLogger("PublisherApi"));
+			= new PublisherApi(this._storageProvider.persistentStorage, this._messageBusProvider, FLogger.create("PublisherApi"));
 		this._subscriberApi
-			= new SubscriberApi(this._storageProvider.persistentStorage, logger.getLogger("SubscriberApi"));
+			= new SubscriberApi(this._storageProvider.persistentStorage, FLogger.create("SubscriberApi"));
 	}
 
 	public get managementApi() { return this._managementApi; }

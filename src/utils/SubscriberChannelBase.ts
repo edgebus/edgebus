@@ -1,9 +1,9 @@
-import { FCancellationToken, FDisposableBase, FException, FExecutionContext, FInitableBase, FSubscriberChannel } from "@freemework/common";
-import { FExceptionCancelled, FExceptionAggregate, FExceptionInvalidOperation } from "@freemework/common";
+import { FCancellationToken, FDisposableBase, FException, FExecutionContext, FInitableBase, FChannelSubscriber } from "@freemework/common";
+import { FCancellationException, FExceptionAggregate, FExceptionInvalidOperation } from "@freemework/common";
 
-export abstract class SubscriberChannelBase<TData, TEvent extends FSubscriberChannel.Event<TData> = FSubscriberChannel.Event<TData>>
-	extends FInitableBase implements FSubscriberChannel<TData, TEvent> {
-	private readonly _callbacks: Array<FSubscriberChannel.Callback<TData, TEvent>>;
+export abstract class SubscriberChannelBase<TData, TEvent extends FChannelSubscriber.Event<TData> = FChannelSubscriber.Event<TData>>
+	extends FInitableBase implements FChannelSubscriber<TData, TEvent> {
+	private readonly _callbacks: Array<FChannelSubscriber.Callback<TData, TEvent>>;
 	private _broken: boolean;
 
 	public constructor() {
@@ -12,7 +12,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FSubscriberCha
 		this._broken = false;
 	}
 
-	public addHandler(cb: FSubscriberChannel.Callback<TData, TEvent>): void {
+	public addHandler(cb: FChannelSubscriber.Callback<TData, TEvent>): void {
 		this.verifyBrokenChannel();
 
 		this._callbacks.push(cb);
@@ -21,7 +21,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FSubscriberCha
 		}
 	}
 
-	public removeHandler(cb: FSubscriberChannel.Callback<TData, TEvent>): void {
+	public removeHandler(cb: FChannelSubscriber.Callback<TData, TEvent>): void {
 		const index = this._callbacks.indexOf(cb);
 		if (index !== -1) {
 			this._callbacks.splice(index, 1);
@@ -76,7 +76,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FSubscriberCha
 				.then(function () {
 					if (errors.length > 0) {
 						for (const error of errors) {
-							if (!(error instanceof FExceptionCancelled)) {
+							if (!(error instanceof FCancellationException)) {
 								throw new FExceptionAggregate(errors);
 							}
 						}
@@ -87,7 +87,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FSubscriberCha
 		} else {
 			if (errors.length > 0) {
 				for (const error of errors) {
-					if (!(error instanceof FExceptionCancelled)) {
+					if (!(error instanceof FCancellationException)) {
 						throw new FExceptionAggregate(errors);
 					}
 				}

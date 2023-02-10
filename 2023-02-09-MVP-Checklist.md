@@ -1,5 +1,5 @@
 - [ ] Setup database migrations
-- [ ] Bump Freemework version
+- [x] Bump Freemework version
 - [ ] Review/update DB structure for the MVP
 - [ ] Add audit middleware/SQLs and setup for publisher router
 - [ ] Implement DBFacade with necessary set of methods to save:

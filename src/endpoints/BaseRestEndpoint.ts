@@ -1,4 +1,4 @@
-import { FCancellationToken, FException, FExceptionInvalidOperation, FExecutionContext, FExecutionContextCancellation, FExecutionContextLogger, FLogger } from "@freemework/common";
+import { FCancellationToken, FException, FExceptionInvalidOperation, FExecutionContext, FCancellationExecutionContext, FLoggerLabelsExecutionContext, FLogger } from "@freemework/common";
 
 import { FAbstractWebServer, FHostingConfiguration, FServersBindEndpoint, FWebServer } from "@freemework/hosting";
 
@@ -20,13 +20,14 @@ declare module "express-serve-static-core" {
 export class BaseRestEndpoint extends FServersBindEndpoint {
 	protected readonly _router: express.Router;
 	// protected readonly _rootRouter: express.Router;
-	// protected readonly _log: FLogger;
+	protected readonly _logger: FLogger;
 
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
 		opts: Configuration.BaseRestEndpoint
 	) {
 		super(servers, opts);
+		this._logger = FLogger.create(this.constructor.name);
 		// this._monitoring = ProviderLocator.default.get(MonitoringProvider);
 		// this._cors = opts.cors;
 		this._router = express.Router();
@@ -61,8 +62,6 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 	// }
 
 	protected onInit(): void {
-		const logger: FLogger = FExecutionContextLogger.of(this.initExecutionContext).logger;
-
 		const classHttpMeta: ClassHttpMeta = __getClassHttpMeta(this.constructor);
 		for (const [jsMethod, httpMeta] of classHttpMeta) {
 			const handler: Function = (this as any)[jsMethod];
@@ -99,8 +98,11 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 			rootExpressApplication.use(this._bindPath, this._router);
 			// rootExpressApplication.use(this._rootRouter);
 
-			if (logger.isInfoEnabled) {
-				logger.info(`Endpoint '${this._bindPath}' was assigned to server '${server.name}'.`);
+			if (this._logger.isInfoEnabled) {
+				this._logger.info(
+					this.initExecutionContext,
+					`Endpoint '${this._bindPath}' was assigned to server '${server.name}'.`
+				);
 			}
 		}
 
@@ -117,9 +119,7 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 	}
 
 
-	protected errorRenderer(e: FException, res: express.Response): void {
-		const logger: FLogger = FExecutionContextLogger.of(this.initExecutionContext).logger;
-
+	protected errorRenderer(executionContext: FExecutionContext, e: FException, res: express.Response): void {
 		// this._monitoring.handleError(e);
 
 		// if (e instanceof BadUserDataError) {
@@ -148,13 +148,13 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 		// 	return;
 		// }
 
-		if (logger.isWarnEnabled) {
-			logger.warn(`Unhandled error ${this.constructor.name}: ${e.message}`);
+		if (this._logger.isWarnEnabled) {
+			this._logger.warn(executionContext, `Unhandled error ${this.constructor.name}: ${e.message}`);
 		} else {
 			console.error(`Unhandled error ${this.constructor.name}: ${e.message}`);
 		}
-		if (logger.isDebugEnabled) { logger.debug(`Unhandled error ${this.constructor.name}: ${e.message} ${e.stack}`); }
-		if (logger.isTraceEnabled) { logger.trace(`Unhandled error ${this.constructor.name}: ${e.message} ${e.stack}`, e); }
+		this._logger.debug(executionContext, () => `Unhandled error ${this.constructor.name}: ${e.message} ${e.stack}`);
+		this._logger.trace(executionContext, () => `Unhandled error ${this.constructor.name}: ${e.message} ${e.stack}`, e);
 
 		// if (isProduction()) {
 		// res.writeHead(500, `Internal error`).end();
@@ -170,24 +170,26 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 		const method: string = req.method.toUpperCase();
 
 		req.executionContext = this.initExecutionContext;
-		req.executionContext = new FExecutionContextCancellation(req.executionContext, cancellationToken, true);
-		req.executionContext = new FExecutionContextLogger(req.executionContext, this.constructor.name, {
+		req.executionContext = new FCancellationExecutionContext(req.executionContext, cancellationToken, true);
+		req.executionContext = new FLoggerLabelsExecutionContext(req.executionContext, {
 			"requestId": `req_${uuid().split('-').join('')}`,
 			"httpMethod": method,
 			"httpPath": req.originalUrl
 		});
 
-		FExecutionContextLogger.of(req.executionContext).logger.debug("Begin HTTP request");
+		this._logger.debug(req.executionContext, "Begin HTTP request");
 
 		const originalEnd: (chunk: any, encoding: BufferEncoding, cb?: (() => void) | undefined) => express.Response = res.end;
 		res.end = (chunk?: any, encodingOrCb?: BufferEncoding | Function, cb?: () => void) => {
 			const statusCode: number = res.statusCode;
 
-			const reqEndLogger: FLogger = FExecutionContextLogger.of(req.executionContext).logger.getLogger({ "httpStatus": statusCode });
-			if (reqEndLogger.isInfoEnabled) {
-				reqEndLogger.info(`${statusCode} ${method} ${req.originalUrl} HTTP/${req.httpVersion}`);
-			}
-			reqEndLogger.debug("End HTTP request");
+			req.executionContext = new FLoggerLabelsExecutionContext(req.executionContext, {
+				"httpStatus": statusCode.toString()
+			});
+
+			this._logger.info(req.executionContext, () => `${statusCode} ${method} ${req.originalUrl} HTTP/${req.httpVersion}`);
+			this._logger.debug(req.executionContext, "End HTTP request");
+
 			return originalEnd.call(res, chunk, encodingOrCb as BufferEncoding, cb as () => void);
 		};
 
@@ -214,10 +216,10 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 			try {
 				const result = cb(req, res);
 				if (result instanceof Promise) {
-					result.catch((e) => this.errorRenderer(FException.wrapIfNeeded(e), res));
+					result.catch((e) => this.errorRenderer(req.executionContext, FException.wrapIfNeeded(e), res));
 				}
 			} catch (e) {
-				this.errorRenderer(FException.wrapIfNeeded(e), res);
+				this.errorRenderer(req.executionContext, FException.wrapIfNeeded(e), res);
 			}
 		};
 		return handler;

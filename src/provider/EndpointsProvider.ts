@@ -1,4 +1,4 @@
-import { FInitable, FInitableBase, FLogger } from "@freemework/common";
+import { FExecutionContext, FInitable, FInitableBase, FLogger } from "@freemework/common";
 import { FWebServer } from "@freemework/hosting";
 
 import { Container, Provides, Singleton } from "typescript-ioc";
@@ -25,9 +25,9 @@ export abstract class EndpointsProvider extends FInitableBase {
 
 	public constructor() {
 		super();
-		this.log = FLogger.Console.getLogger("Endpoints");
+		this.log = FLogger.create("Endpoints");
 		if (this.log.isDebugEnabled) {
-			this.log.debug(`Implementation: ${this.constructor.name}`);
+			this.log.debug(FExecutionContext.Empty, `Implementation: ${this.constructor.name}`);
 		}
 	}
 
@@ -50,7 +50,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 	public constructor() {
 		super();
 
-		this.log.info("Constructing endpoints...");
+		this.log.info(FExecutionContext.Empty, "Constructing endpoints...");
 
 		this._hostingProvider = Container.get(HostingProvider);
 		this._configProvider = Container.get(ConfigurationProvider);
@@ -84,7 +84,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					const friendlyEndpoint: Configuration.RestInfoEndpoint = endpoint;
 					const endpointInstance = new InfoRestEndpoint(
 						endpointServers, endpoint,
-						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+						FLogger.create(this.log.name + friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
 					break;
@@ -93,7 +93,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					const friendlyEndpoint: Configuration.RestManagementEndpoint = endpoint;
 					const endpointInstance = new ManagementApiRestEndpoint(
 						endpointServers, this._apiProvider.managementApi, endpoint,
-						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+						FLogger.create(this.log.name + friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
 					break;
@@ -102,7 +102,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					const friendlyEndpoint: Configuration.RestPublisherEndpoint = endpoint;
 					const endpointInstance = new PublisherApiRestEndpoint(
 						endpointServers, this._apiProvider.publisherApi, endpoint,
-						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+						//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
 					publisherApiRestEndpoints.push(endpointInstance);
@@ -112,7 +112,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					const friendlyEndpoint: Configuration.RestSubscriberEndpoint = endpoint;
 					const endpointInstance = new SubscriberApiRestEndpoint(
 						endpointServers, this._apiProvider.subscriberApi, endpoint,
-						this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+						FLogger.create(this.log.name + friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
 					subscriberApiRestEndpoints.push(endpointInstance);
@@ -138,7 +138,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 	}
 
 	protected async onInit(): Promise<void> {
-		this.log.info("Initializing endpoints...");
+		this.log.info(this.initExecutionContext, "Initializing endpoints...");
 		try {
 			for (const endpointInstance of this._endpointInstances) {
 				await endpointInstance.init(this.initExecutionContext);
@@ -154,7 +154,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 	}
 
 	protected async onDispose(): Promise<void> {
-		this.log.info("Destroying endpoints...");
+		this.log.info(this.initExecutionContext, "Destroying endpoints...");
 		let destroyHandler;
 		while ((destroyHandler = this._destroyHandlers.pop()) !== undefined) {
 			await destroyHandler();

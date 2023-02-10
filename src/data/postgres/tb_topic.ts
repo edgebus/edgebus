@@ -1,11 +1,11 @@
-import { FSqlProvider, FSqlResultRecord, FSqlData, FExecutionContext } from "@freemework/common";
+import { FSqlConnection, FSqlResultRecord, FSqlData, FExecutionContext } from "@freemework/common";
 
 import { Security } from "../../model/Security";
 import { Topic } from "../../model/Topic";
 
 export async function create(
 	executionContext: FExecutionContext,
-	sqlProvider: FSqlProvider,
+	sqlProvider: FSqlConnection,
 	topicSecurity: Security,
 	data: Topic.Id & Topic.Data
 ): Promise<Topic> {
@@ -39,7 +39,7 @@ export async function create(
 
 export async function list(
 	executionContext: FExecutionContext,
-	sqlProvider: FSqlProvider,
+	sqlProvider: FSqlConnection,
 	domain: string | null
 	//	filter?: { enabled?: boolean }
 ): Promise<Array<Topic>> {
@@ -111,12 +111,12 @@ export async function list(
 // }
 
 function mapDbRow(sqlRow: FSqlResultRecord): Topic {
-	const topicDomain: string | null = sqlRow.get("domain").asNullableString;
+	const topicDomain: string | null = sqlRow.get("domain").asStringNullable;
 	const topicName: string = sqlRow.get("name").asString;
 	const topicDescription: string = sqlRow.get("description").asString;
 	const topicMediaType: string = sqlRow.get("media_type").asString;
 	const dirtyCreatedAt: Date = sqlRow.get("utc_create_date").asDate;
-	const dirtyDeletedAt: Date | null = sqlRow.get("utc_delete_date").asNullableDate;
+	const dirtyDeletedAt: Date | null = sqlRow.get("utc_delete_date").asDateNullable;
 
 	const topic: Topic = {
 		topicName,

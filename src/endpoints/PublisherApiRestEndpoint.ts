@@ -1,4 +1,4 @@
-import { FEnsure, FEnsureException, FException, FExceptionArgument, FExceptionInvalidOperation, FLogger } from "@freemework/common";
+import { FEnsure, FEnsureException, FException, FExceptionArgument, FExceptionInvalidOperation, FExecutionContext, FLogger } from "@freemework/common";
 import { FHostingConfiguration, FWebServer } from "@freemework/hosting";
 
 import * as express from "express";
@@ -19,18 +19,14 @@ const ensure: FEnsure = FEnsure.create();
 export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 	private readonly _api: PublisherApi;
 	private readonly _httpPublishersMap: Map<HttpPublisher["publisherId"], HttpPublisher>;
-	private readonly _log: FLogger;
 	protected readonly _rootRouter: express.Router;
 
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
 		api: PublisherApi,
-		opts: Configuration.RestPublisherEndpoint,
-		log: FLogger
+		opts: Configuration.RestPublisherEndpoint
 	) {
 		super(servers, opts);
-
-		this._log = log;
 
 		this._api = api;
 		this._httpPublishersMap = new Map();
@@ -45,10 +41,10 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 		this._router.delete("/:publisherId", this.safeBinder(this.deletePublisher.bind(this)));
 	}
 
-	public addHttpPublisher(publisher: HttpPublisher): void {
+	public addHttpPublisher(executionContext: FExecutionContext, publisher: HttpPublisher): void {
 		const publisherId: string = publisher.publisherId;
 
-		this._log.info(`Register publisher: ${publisherId} for path: ${publisher.bindPath}`);
+		this._logger.info(executionContext, `Register publisher: ${publisherId} for path: ${publisher.bindPath}`);
 
 		if (this._httpPublishersMap.has(publisherId)) {
 			throw new FExceptionInvalidOperation("Twice add same publisher is not allowed.");
@@ -69,15 +65,15 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 						res.writeHead(400, `Bad request. ${err.message}`).end();
 						return;
 					}
-					this._log.debug("Failed to push message.", err);
-					this._log.warn(`Failed to push message. Error: ${err.message}`);
+					this._logger.debug(executionContext, "Failed to push message.", err);
+					this._logger.warn(executionContext, `Failed to push message. Error: ${err.message}`);
 					res.writeHead(500, "Internal Error").end();
 				}
 			});
 
 		}
 	}
-	public removeHttpPublisher(publisherId: HttpPublisher["publisherId"]): boolean {
+	public removeHttpPublisher(executionContext: FExecutionContext, publisherId: HttpPublisher["publisherId"]): boolean {
 		return this._httpPublishersMap.delete(publisherId);
 	}
 
@@ -155,7 +151,7 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 
 			const httpPublisher: HttpPublisher | undefined = this._httpPublishersMap.get(publisherId);
 			if (httpPublisher === undefined) {
-				this._log.info(`Wrong push publisherId: ${publisherId}`);
+				this._logger.info(req.executionContext, () => `Wrong push publisherId: ${publisherId}`);
 				res.writeHead(404, "Not Found").end();
 				return;
 			}
@@ -167,8 +163,8 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 				res.writeHead(400, `Bad request. ${err.message}`).end();
 				return;
 			}
-			this._log.debug("Failed to push message.", err);
-			this._log.warn(`Failed to push message. Error: ${err.message}`);
+			this._logger.debug(req.executionContext, "Failed to push message.", err);
+			this._logger.warn(req.executionContext, () => `Failed to push message. Error: ${err.message}`);
 			res.writeHead(500, "Internal Error").end();
 		}
 	}

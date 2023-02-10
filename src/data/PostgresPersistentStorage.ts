@@ -1,5 +1,5 @@
-import { FException, FExecutionContext, FInitableBase, FLogger, FSqlProvider } from "@freemework/common";
-import { FSqlProviderFactoryPostgres } from "@freemework/sql.postgres";
+import { FException, FExecutionContext, FInitableBase, FLogger, FSqlConnection } from "@freemework/common";
+import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 import { PersistentStorage } from "./PersistentStorage";
 
@@ -26,7 +26,7 @@ import { Topic } from "../model/Topic";
 //import * as webhookFunctions from "./postgres/webhook";
 
 export class PostgresPersistentStorage extends FInitableBase implements PersistentStorage {
-	private readonly _sqlProviderFactory: FSqlProviderFactoryPostgres;
+	private readonly _sqlProviderFactory: FSqlConnectionFactoryPostgres;
 	private readonly _log: FLogger;
 	private readonly _url: URL;
 
@@ -35,9 +35,9 @@ export class PostgresPersistentStorage extends FInitableBase implements Persiste
 		this._url = url;
 		this._log = log;
 
-		this._log.debug(`Construct ${PostgresPersistentStorage.name} for URL ${url}`);
+		this._log.debug(FExecutionContext.Empty, `Construct ${PostgresPersistentStorage.name} for URL ${url}`);
 
-		this._sqlProviderFactory = new FSqlProviderFactoryPostgres({
+		this._sqlProviderFactory = new FSqlConnectionFactoryPostgres({
 			url: this._url,
 			// log: this._log,
 			applicationName: "notifier.service"
@@ -54,7 +54,7 @@ export class PostgresPersistentStorage extends FInitableBase implements Persiste
 		try {
 			const publisher: Publisher<TDataVariant> = await this._sqlProviderFactory
 				.usingProvider(executionContext,
-					async (sqlProvider: FSqlProvider) => sqlToolsPublisher
+					async (sqlProvider: FSqlConnection) => sqlToolsPublisher
 						.create(executionContext, sqlProvider, publisherSecurity, variant)
 				);
 
@@ -74,7 +74,7 @@ export class PostgresPersistentStorage extends FInitableBase implements Persiste
 		try {
 			const subscriber: Subscriber<TDataVariant> = await this._sqlProviderFactory
 				.usingProvider(executionContext,
-					async (sqlProvider: FSqlProvider) => sqlToolsSubscriber
+					async (sqlProvider: FSqlConnection) => sqlToolsSubscriber
 						.create(executionContext, sqlProvider, subscriberSecurity, variant)
 				);
 
@@ -94,14 +94,14 @@ export class PostgresPersistentStorage extends FInitableBase implements Persiste
 		try {
 			const topic: Topic = await this._sqlProviderFactory
 				.usingProvider(executionContext,
-					async (sqlProvider: FSqlProvider) =>
+					async (sqlProvider: FSqlConnection) =>
 						sqlToolsTopic.create(executionContext, sqlProvider, topicSecurity, topicData)
 				);
 
 			return topic;
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);
-			this._log.error(`addTopic Error: ${ex.message}`);
+			this._log.error(executionContext, `addTopic Error: ${ex.message}`);
 			throw storageHandledException(e);
 		}
 	}
@@ -114,7 +114,7 @@ export class PostgresPersistentStorage extends FInitableBase implements Persiste
 		try {
 			const topics: Array<Topic> = await this._sqlProviderFactory
 				.usingProvider(executionContext,
-					async (sqlProvider: FSqlProvider) =>
+					async (sqlProvider: FSqlConnection) =>
 						sqlToolsTopic.list(executionContext, sqlProvider, domain)
 				);
 

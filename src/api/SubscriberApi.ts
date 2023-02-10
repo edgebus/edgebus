@@ -26,7 +26,7 @@ export class SubscriberApi extends FInitableBase {
 		executionContext: FExecutionContext,
 		subscriberSecurity: Security
 	): Promise<Array<Subscriber>> {
-		this._log.debug(`Run subscriberWebhook with subscriberSecurity: ${subscriberSecurity}`);
+		this._log.debug(executionContext, `Run subscriberWebhook with subscriberSecurity: ${subscriberSecurity}`);
 
 		// try {
 		// 	const webhooks: Array<Subscriber> = await this._storage
@@ -53,7 +53,7 @@ export class SubscriberApi extends FInitableBase {
 		topicSubscriberSecurity: Security, webhookData: Subscriber.Webhook
 	): Promise<Subscriber<Subscriber.Webhook>> {
 
-		this._log.debug(`Run subscriberWebhook with topic: ${topicId} and webhookData ${webhookData}`);
+		this._log.debug(executionContext, `Run subscriberWebhook with topic: ${topicId} and webhookData ${webhookData}`);
 		throw new FExceptionInvalidOperation("Not implemented yet");
 		// try {
 		// 	const topicSubscriberSecurityRecord: Topic = await this._storage

@@ -1,4 +1,4 @@
-import { FLogger, FCancellationToken, FInitableBase } from "@freemework/common";
+import { FLogger, FCancellationToken, FInitableBase, FExecutionContext } from "@freemework/common";
 import { Container, Provides, Singleton } from "typescript-ioc";
 import * as hosting from "@freemework/hosting";
 
@@ -15,9 +15,9 @@ export abstract class HostingProvider extends FInitableBase {
 
 	public constructor() {
 		super();
-		this.log = FLogger.None;
+		this.log = FLogger.create(HostingProvider.name);
 		if (this.log.isDebugEnabled) {
-			this.log.debug(`Implementation: ${this.constructor.name}`);
+			this.log.debug(FExecutionContext.Empty, `Implementation: ${this.constructor.name}`);
 		}
 	}
 }
@@ -40,7 +40,7 @@ class HostingProviderImpl extends HostingProvider {
 	public constructor() {
 		super();
 
-		this.log.info("Constructing Web servers...");
+		this.log.info(FExecutionContext.Empty, "Constructing Web servers...");
 
 		this._configProvider = Container.get(ConfigurationProvider);
 
@@ -73,7 +73,7 @@ class HostingProviderImpl extends HostingProvider {
 
 
 	protected async onInit(): Promise<void> {
-		this.log.info("Initializing Web servers...");
+		this.log.info(this.initExecutionContext, "Initializing Web servers...");
 
 		const serversMap: { readonly [serverName: string]: { server: hosting.FWebServer, isOwnInstance: boolean } }
 			= _.keyBy(this._serverInstances, "name");
@@ -81,7 +81,7 @@ class HostingProviderImpl extends HostingProvider {
 		try {
 			for (const serverInfo of _.values(serversMap)) {
 				if (this.log.isInfoEnabled) {
-					this.log.info(`Start server: ${serverInfo.server.name}`);
+					this.log.info(this.initExecutionContext, `Start server: ${serverInfo.server.name}`);
 				}
 				if (serverInfo.isOwnInstance === true) {
 					setupExpressErrorHandles(serverInfo.server.rootExpressApplication, this.log);
@@ -100,7 +100,7 @@ class HostingProviderImpl extends HostingProvider {
 	}
 
 	protected async onDispose(): Promise<void> {
-		this.log.info("Disposing Web servers...");
+		this.log.info(this.initExecutionContext, "Disposing Web servers...");
 		let destroyHandler;
 		while ((destroyHandler = this._destroyHandlers.pop()) !== undefined) {
 			await destroyHandler();
@@ -112,13 +112,18 @@ class HostingProviderImpl extends HostingProvider {
 
 export function setupExpressErrorHandles(app: express.Application, log: FLogger): void {
 	// 404 Not found (bad URL)
-	app.use(function (req: express.Request, res: express.Response) { res.status(404).end("404 Not Found"); });
+	app.use(function (req: express.Request, res: express.Response) {
+		log.error(req.executionContext, () => { return {} as any; });
+		log.info(req.executionContext, "404 Not Found");
+		res.status(404).end("404 Not Found");
+	});
 
 	// 5xx Fatal error
 	app.use(function (err: any, req: express.Request, res: express.Response, next: express.NextFunction): any {
 		if (err) {
 			//TODO: send email, log err, etc...
-			log.error(err);
+			log.error(req.executionContext, () => `${err}`);
+			// log.error(req.executionContext, `${err}`);
 		}
 		//return res.status(500).end("500 Internal Error");
 		return next(err); // use express exception render

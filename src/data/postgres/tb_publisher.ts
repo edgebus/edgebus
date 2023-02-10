@@ -1,4 +1,4 @@
-import { FExecutionContext, FSqlProvider, FSqlResultRecord } from "@freemework/common";
+import { FExecutionContext, FSqlConnection, FSqlResultRecord } from "@freemework/common";
 
 import { v4 as uuid } from "uuid";
 import * as _ from "lodash";
@@ -10,7 +10,7 @@ import { Security } from "../../model/Security";
 
 export async function create<TVariant extends Publisher.DataVariant>(
 	executionContext: FExecutionContext,
-	sqlProvider: FSqlProvider,
+	sqlProvider: FSqlConnection,
 	publisherSecurity: Security,
 	variant: TVariant
 ): Promise<Publisher<TVariant>> {

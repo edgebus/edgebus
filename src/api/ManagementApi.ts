@@ -29,7 +29,7 @@ export class ManagementApi extends FInitableBase {
 	public async createTopic(
 		executionContext: FExecutionContext, topicData: Topic.Id & Topic.Data
 	): Promise<Topic> {
-		if (this._log.isDebugEnabled) { this._log.debug(`Enter createTopic with topicData: ${JSON.stringify(topicData)}`); }
+		if (this._log.isDebugEnabled) { this._log.debug(executionContext, `Enter createTopic with topicData: ${JSON.stringify(topicData)}`); }
 
 		try {
 			const fullTopicData: Topic.Id & Topic.Data = {
@@ -48,13 +48,13 @@ export class ManagementApi extends FInitableBase {
 				fullTopicData
 			);
 
-			if (this._log.isDebugEnabled) { this._log.debug(`Exit createTopic with topic: ${JSON.stringify(topic)}`); }
+			if (this._log.isDebugEnabled) { this._log.debug(executionContext, `Exit createTopic with topic: ${JSON.stringify(topic)}`); }
 			return topic;
 		} catch (e) {
 			if (this._log.isErrorEnabled || this._log.isTraceEnabled) {
 				const err: FException = FException.wrapIfNeeded(e);
-				if (this._log.isErrorEnabled) { this._log.error(`Failure createTopic: ${err.message}`); }
-				this._log.trace("Failure createTopic", err);
+				if (this._log.isErrorEnabled) { this._log.error(executionContext, `Failure createTopic: ${err.message}`); }
+				this._log.trace(executionContext, "Failure createTopic", err);
 			}
 			throw apiHandledException(e);
 		}

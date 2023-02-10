@@ -18,9 +18,9 @@ export abstract class MessageBusProvider extends FInitableBase implements Messag
 
 	public constructor() {
 		super();
-		this.log = FLogger.None.getLogger("MessageBus");
+		this.log = FLogger.create("MessageBus");
 		if (this.log.isDebugEnabled) {
-			this.log.debug(`Implementation: ${this.constructor.name}`);
+			this.log.debug(FExecutionContext.Empty, `Implementation: ${this.constructor.name}`);
 		}
 	}
 

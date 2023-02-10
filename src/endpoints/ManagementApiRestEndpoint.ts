@@ -1,4 +1,4 @@
-import { FEnsure, FExecutionContext, FExecutionContextLogger, FLogger } from "@freemework/common";
+import { FEnsure, FExecutionContext, FLoggerLabelsExecutionContext, FLogger } from "@freemework/common";
 import { FHostingConfiguration, FServersBindEndpoint, FWebServer } from "@freemework/hosting";
 
 
@@ -81,7 +81,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 				topicMediaType
 			};
 
-			const topic = await this._api.createTopic(FExecutionContext.None, topicData);
+			const topic = await this._api.createTopic(FExecutionContext.Empty, topicData);
 
 			res
 				.status(201)
@@ -105,7 +105,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 		try {
 			const domain: string | null = null; // TODO get from CN of the cert
 
-			const topics: Array<Topic> = await this._api.listTopics(FExecutionContext.None, domain);
+			const topics: Array<Topic> = await this._api.listTopics(req.executionContext, domain);
 
 			const responseData = topics.map(topic => ({
 				name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,

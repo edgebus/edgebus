@@ -21,12 +21,12 @@ case "${1}" in
 		/usr/local/bin/node /usr/local/org.zxteam.notifier/bin/migrate-database.js
 		echo
 		echo "Starting EdgeBus..."
-		exec /usr/local/bin/node /usr/local/org.zxteam.notifier/bin/notifier-service.js --config=/etc/org.zxteam.notifier/notifier-service.config
+		exec /usr/local/bin/node /usr/local/org.zxteam.notifier/bin/notifier-service.js --config=/etc/org.zxteam.notifier/edgebus.config
 		;;
 	"notifier")
 		echo
 		echo "Starting EdgeBus..."
-		exec /usr/local/bin/node /usr/local/org.zxteam.notifier/bin/notifier-service.js --config=/etc/org.zxteam.notifier/notifier-service.config
+		exec /usr/local/bin/node /usr/local/org.zxteam.notifier/bin/notifier-service.js --config=/etc/org.zxteam.notifier/edgebus.config
 		;;
 	*)
 		echo "Wrong CMD argument: ${1}" >&2

@@ -19,7 +19,7 @@
 			},
 			"envFile": "${workspaceFolder}/.env",
 			"args": [
-				"--config-file=${workspaceRoot}/notifier-service.config",
+				"--config-file=${workspaceRoot}/edgebus.config",
 				"--config-env"
 			],
 			"program": "${workspaceRoot}/bin/app.js",
@@ -39,7 +39,7 @@
 			},
 			"envFile": "${workspaceFolder}/.env",
 			"args": [
-				"--config=${workspaceRoot}/notifier-service.config"
+				"--config=${workspaceRoot}/edgebus.config"
 			],
 			"program": "${workspaceRoot}/bin/migrate-database.js"
 		}

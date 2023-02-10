@@ -1,4 +1,4 @@
-import { FInitableBase, FLogger } from "@freemework/common";
+import { FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 import { Container, Provides, Singleton } from "typescript-ioc";
 
 import * as _ from "lodash";
@@ -13,9 +13,9 @@ export abstract class StorageProvider extends FInitableBase {
 
 	public constructor() {
 		super();
-		this.log = FLogger.Console.getLogger("Storage");
+		this.log = FLogger.create("Storage");
 		if (this.log.isDebugEnabled) {
-			this.log.debug(`Implementation: ${this.constructor.name}`);
+			this.log.debug(FExecutionContext.Empty, `Implementation: ${this.constructor.name}`);
 		}
 	}
 

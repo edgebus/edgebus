@@ -39,7 +39,7 @@ export class WebSocketHostSubscriber extends FInitableBase {
 
 		const bindPath = `${baseBindPath}/websockethost/${id}`;
 
-		this._log.debug(`Construct ${WebSocketHostSubscriber.name} with bind path '${bindPath}'.`);
+		this._log.debug(FExecutionContext.Empty, `Construct ${WebSocketHostSubscriber.name} with bind path '${bindPath}'.`);
 
 		this._webSocketHostSubscriberEndpoint = new WebSocketHostSubscriberEndpoint(
 			//messagesChannel.topicName,
@@ -49,7 +49,7 @@ export class WebSocketHostSubscriber extends FInitableBase {
 				defaultProtocol: "jsonrpc",
 				bindPath
 			},
-			_log.getLogger(WebSocketHostSubscriberEndpoint.name)
+			FLogger.create(_log.name + WebSocketHostSubscriberEndpoint.name)
 		);
 
 		const onMessageBound = this._onMessage.bind(this);
