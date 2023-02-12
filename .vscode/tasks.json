@@ -20,6 +20,73 @@
 			},
 			"label": "build",
 			"detail": "tsc"
+		},
+		{
+			"label": "Build Postgres Database",
+			"group": "build",
+			"type": "shell",
+			"command": "docker run --interactive --tty --rm --volume \"${workspaceFolder}/database/postgres\":/data --env ENV=local --env \"database.name\" --env \"database.user.owner\" --env \"database.user.api\" --env \"database.user.audit\" --env \"database.user.readonly\" zxteamorg/devel.migration-builder:20210623 --config-file=database.config --config-file=database-local.config --config-env",
+			"options": {
+				"env": {
+					"database.name": "devdb",
+					"database.user.owner": "edgebus-local-owner",
+					"database.user.api": "edgebus-local-api",
+					"database.user.audit": "edgebus-local-audit",
+					"database.user.readonly": "edgebus-local-readonly"
+				}
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Database Postgres Install (Full)",
+			"group": "none",
+			"dependsOn": [
+				"Build Postgres Database"
+			],
+			"type": "shell",
+			"command": "docker run --network=edgebus-local-tier --rm --interactive --tty --env POSTGRES_URL=postgres://postgres@postgres:5432/devdb --env TARGET_VERSION=v00.00 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 install --no-sleep && docker run --network=\"edgebus-local-tier\" --rm --interactive --tty --env POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb --env TARGET_VERSION=v99.99-next-z --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 install --no-sleep",
+			"problemMatcher": []
+		},
+		{
+			"label": "Database Postgres Install to v00.01 (current production)",
+			"group": "none",
+			"dependsOn": [
+				"Build Postgres Database"
+			],
+			"type": "shell",
+			"command": "docker run --network=edgebus-local-tier --rm --interactive --tty --env POSTGRES_URL=postgres://postgres@postgres:5432/devdb --env TARGET_VERSION=v00.00 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 install --no-sleep && docker run --network=\"edgebus-local-tier\" --rm --interactive --tty --env POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb --env TARGET_VERSION=v00.01 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 install --no-sleep",
+			"problemMatcher": []
+		},
+		{
+			"label": "Database Postgres Install to v98.99 (next release)",
+			"group": "none",
+			"dependsOn": [
+				"Build Postgres Database"
+			],
+			"type": "shell",
+			"command": "docker run --network=edgebus-local-tier --rm --interactive --tty --env POSTGRES_URL=postgres://postgres@postgres:5432/devdb --env TARGET_VERSION=v00.00 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 install --no-sleep && docker run --network=\"edgebus-local-tier\" --rm --interactive --tty --env POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb --env TARGET_VERSION=v98.99 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 install --no-sleep",
+			"problemMatcher": []
+		},
+		{
+			"label": "Database Postgres Rollback (Full)",
+			"group": "none",
+			"type": "shell",
+			"command": "docker run --network=edgebus-local-tier --rm --interactive --tty --env \"POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb\" --env \"TARGET_VERSION=v00.00\" --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 rollback --no-sleep && docker run --network=\"edgebus-local-tier\" --rm --interactive --tty --env \"POSTGRES_URL=postgres://postgres@postgres:5432/devdb\" --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 rollback --no-sleep",
+			"problemMatcher": []
+		},
+		{
+			"label": "Database Postgres Rollback to v00.00 (initial version)",
+			"group": "none",
+			"type": "shell",
+			"command": "docker run --network=edgebus-local-tier --rm --interactive --tty --env \"POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb\" --env TARGET_VERSION=v00.00 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 rollback --no-sleep",
+			"problemMatcher": []
+		},
+		{
+			"label": "Database Postgres Rollback to v00.01 (current production)",
+			"group": "none",
+			"type": "shell",
+			"command": "docker run --network=edgebus-local-tier --rm --interactive --tty --env \"POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb\" --env TARGET_VERSION=v00.01 --volume \"${workspaceFolder}/database/postgres/.dist:/var/local/cexiolabs/migration\" --volume \"${workspaceFolder}/log4js.json:/etc/cexiolabs/migration/log4js.json\" cexiolabs/migration-postgres:20210623 rollback --no-sleep",
+			"problemMatcher": []
 		}
 	]
 }

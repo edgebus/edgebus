@@ -1,4 +1,4 @@
-- [ ] Setup database migrations
+- [x] Setup database migrations
 - [x] Bump Freemework version
 - [ ] Review/update DB structure for the MVP
 - [ ] Add audit middleware/SQLs and setup for publisher router
