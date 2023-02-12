@@ -1,4 +1,4 @@
-import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger } from "@freemework/common";
+import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger, FExceptionArgument } from "@freemework/common";
 import { FLauncherRuntime } from "@freemework/hosting";
 
 import * as _ from "lodash";
@@ -14,6 +14,7 @@ import { WebSocketHostSubscriber } from "./subscriber/WebSocketHostSubscriber";
 import { MessageBus } from "./messaging/MessageBus";
 import { Container } from "typescript-ioc";
 import { Configuration } from "./Configuration";
+import { HttpClientSubscriber } from "./subscriber/HttpClientSubscriber";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
@@ -135,6 +136,21 @@ export default async function (executionContext: FExecutionContext, configuratio
 				// 		"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
 				// 		"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
 				// 	]
+			},
+			{
+				topicNames: ["pss-provider-wtf2", "wtf2"],
+				subscriberIds: [
+					"subscriber.httpclient.POST.http://localhost:8020",
+				]
+				// },
+				// {
+				// 	topicNames: ["wtf2"],
+				// 	subscriberIds: [
+				// 		"subscriber.websockethost.19ee1bff-d469-4b8c-b5a8-0fd66a8b4b96",
+				// 		"subscriber.websockethost.serge263-11f9-4df6-acc8-88faee098c99",
+				// 		"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
+				// 		"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
+				// 	]
 			}
 		];
 
@@ -178,17 +194,37 @@ export default async function (executionContext: FExecutionContext, configuratio
 				}
 
 				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
-					const webSocketHostSubscriber = new WebSocketHostSubscriber(
-						{
-							baseBindPath: subscriberApiRestEndpoint.bindPath,
-							bindServers: subscriberApiRestEndpoint.servers,
-							subscriberId: subscriberId
-						},
-						FLogger.create(log.name + "." + WebSocketHostSubscriber.name),
-						...channels
-					);
-					await webSocketHostSubscriber.init(executionContext);
-					itemsToDispose.push(webSocketHostSubscriber);
+					const sybscriberType = subscriberId.split(".")[1];
+					switch (sybscriberType) {
+						case "websockethost":
+							const webSocketHostSubscriber = new WebSocketHostSubscriber(
+								{
+									baseBindPath: subscriberApiRestEndpoint.bindPath,
+									bindServers: subscriberApiRestEndpoint.servers,
+									subscriberId: subscriberId
+								},
+								FLogger.create(log.name + "." + WebSocketHostSubscriber.name),
+								...channels
+							);
+							await webSocketHostSubscriber.init(executionContext);
+							itemsToDispose.push(webSocketHostSubscriber);
+							break;
+						case "httpclient":
+							const httpClientSubscriber = new HttpClientSubscriber(
+								{
+									baseBindPath: subscriberApiRestEndpoint.bindPath,
+									bindServers: subscriberApiRestEndpoint.servers,
+									subscriberId: subscriberId
+								},
+								FLogger.create(log.name + "." + HttpClientSubscriber.name),
+								...channels
+							);
+							await httpClientSubscriber.init(executionContext);
+							itemsToDispose.push(httpClientSubscriber);
+							break;
+						default:
+							throw new FExceptionArgument(`Unsupported subscriber type ${sybscriberType}`);
+					}
 				}
 			}
 		}

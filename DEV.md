@@ -16,7 +16,7 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 	```
 1. Send few test messages
 	```shell
-	curl --verbose --data '{"a":42}' http://127.0.0.1:8080/v2/callback/cryptoproviders/pss-provider-wtf2
+	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:8080/v2/callback/cryptoproviders/pss-provider-wtf2
 	```
 1. Run WebSocket consumer to obtain messages
 	```shell
@@ -33,7 +33,7 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 	```
 1. Send few test messages
 	```shell
-	curl --verbose --data '{"a":42}' http://127.0.0.1:8080/v2/callback/cryptoproviders/pss-provider-wtf2
+	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:8080/v2/callback/cryptoproviders/pss-provider-wtf2
 	```
 1. Run HTTP Servers consumer to obtain messages
 	```shell
