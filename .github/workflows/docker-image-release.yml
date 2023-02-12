@@ -12,7 +12,7 @@ env:
   # Define one of test report format: dart-json, dotnet-trx, flutter-json, java-junit, jest-junit, mocha-json
   TEST_REPORT_FORMAT: java-junit
   # Override path to GitHub Container Repository
-  GHCR_REPOSITORY: "${{ github.repository }}"
+  GHCR_REPOSITORY: "${{ github.repository }}/typescript-service"
   # Set to "yes" to publish image into https://hub.docker.com
   DOCKERHUB_PUBLISH: yes
   # Override path to Docker Hub repository
@@ -181,6 +181,7 @@ jobs:
     needs:
     - configure
     - docker-build
+    if: needs.configure.outputs.test_dockerfiles_count > 0
     strategy:
       matrix:
         dockerfile: ${{ fromJson(needs.configure.outputs.test_dockerfiles) }}
@@ -245,10 +246,15 @@ jobs:
       if: env.TEST_REPORT_FORMAT == 'java-junit' && steps.upload-artifact.conclusion == 'success'
 
   publish-dockerhub:
-    if: needs.configure.outputs.dockerhub_publish == 'yes' && needs.configure.outputs.is_release_candidate == 'no'
     needs:
     - configure
     - docker-test
+    if: |
+      always() &&
+      needs.configure.outputs.dockerhub_publish == 'yes' &&
+      needs.configure.outputs.is_release_candidate == 'no' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     steps:
     - name: Check conditions
@@ -285,6 +291,10 @@ jobs:
     - configure
     - docker-test
     - publish-dockerhub
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -302,6 +312,10 @@ jobs:
     needs:
     - configure
     - docker-test
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     strategy:
       matrix:
         dockerfile: ${{ fromJson(needs.configure.outputs.app_dockerfiles) }}

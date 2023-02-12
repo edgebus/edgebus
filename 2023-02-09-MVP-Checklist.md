@@ -7,5 +7,5 @@
   - [ ] Add tb_delivery/tb_delivery_failure/tb_delivery_success record
 - [ ] Implement HttpSubscriber.ts
 - [ ] Inject DBFacade calls into MessageBusLocal.ts/HttpSubscriber.ts
-- [ ] Refactor Dockerfile
+- [x] Refactor Dockerfile
 - [ ] Setup Manager for Publisher/Subscriber to be able to launch from scratch

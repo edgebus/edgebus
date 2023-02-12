@@ -4,38 +4,34 @@ import { Provides, Singleton } from "typescript-ioc";
 
 @Singleton
 export abstract class BuildInfo {
-	public readonly title: string;
+	public readonly name: string;
 	public readonly description: string;
-	// public readonly company: string;
+	public readonly company: string;
 	// public readonly copyright: string;
-	// public readonly product: string;
 	public readonly version: string;
-	// public readonly contributors: ReadonlyArray<string>;
-	// public readonly repositoryUrl: URL;
-	// public readonly repositoryReference: string;
-	// public readonly repositoryCommit: string;
-	// public readonly buildConfiguration: string;
-	// public readonly buildLogUrl: URL;
-	// public readonly buildDate: Date;
+	public readonly contributors: ReadonlyArray<string>;
+	public readonly pipelineUrl: URL;
+	public readonly projectUrl: URL;
+	public readonly commitReference: string;
+	public readonly commitDate: Date;
+	public readonly buildConfiguration: string;
 
 	public constructor(buildInfoLike: BuildInfo) {
 		if (this.constructor === BuildInfo) {
 			throw new FExceptionInvalidOperation(`Cannot create an instance of abstract class: ${this.constructor.name}`);
 		}
 
-		this.title = buildInfoLike.title;
+		this.name = buildInfoLike.name;
 		this.description = buildInfoLike.description;
-		// this.company = buildInfoLike.company;
+		this.company = buildInfoLike.company;
 		// this.copyright = buildInfoLike.copyright;
-		// this.product = buildInfoLike.product;
 		this.version = buildInfoLike.version;
-		// this.contributors = buildInfoLike.contributors;
-		// this.repositoryUrl = buildInfoLike.repositoryUrl;
-		// this.repositoryReference = buildInfoLike.repositoryReference;
-		// this.repositoryCommit = buildInfoLike.repositoryCommit;
-		// this.buildConfiguration = buildInfoLike.buildConfiguration;
-		// this.buildLogUrl = buildInfoLike.buildLogUrl;
-		// this.buildDate = buildInfoLike.buildDate;
+		this.contributors = buildInfoLike.contributors;
+		this.projectUrl = buildInfoLike.projectUrl;
+		this.pipelineUrl = buildInfoLike.pipelineUrl;
+		this.commitReference = buildInfoLike.commitReference;
+		this.commitDate = buildInfoLike.commitDate;
+		this.buildConfiguration = buildInfoLike.buildConfiguration;
 	}
 }
 
@@ -46,26 +42,24 @@ class BuildInfoImpl extends BuildInfo {
 	}
 
 	private static _fromPackageJson(): BuildInfo {
-		const { version, title, description, author, contributors, copyright, product, build } = require("../../package.json");
+		const { version, name, description, author, contributors, copyright, product, build: buildRaw } = require("../../package.json");
 
 		const ensure: FEnsure = FEnsure.create();
 
-		// const buildRaw: any = ensure.defined(build, "Incorrect 'build' field.");
+		const build: any = ensure.defined(buildRaw, "Incorrect 'build' field.");
 
 		const buildInfo: BuildInfo = {
-			title: ensure.string(title, "Incorrect 'title' field."),
+			name: ensure.string(name, "Incorrect 'name' field."),
 			description: ensure.string(description, "Incorrect 'description' field."),
-			// company: ensure.string(author, "Incorrect 'author' field."),
+			company: ensure.string(author, "Incorrect 'author' field."),
 			// copyright: ensure.string(copyright, "Incorrect 'copyright' field."),
-			// product: ensure.string(product, "Incorrect 'product' field."),
 			version: ensure.string(version, "Incorrect 'version' field."),
-			// contributors: ensure.array(contributors, "Incorrect 'contributors' field.").map(contributor => ensure.string(contributor, "Bad contributor value.")),
-			// repositoryUrl: new URL(ensure.string(buildRaw.repositoryUrl, "Incorrect 'repositoryUrl' field.")),
-			// repositoryReference: ensure.string(buildRaw.repositoryReference, "Incorrect 'repositoryReference' field."),
-			// repositoryCommit: ensure.string(buildRaw.repositoryCommit, "Incorrect 'repositoryCommit' field."),
-			// buildConfiguration: ensure.string(buildRaw.buildConfiguration, "Incorrect 'buildConfiguration' field."),
-			// buildLogUrl: new URL(ensure.string(buildRaw.buildLogUrl, "Incorrect 'buildLogUrl' field.")),
-			// buildDate: new Date(ensure.string(buildRaw.buildDate, "Incorrect 'buildDate' field."))
+			contributors: ensure.array(contributors, "Incorrect 'contributors' field.").map(contributor => ensure.string(contributor, "Bad contributor value.")),
+			projectUrl: new URL(ensure.string(build.project_url, "Incorrect 'build.project_url' field.")),
+			pipelineUrl: new URL(ensure.string(build.pipeline_url, "Incorrect 'build.pipeline_url' field.")),
+			commitReference: ensure.string(build.commit_reference, "Incorrect 'build.commit_reference' field."),
+			commitDate: new Date(ensure.string(build.commit_timestamp, "Incorrect 'build.commit_timestamp' field.")),
+			buildConfiguration: ensure.string(build.configuration, "Incorrect 'build.configuration' field."),
 		};
 
 		return Object.freeze(buildInfo);

@@ -22,7 +22,7 @@
 				"--config-file=${workspaceRoot}/edgebus.config",
 				"--config-env"
 			],
-			"program": "${workspaceRoot}/bin/app.js",
+			"program": "${workspaceRoot}/bin/edgebus-devel.js",
 			"skipFiles": [
 				"<node_internals>/**"
 			],

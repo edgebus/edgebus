@@ -28,14 +28,24 @@
 		"src/**/*.d.ts": true,
 		"src/**/*.js": true,
 		"src/**/*.map": true,
+		"src-devel/**/*.d.ts": true,
+		"src-devel/**/*.js": true,
+		"src-devel/**/*.map": true,
 		"test/**/*.d.ts": true,
 		"test/**/*.map": true,
 		"test/**/*.js": true,
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
 	},
 	"cSpell.words": [
 		"auditability",
 		"devel",
 		"edgebus",
+		"embeddable",
 		"Encrypter",
 		"freemework",
 		"Initable",

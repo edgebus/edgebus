@@ -3,23 +3,10 @@
 	"version": "0.1.0",
 	"title": "EdgeBus Service",
 	"description": "EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.",
-	"main": "./src/index.js",
-	"types": "./src/index.d.ts",
-	"author": {
-		"name": "ZXTeam",
-		"email": "pub@zxteam.org",
-		"url": "http://www.zxteam.org"
-	},
+	"author": "ZXTeam <pub@zxteam.org> (http://www.zxteam.org)",
 	"contributors": [
-		{
-			"name": "Maxim Anurin",
-			"email": "maxim.anurin@zxteam.org",
-			"url": "http://www.anurin.name"
-		},
-		{
-			"name": "Serhii Zghama",
-			"email": "serhii.zghama@zxteam.org"
-		}
+		"Maxim Anurin <maxim.anurin@zxteam.org> (http://www.anurin.name)",
+		"Serhii Zghama <serhii.zghama@zxteam.org>"
 	],
 	"license": "MIT",
 	"devDependencies": {
@@ -51,10 +38,14 @@
 		"url": "https://github.com/edgebus/edgebus/issues"
 	},
 	"homepage": "https://github.com/edgebus/edgebus",
+	"main": "./src/index.js",
+	"types": "./src/index.d.ts",
 	"scripts": {
 		"clean": "find src \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\; ; find test \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\;",
 		"build": "tsc",
-		"start": "node --require=dotenv/config bin/app.js --config-file=edgebus.config --config-env",
+		"build:application": "rm -rf lib && tsc --project tsconfig-application.json && cp -a bin .dist/bin && jq '{ name: .name, version: .version, description: .description, author: .author, contributors: .contributors, license: .license, keywords: .keywords, repository: .repository, bugs: .bugs, engines: .engines, homepage: .homepage, main: \"lib/index.js\", types: \"lib/index.d.ts\", dependencies: .dependencies, build: .build }' package.json > .dist/package.json",
+		"build:package": "rm -rf lib && tsc --project tsconfig-package.json && cp PACKAGE.md .dist/README.md && jq '{ name: .name, version: .version, description: .description, author: .author, contributors: .contributors, license: .license, keywords: .keywords, repository: .repository, bugs: .bugs, engines: .engines, homepage: .homepage, main: \"lib/index.js\", types: \"lib/index.d.ts\", dependencies: .dependencies, build: .build }' package.json > .dist/package.json",
+		"start": "node --require=dotenv/config bin/edgebus.js --config-file=edgebus.config --config-env",
 		"test": "true",
 		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000",
 		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\"",

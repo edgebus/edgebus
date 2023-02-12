@@ -4,6 +4,6 @@
 
 const { Flauncher } = require("@freemework/hosting");
 
-const { default: runtimeFactory, Configuration } = require("../src");
+const { default: runtimeFactory, Configuration } = require("..");
 
 Flauncher(Configuration.parse, runtimeFactory);

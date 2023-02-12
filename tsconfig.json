@@ -4,6 +4,7 @@
 		"alwaysStrict": true,
 		"declaration": true,
 		"experimentalDecorators": true,
+		"listFiles": false,
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"noImplicitAny": true,

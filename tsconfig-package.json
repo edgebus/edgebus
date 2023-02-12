@@ -1,0 +1,14 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [
+		"src/**/*"
+	],
+	"compilerOptions": {
+		"rootDir": "src",
+		"listFiles": true,
+		"outDir": ".dist/lib/",
+		"inlineSources": true,
+		"sourceMap": true,
+		"sourceRoot": "src"
+	}
+}
