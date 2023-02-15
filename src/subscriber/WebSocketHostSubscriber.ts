@@ -52,12 +52,11 @@ export class WebSocketHostSubscriber extends FInitableBase {
 			FLogger.create(_log.name + WebSocketHostSubscriberEndpoint.name)
 		);
 
-		const onMessageBound = this._onMessage.bind(this);
+		const onMessageBound: MessageBus.Channel.Callback = this._onMessage.bind(this);
 
 		this._webSocketHostSubscriberEndpoint.on("firstConsumerAdded", () => {
 			this._channels.forEach(channel => {
 				channel.addHandler(onMessageBound);
-				channel.wakeUp();
 			});
 		});
 		this._webSocketHostSubscriberEndpoint.on("lastConsumerRemoved", () => {
@@ -72,14 +71,7 @@ export class WebSocketHostSubscriber extends FInitableBase {
 		await this._webSocketHostSubscriberEndpoint.dispose();
 	}
 
-	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event | Error): Promise<void> {
-		//
-		if (event instanceof Error) {
-			//
-			console.error(event); // TODO something
-			return;
-		}
-
+	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
 		try {
 			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
 				event.delivered = false;

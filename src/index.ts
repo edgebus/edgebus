@@ -194,8 +194,8 @@ export default async function (executionContext: FExecutionContext, configuratio
 				}
 
 				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
-					const sybscriberType = subscriberId.split(".")[1];
-					switch (sybscriberType) {
+					const subscriberType = subscriberId.split(".")[1];
+					switch (subscriberType) {
 						case "websockethost":
 							const webSocketHostSubscriber = new WebSocketHostSubscriber(
 								{
@@ -212,18 +212,17 @@ export default async function (executionContext: FExecutionContext, configuratio
 						case "httpclient":
 							const httpClientSubscriber = new HttpClientSubscriber(
 								{
-									baseBindPath: subscriberApiRestEndpoint.bindPath,
-									bindServers: subscriberApiRestEndpoint.servers,
-									subscriberId: subscriberId
+									deliveryHttpMethod: subscriberId.split(".")[2],
+									deliveryUrl: new URL(subscriberId.split(".")[3]),
+									subscriberId,
 								},
-								FLogger.create(log.name + "." + HttpClientSubscriber.name),
 								...channels
 							);
 							await httpClientSubscriber.init(executionContext);
 							itemsToDispose.push(httpClientSubscriber);
 							break;
 						default:
-							throw new FExceptionArgument(`Unsupported subscriber type ${sybscriberType}`);
+							throw new FExceptionArgument(`Unsupported subscriber type ${subscriberType}`);
 					}
 				}
 			}

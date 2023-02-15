@@ -1,10 +1,10 @@
-import { MessageBus } from "./MessageBus";
+import { FException, FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
 
+import { MessageBus } from "./MessageBus";
 import { Message } from "../model/Message";
 import { Topic } from "../model/Topic";
 import { Subscriber } from "../model/Subscriber";
-import { SubscriberChannelBase } from "../utils/SubscriberChannelBase";
-import { FException, FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
+import { EventChannelBase } from "../utils/EventChannelBase";
 
 export class MessageBusLocal extends FInitableBase implements MessageBus {
 	private readonly _messageQueues: Map<Topic["topicName"], Map<Subscriber["subscriberId"], Array<Message>>>;
@@ -87,7 +87,7 @@ export namespace MessageBusLocal {
 }
 
 
-class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
+class MessageBusLocalChannel extends EventChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
 	implements MessageBus.Channel {
 	private readonly _queue: Array<Message>;
 	private readonly _topicName: Topic["topicName"];
@@ -112,6 +112,11 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 
 	public onAddFirstHandler() {
 		super.onAddFirstHandler();
+	}
+
+	public addHandler(cb: MessageBus.Channel.Callback): void {
+		super.addHandler(cb);
+		this.wakeUp();
 	}
 
 	public wakeUp(): void {
@@ -147,6 +152,9 @@ class MessageBusLocalChannel extends SubscriberChannelBase<Message.Id & Message.
 					data: message
 				};
 				await this.notify(this.initExecutionContext, event);
+				if (event.delivered === undefined) {
+					throw new FExceptionInvalidOperation("Contract violation. Event consumer MUST set field 'delivered' to true/false explicitly.");
+				}
 				if (event.delivered === true) {
 					this._queue.shift(); // OK, going to next message
 				}

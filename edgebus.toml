@@ -1,0 +1,75 @@
+# Configure HTTP server
+[edgebus.runtime.server.management]
+	listenHost = "0.0.0.0"
+	listenPort = "8443"
+	type = "https"
+
+[edgebus.runtime.server.publisher]
+	listenHost = "0.0.0.0"
+	listenPort = "8444"
+	type = "https"
+
+[edgebus.runtime.server.subscriber]
+	listenHost = "0.0.0.0"
+	listenPort = "8445"
+	type = "https"
+
+[edgebus.runtime.server]
+	# Enable (turn on) servers
+	indexes = "management publisher subscriber"
+
+
+# Configure endpoint "info"
+[edgebus.runtime.endpoint.info]
+	type = "rest-info"
+	servers = "management publisher subscriber"
+	bindPath = "/info"
+	[edgebus.runtime.endpoint.info.cors]
+		methods = "GET"
+		whiteList = "*"
+		allowedHeaders = "*"
+
+# Configure endpoint "management"
+[edgebus.runtime.endpoint.management]
+	type = "rest-management"
+	servers = "management"
+	bindPath = "/management"
+	methods = "GET"
+
+# Configure endpoint "publisher"
+[edgebus.runtime.endpoint.publisher]
+	type = "rest-publisher"
+	servers = "publisher"
+	bindPath = "/publisher"
+	methods = "GET"
+
+# Configure endpoint "subscriber"
+[edgebus.runtime.endpoint.subscriber]
+	type = "rest-subscriber"
+	servers = "subscriber"
+	bindPath = "/subscriber"
+	methods = "GET"
+
+# Enable (turn on) endpoints
+[edgebus.runtime.endpoint]
+	#indexes = management
+	indexes = "info management publisher subscriber"
+
+
+# Cache URL (Redis only at the moment)
+[edgebus.runtime.cache]
+	url = "redis://your.redis.server:6379/0"
+
+
+# Persistent storage URL (Postgres only at the moment)
+[edgebus.runtime.persist]
+	url = "postgres://your.postgres.server:5432/notifier"
+
+
+# =======================
+# Database Migration only
+# =======================
+
+# Persistent storage URL (Postgres only at the moment)
+[edgebus.migration.persist]
+	url = "postgres://your.postgres.server:5432/notifier"

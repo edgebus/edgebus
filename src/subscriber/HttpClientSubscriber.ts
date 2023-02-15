@@ -1,98 +1,114 @@
-import { FExceptionArgument, FExecutionContext, FHttpClient, FInitableBase, FLogger } from "@freemework/common";
+import { FException, FExecutionContext, FHttpClient, FInitableBase, FLogger } from "@freemework/common";
+
+import { OutgoingHttpHeaders } from "http";
 
 import { MessageBus } from "../messaging/MessageBus";
-import { WebSocketHostSubscriberEndpoint } from "../endpoints/WebSocketHostSubscriberEndpoint";
 import { Subscriber } from "../model/Subscriber";
 import { Message } from "../model/Message";
-import { Topic } from "../model/Topic";
-import { FWebServer } from "@freemework/hosting";
 
 export class HttpClientSubscriber extends FInitableBase {
 
+	private readonly _log: FLogger;
 	private readonly _channels: ReadonlyArray<MessageBus.Channel>;
-	private readonly _method: string;
-	private readonly _host: URL;
-	private client?: FHttpClient;
+	private readonly _method: string | null;
+	private readonly _url: URL;
+	private readonly _client: FHttpClient;
+	private readonly _onMessageBound: MessageBus.Channel.Callback;
 
 	public constructor(
 		opts: HttpClientSubscriber.Opts,
-		private readonly _log: FLogger,
 		...channels: ReadonlyArray<MessageBus.Channel>
 	) {
 		super();
 
+		this._log = FLogger.create(this.constructor.name);
+		this._client = new FHttpClient();
 		this._channels = channels;
 
-		let baseBindPath = opts.baseBindPath;
-		while (baseBindPath.length > 0 && baseBindPath.endsWith("/")) {
-			baseBindPath = baseBindPath.slice(0, -1);
-		}
+		this._onMessageBound = this._onMessage.bind(this);
 
-		const [prefix, kind, method, host] = opts.subscriberId.split(".");
+		this._method = opts.deliveryHttpMethod !== undefined ? opts.deliveryHttpMethod : null;
+		this._url = opts.deliveryUrl;
 
-		this._method = method;
-		this._host = new URL(host);
-
-		if (prefix !== "subscriber") {
-			throw new FExceptionArgument(`Wrong subscriberId prefix: '${prefix}'. Expected: 'subscriber'`, "opts.subscriberId");
-		}
-		if (kind !== "httpclient") {
-			throw new FExceptionArgument(`Wrong subscriberId kind: '${kind}'. Expected: 'httpclient'`, "opts.subscriberId");
-		}
-
-		this._log.debug(FExecutionContext.Empty, `Construct ${HttpClientSubscriber.name} with bind host ${this._method}:'${this._host}'.`);
+		this._log.trace(FExecutionContext.Empty, () => `Construct with delivery target '${this._url}' (method: '${this._method}').`);
 	}
 
 	protected async onInit(): Promise<void> {
-		this.client = new FHttpClient();
-		const onMessageBound = this._onMessage.bind(this);
-		this._channels.forEach(channel => {
-			channel.addHandler(onMessageBound);
-			channel.wakeUp();
-		});
-
+		this._channels.forEach(channel => channel.addHandler(this._onMessageBound));
 	}
 	protected async onDispose(): Promise<void> {
-		const onMessageBound = this._onMessage.bind(this);
-		this._channels.forEach(channel => channel.removeHandler(onMessageBound));
+		this._channels.forEach(channel => channel.removeHandler(this._onMessageBound));
 	}
 
-	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event | Error): Promise<void> {
-		//
-		if (event instanceof Error) {
-			//
-			console.error(event); // TODO something
-			return;
-		}
+	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
 		try {
-			const mediaType = event.data.mediaType;
-			const messageBody = event.data.messageBody;
+			const message: Message.Id & Message.Data = event.data;
 
-			const data = JSON.parse(messageBody.toString("utf8"));
-			const nativeMethod = data.method;
-			const bodyData = Buffer.from(JSON.stringify(data.body), "utf-8");
+			const messageHttpMethod: string | null = HttpClientSubscriber._extractHttpMethod(message);
+			const messageHeaders: OutgoingHttpHeaders = HttpClientSubscriber._extractHttpHeaders(message);
+			const body: Buffer = HttpClientSubscriber._extractHttpBody(message);
 
-			const response = await this.client?.invoke(executionContext, {
-				url: this._host,
-				method: this._method === "INHERIT" ? nativeMethod : this._method,
-				headers: event.data.headers,
-				body: bodyData
-			});
-			if (response && response.statusCode >= 300) {
-				console.log(`Request failure, response code ${response.statusCode}`);
+			let method: string;
+			if (this._method !== null) {
+				method = this._method;
+			} else if (messageHttpMethod !== null) {
+				method = messageHttpMethod;
+			} else {
+				method = "POST";
 			}
-			event.delivered = true;
+
+			const response = await this._client.invoke(executionContext, {
+				url: this._url,
+				method,
+				headers: messageHeaders,
+				body
+			});
+			if (response && response.statusCode >= 200 && response.statusCode < 300) {
+				event.delivered = true;
+				this._log.info(executionContext, () => `Event from topic '${event.source.topicName}' was delivered successfully.`);
+			} else {
+				event.delivered = false;
+				this._log.info(executionContext, () => `Request failure, response code ${response.statusCode}`);
+			}
 		} catch (e) {
 			event.delivered = false;
-			console.log(e);
+			const err: FException = FException.wrapIfNeeded(e);
+			this._log.info(executionContext, () => `Event from topic '${event.source.topicName}' was NOT delivered. ${err.message}`);
+			this._log.debug(executionContext, () => `Event from topic '${event.source.topicName}' was NOT delivered.`, err);
 		}
+	}
+
+	private static _extractHttpMethod(message: Message.Data): string | null {
+		const messageBody: Buffer = message.messageBody;
+		const parsedMessageBody: any = JSON.parse(messageBody.toString("utf8"));
+		const originalHttpMethod: any = parsedMessageBody.method;
+		if (typeof originalHttpMethod === "string") {
+			return originalHttpMethod;
+		}
+		return null;
+	}
+
+	private static _extractHttpHeaders(message: Message.Data): OutgoingHttpHeaders {
+		const messageHeaders: {
+			readonly [name: string]: string;
+		} = message.headers;
+		return messageHeaders;
+	}
+
+	private static _extractHttpBody(message: Message.Data): Buffer {
+		const messageBody: Buffer = message.messageBody;
+
+		const parsedMessageBody: any = JSON.parse(messageBody.toString("utf8"));
+		const bodyData: Buffer = Buffer.from(JSON.stringify(parsedMessageBody.body), "utf-8");
+
+		return bodyData;
 	}
 }
 
 export namespace HttpClientSubscriber {
 	export interface Opts {
 		readonly subscriberId: Subscriber["subscriberId"];
-		readonly bindServers: ReadonlyArray<FWebServer>;
-		readonly baseBindPath: string;
+		readonly deliveryUrl: URL;
+		readonly deliveryHttpMethod?: "GET" | "POST" | "PUT" | "DELETE" | string;
 	}
 }

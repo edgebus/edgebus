@@ -1,27 +1,23 @@
-import { FCancellationToken, FDisposableBase, FException, FExecutionContext, FInitableBase, FChannelSubscriber } from "@freemework/common";
+import { FCancellationToken, FDisposableBase, FException, FExecutionContext, FInitableBase, FChannelEvent, FChannelEventMixin } from "@freemework/common";
 import { FCancellationException, FExceptionAggregate, FExceptionInvalidOperation } from "@freemework/common";
 
-export abstract class SubscriberChannelBase<TData, TEvent extends FChannelSubscriber.Event<TData> = FChannelSubscriber.Event<TData>>
-	extends FInitableBase implements FChannelSubscriber<TData, TEvent> {
-	private readonly _callbacks: Array<FChannelSubscriber.Callback<TData, TEvent>>;
-	private _broken: boolean;
+export abstract class EventChannelBase<TData, TEvent extends FChannelEvent.Event<TData> = FChannelEvent.Event<TData>>
+	extends FInitableBase implements FChannelEvent<TData, TEvent> {
+	private readonly _callbacks: Array<FChannelEvent.Callback<TData, TEvent>>;
 
 	public constructor() {
 		super();
 		this._callbacks = [];
-		this._broken = false;
 	}
 
-	public addHandler(cb: FChannelSubscriber.Callback<TData, TEvent>): void {
-		this.verifyBrokenChannel();
-
+	public addHandler(cb: FChannelEvent.Callback<TData, TEvent>): void {
 		this._callbacks.push(cb);
 		if (this._callbacks.length === 1) {
 			this.onAddFirstHandler();
 		}
 	}
 
-	public removeHandler(cb: FChannelSubscriber.Callback<TData, TEvent>): void {
+	public removeHandler(cb: FChannelEvent.Callback<TData, TEvent>): void {
 		const index = this._callbacks.indexOf(cb);
 		if (index !== -1) {
 			this._callbacks.splice(index, 1);
@@ -31,23 +27,11 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FChannelSubscr
 		}
 	}
 
-	protected get isBroken(): boolean { return this._broken; }
-
-	protected verifyBrokenChannel(): void {
-		if (this.isBroken) {
-			throw new FExceptionInvalidOperation("Wrong operation on broken channel");
-		}
-	}
-
-	protected notify(executionContext: FExecutionContext, event: TEvent | FException): void | Promise<void> {
+	protected notify(executionContext: FExecutionContext, event: TEvent): void | Promise<void> {
 		if (this._callbacks.length === 0) {
 			return;
 		}
 		const callbacks = this._callbacks.slice();
-		if (event instanceof Error) {
-			this._broken = true;
-			this._callbacks.splice(0, this._callbacks.length);
-		}
 		if (callbacks.length === 1) {
 			return callbacks[0](executionContext, event);
 		}
@@ -55,12 +39,12 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FChannelSubscr
 		const errors: Array<FException> = [];
 		for (const callback of callbacks) {
 			try {
-				const result = callback(executionContext,event);
+				const result = callback(executionContext, event);
 				if (result instanceof Promise) {
 					promises.push(result);
 				}
 			} catch (e) {
-				errors.push(FException.wrapIfNeeded( e));
+				errors.push(FException.wrapIfNeeded(e));
 			}
 		}
 
@@ -77,7 +61,7 @@ export abstract class SubscriberChannelBase<TData, TEvent extends FChannelSubscr
 					if (errors.length > 0) {
 						for (const error of errors) {
 							if (!(error instanceof FCancellationException)) {
-								throw new FExceptionAggregate(errors);
+								FExceptionAggregate.throwIfNeeded(errors);
 							}
 						}
 						// So, all errors are CancelledError instances, throw first

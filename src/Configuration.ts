@@ -29,16 +29,16 @@ export class Configuration {
 	) { }
 
 	public static parse(configuration: FConfiguration): Configuration {
-		const servers: ReadonlyArray<FHostingConfiguration.WebServer> = Object.freeze(FHostingConfiguration.parseWebServers(configuration));
+		const runtimeConfiguration: FConfiguration = configuration.getNamespace("edgebus.runtime");
 
-		const endpoints: ReadonlyArray<Configuration.Endpoint> = Object.freeze(configuration.get("endpoints").asString.split(" ").map(
-			(endpointIndex: string): Configuration.Endpoint => {
-				return parseEndpoint(configuration, endpointIndex);
-			}
-		));
+		const servers: ReadonlyArray<FHostingConfiguration.WebServer> = Object.freeze(FHostingConfiguration.parseWebServers(runtimeConfiguration));
 
-		const cacheStorageURL: URL = configuration.get("cacheStorage.url").asUrl;
-		const persistentStorageURL: URL = configuration.get("persistentStorage.url").asUrl;
+		const endpoints: ReadonlyArray<Configuration.Endpoint> = Object.freeze(
+			runtimeConfiguration.getArray("endpoint").map(parseEndpoint)
+		);
+
+		const cacheStorageURL: URL = runtimeConfiguration.get("cache.url").asUrl;
+		const persistentStorageURL: URL = runtimeConfiguration.get("persistent.url").asUrl;
 
 		const appConfig: Configuration = new Configuration(
 			servers,
@@ -109,8 +109,7 @@ export class ConfigurationException extends FException { }
 // |___| |_| |_|  \__|  \___| |_|    |_| |_|  \__,_| |_|
 
 
-function parseEndpoint(configuration: FConfiguration, endpointIndex: string): Configuration.Endpoint {
-	const endpointConfiguration: FConfiguration = configuration.getNamespace(`endpoint.${endpointIndex}`);
+function parseEndpoint(endpointConfiguration: FConfiguration): Configuration.Endpoint {
 	const endpointType: Configuration.Endpoint["type"] = endpointConfiguration.get("type").asString as Configuration.Endpoint["type"];
 	switch (endpointType) {
 		case "rest-info": {

@@ -5,7 +5,9 @@
 - [ ] Implement DBFacade with necessary set of methods to save:
   - [ ] Add tb_message record
   - [ ] Add tb_delivery/tb_delivery_failure/tb_delivery_success record
-- [ ] Implement HttpSubscriber.ts
+- [x] Implement HttpSubscriber.ts
+- [ ] Implement retry policy for HttpSubscriber.ts
 - [ ] Inject DBFacade calls into MessageBusLocal.ts/HttpSubscriber.ts
 - [x] Refactor Dockerfile
 - [ ] Setup Manager for Publisher/Subscriber to be able to launch from scratch
+- [x] Migrate to .toml configuration file

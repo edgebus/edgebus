@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import * as WebSocket from "ws";
 
 import { Message } from "../model/Message";
-import { SubscriberChannelBase } from "../utils/SubscriberChannelBase";
+import { EventChannelBase } from "../utils/EventChannelBase";
 import { Topic } from "../model/Topic";
 
 export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEndpoint {
@@ -116,7 +116,7 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 	}
 }
 
-class TextChannel extends SubscriberChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
+class TextChannel extends EventChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
 	private readonly _disposer: () => void | Promise<void>;
 
 	public constructor(disposer: () => void | Promise<void>) {
