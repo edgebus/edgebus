@@ -7,7 +7,7 @@
 !src-devel/
 !.npmrc
 !PACKAGE.md
-!edgebus.config
+!edgebus.toml
 !package.json
 !package-lock.json
 !tsconfig-application.json
