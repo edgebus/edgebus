@@ -46,6 +46,7 @@ class HostingProviderImpl extends HostingProvider {
 
 		this._serverInstances = this._configProvider.servers.map((serverOpts) => {
 			if (hosting.instanceofWebServer(serverOpts)) {
+				this.log.debug(FExecutionContext.Empty, () => `Use Web server '${serverOpts.name}' ...`);
 				return { name: serverOpts.name, server: serverOpts, isOwnInstance: false };
 			}
 
@@ -61,6 +62,8 @@ class HostingProviderImpl extends HostingProvider {
 			} else {
 				expressApplication.set("json spaces", 4);
 			}
+
+			this.log.debug(FExecutionContext.Empty, () => `Created own Web server '${ownServerInstance.name}' ...`);
 
 			return Object.freeze({ name: ownServerInstance.name, server: ownServerInstance, isOwnInstance: true });
 		});

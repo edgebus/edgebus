@@ -19,7 +19,8 @@
 			},
 			"envFile": "${workspaceFolder}/.env",
 			"args": [
-				"--config-toml-file=${workspaceRoot}/edgebus.toml",
+				"--config-toml-file=${workspaceRoot}/edgebus-service.toml",
+				"--config-toml-file=${workspaceRoot}/edgebus-setup.toml",
 				"--config-env"
 			],
 			"program": "${workspaceRoot}/bin/edgebus-devel.js",

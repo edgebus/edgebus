@@ -86,7 +86,7 @@ RUN rm package-lock.json
 # Compositor merges all artifacts between builds
 FROM node:${IMAGE_TAG_NODEJS} AS compositor_base
 COPY docker/docker-entrypoint-edgebus.sh /stage/usr/local/bin/docker-entrypoint-edgebus.sh
-COPY edgebus.toml /stage/etc/edgebus/
+COPY edgebus-runtime.toml /stage/etc/edgebus/
 
 FROM compositor_base AS compositor_snapshot
 # Nothing special for 'snapshot' at composite phase
@@ -128,4 +128,4 @@ COPY --from=compositor /stage/ /
 # RUN update-ca-certificates
 EXPOSE 8080 8443
 ENTRYPOINT [ "/usr/local/bin/docker-entrypoint-edgebus.sh" ]
-CMD ["--config-toml-file=/etc/edgebus/edgebus.toml","--config-env"]
+CMD ["--config-toml-file=/etc/edgebus/edgebus-runtime.toml","--config-env"]

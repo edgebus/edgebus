@@ -10,6 +10,7 @@ export abstract class ConfigurationProvider implements Configuration {
 	abstract get endpoints(): ReadonlyArray<Configuration.Endpoint>;
 	abstract get cacheStorageURL(): URL;
 	abstract get persistentStorageURL(): URL;
+	abstract get setup(): Configuration.Setup | null;
 }
 
 @Provides(ConfigurationProvider)
@@ -28,4 +29,5 @@ export class ConfigurationProviderImpl extends ConfigurationProvider {
 	public get endpoints() { return this._configuration.endpoints; }
 	public get cacheStorageURL() { return this._configuration.cacheStorageURL; }
 	public get persistentStorageURL() { return this._configuration.persistentStorageURL; }
+	public get setup() { return this._configuration.setup; }
 }

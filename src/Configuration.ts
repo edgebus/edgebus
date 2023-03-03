@@ -25,26 +25,37 @@ export class Configuration {
 		/**
 		 * Connection URL to cache storage (for example Redis)
 		 */
-		public readonly cacheStorageURL: URL
+		public readonly cacheStorageURL: URL,
+
+		/**
+		 * Predefined configuration
+		 */
+		public readonly setup: Configuration.Setup | null
 	) { }
 
 	public static parse(configuration: FConfiguration): Configuration {
-		const runtimeConfiguration: FConfiguration = configuration.getNamespace("edgebus.runtime");
+		const edgebusConfiguration: FConfiguration = configuration.getNamespace("edgebus");
 
-		const servers: ReadonlyArray<FHostingConfiguration.WebServer> = Object.freeze(FHostingConfiguration.parseWebServers(runtimeConfiguration));
+		const edgebusRuntimeConfiguration: FConfiguration = edgebusConfiguration.getNamespace("runtime");
+
+		const servers: ReadonlyArray<FHostingConfiguration.WebServer> = Object.freeze(FHostingConfiguration.parseWebServers(edgebusRuntimeConfiguration));
 
 		const endpoints: ReadonlyArray<Configuration.Endpoint> = Object.freeze(
-			runtimeConfiguration.getArray("endpoint").map(parseEndpoint)
+			edgebusRuntimeConfiguration.getArray("endpoint").map(parseEndpoint)
 		);
 
-		const cacheStorageURL: URL = runtimeConfiguration.get("cache.url").asUrl;
-		const persistentStorageURL: URL = runtimeConfiguration.get("persistent.url").asUrl;
+		const cacheStorageURL: URL = edgebusRuntimeConfiguration.get("cache.url").asUrl;
+		const persistentStorageURL: URL = edgebusRuntimeConfiguration.get("persistent.url").asUrl;
+
+		const setupConfiguration: FConfiguration | null = edgebusConfiguration.findNamespace("setup");
+		const setup: Configuration.Setup | null = setupConfiguration !== null ? parseSetup(setupConfiguration) : null;
 
 		const appConfig: Configuration = new Configuration(
 			servers,
 			endpoints,
 			persistentStorageURL,
 			cacheStorageURL,
+			setup
 		);
 
 		return appConfig;
@@ -96,6 +107,29 @@ export namespace Configuration {
 			readonly cert: Buffer;
 			readonly key: Buffer;
 		};
+	}
+
+	export interface Setup {
+		readonly publishers: ReadonlyArray<Setup.Publisher>;
+		readonly subscribers: ReadonlyArray<Setup.Subscriber>;
+		readonly topics: ReadonlyArray<Setup.Topic>;
+	}
+
+	export namespace Setup {
+		export interface Publisher {
+			readonly name: string;
+			readonly description: string;
+		}
+
+		export interface Subscriber {
+			readonly name: string;
+			readonly description: string;
+		}
+
+		export interface Topic {
+			readonly name: string;
+			readonly description: string;
+		}
 	}
 }
 
@@ -168,11 +202,42 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Configuration.End
 	}
 }
 
-function parseCors(configuration: FConfiguration): Configuration.Cors {
-	const methods: ReadonlyArray<string> = Object.freeze(configuration.get("methods").asString.split(" "));
-	const whiteList: ReadonlyArray<string> = Object.freeze(configuration.get("whiteList").asString.split(" "));
-	const allowedHeaders: ReadonlyArray<string> = Object.freeze(configuration.get("allowedHeaders").asString.split(" "));
+function parseCors(corsConfiguration: FConfiguration): Configuration.Cors {
+	const methods: ReadonlyArray<string> = Object.freeze(corsConfiguration.get("methods").asString.split(" "));
+	const whiteList: ReadonlyArray<string> = Object.freeze(corsConfiguration.get("whiteList").asString.split(" "));
+	const allowedHeaders: ReadonlyArray<string> = Object.freeze(corsConfiguration.get("allowedHeaders").asString.split(" "));
 	return Object.freeze({ methods, whiteList, allowedHeaders });
+}
+
+function parseSetup(setupConfiguration: FConfiguration) {
+
+	const publishers: Array<Configuration.Setup.Publisher> = [];
+	const subscribers: Array<Configuration.Setup.Subscriber> = [];
+	const topics: Array<Configuration.Setup.Topic> = [];
+
+	const publisherKey: string = "publisher";
+	if (setupConfiguration.hasNamespace(publisherKey)) {
+		const publishersConfiguration = setupConfiguration.getArray(publisherKey);
+		// TODO
+	}
+
+	const subscriberKey: string = "subscriber";
+	if (setupConfiguration.hasNamespace(subscriberKey)) {
+		const subscribersConfiguration = setupConfiguration.getArray(subscriberKey);
+		// TODO
+	}
+
+	const topicKey: string = "topic";
+	if (setupConfiguration.hasNamespace(topicKey)) {
+		const topicsConfiguration = setupConfiguration.getArray(topicKey);
+		// TODO
+	}
+
+	return Object.freeze({
+		publishers: Object.freeze(publishers),
+		subscribers: Object.freeze(subscribers),
+		topics: Object.freeze(topics),
+	});
 }
 
 class UnreachableNotSupportedEndpointError extends Error {

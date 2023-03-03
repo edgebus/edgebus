@@ -1,26 +1,35 @@
-# Configure HTTP server
-[edgebus.runtime.server.management]
+# Enable (turn on) specific servers ONLY
+#"edgebus.runtime.server.indexes" = "management publisher subscriber"
+
+# Enable (turn on) specific endpoints ONLY
+#"edgebus.runtime.endpoint.indexes" = "info management publisher subscriber"
+
+
+# Configure web server "management"
+[[edgebus.runtime.server]]
+	index = "management"
 	listenHost = "0.0.0.0"
 	listenPort = "8443"
 	type = "https"
 
-[edgebus.runtime.server.publisher]
+# Configure web server "publisher"
+[[edgebus.runtime.server]]
+	index = "publisher"
 	listenHost = "0.0.0.0"
 	listenPort = "8444"
 	type = "https"
 
-[edgebus.runtime.server.subscriber]
+# Configure web server "subscriber"
+[[edgebus.runtime.server]]
+	index = "subscriber"
 	listenHost = "0.0.0.0"
 	listenPort = "8445"
 	type = "https"
 
-[edgebus.runtime.server]
-	# Enable (turn on) servers
-	indexes = "management publisher subscriber"
-
 
 # Configure endpoint "info"
-[edgebus.runtime.endpoint.info]
+[[edgebus.runtime.endpoint]]
+	index = "info"
 	type = "rest-info"
 	servers = "management publisher subscriber"
 	bindPath = "/info"
@@ -30,31 +39,28 @@
 		allowedHeaders = "*"
 
 # Configure endpoint "management"
-[edgebus.runtime.endpoint.management]
+[[edgebus.runtime.endpoint]]
+	index = "management"
 	type = "rest-management"
 	servers = "management"
 	bindPath = "/management"
 	methods = "GET"
 
 # Configure endpoint "publisher"
-[edgebus.runtime.endpoint.publisher]
+[[edgebus.runtime.endpoint]]
+	index = "publisher"
 	type = "rest-publisher"
 	servers = "publisher"
 	bindPath = "/publisher"
 	methods = "GET"
 
 # Configure endpoint "subscriber"
-[edgebus.runtime.endpoint.subscriber]
+[[edgebus.runtime.endpoint]]
+	index = "subscriber"
 	type = "rest-subscriber"
 	servers = "subscriber"
 	bindPath = "/subscriber"
 	methods = "GET"
-
-# Enable (turn on) endpoints
-[edgebus.runtime.endpoint]
-	#indexes = management
-	indexes = "info management publisher subscriber"
-
 
 # Cache URL (Redis only at the moment)
 [edgebus.runtime.cache]

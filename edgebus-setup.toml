@@ -1,0 +1,10 @@
+# Enable (turn on) specific topics ONLY
+#"edgebus.setup.topic.indexes" = "..."
+
+[[edgebus.setup.topic]]
+	index = "pss-provider-wtf2"
+	description = "PSS Provider WTF2 callbacks"
+
+[[edgebus.setup.topic]]
+	index = "wtf2"
+	"description" = "WTF2 callbacks"
