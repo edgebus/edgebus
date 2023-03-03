@@ -3,10 +3,10 @@ import { FExecutionContext, FSqlConnection, FSqlResultRecord } from "@freemework
 import { v4 as uuid } from "uuid";
 import * as _ from "lodash";
 
-import { Topic } from "../../model/Topic";
-import { Publisher } from "../../model/Publisher";
-import { Converter } from "../../model/Convert";
-import { Security } from "../../model/Security";
+import { Topic } from "../../model/topic";
+import { Publisher } from "../../model/publisher";
+import { Converter } from "../../model/convert";
+import { Security } from "../../model/security";
 
 export async function create<TVariant extends Publisher.DataVariant>(
 	executionContext: FExecutionContext,

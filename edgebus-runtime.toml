@@ -11,6 +11,7 @@
 	listenHost = "0.0.0.0"
 	listenPort = "8443"
 	type = "https"
+# /Configure web server "management"
 
 # Configure web server "publisher"
 [[edgebus.runtime.server]]
@@ -18,6 +19,7 @@
 	listenHost = "0.0.0.0"
 	listenPort = "8444"
 	type = "https"
+# /Configure web server "publisher"
 
 # Configure web server "subscriber"
 [[edgebus.runtime.server]]
@@ -25,6 +27,7 @@
 	listenHost = "0.0.0.0"
 	listenPort = "8445"
 	type = "https"
+# /Configure web server "subscriber"
 
 
 # Configure endpoint "info"
@@ -37,6 +40,7 @@
 		methods = "GET"
 		whiteList = "*"
 		allowedHeaders = "*"
+# /Configure endpoint "info"
 
 # Configure endpoint "management"
 [[edgebus.runtime.endpoint]]
@@ -45,6 +49,7 @@
 	servers = "management"
 	bindPath = "/management"
 	methods = "GET"
+# /Configure endpoint "management"
 
 # Configure endpoint "publisher"
 [[edgebus.runtime.endpoint]]
@@ -53,6 +58,7 @@
 	servers = "publisher"
 	bindPath = "/publisher"
 	methods = "GET"
+# /Configure endpoint "publisher"
 
 # Configure endpoint "subscriber"
 [[edgebus.runtime.endpoint]]
@@ -61,15 +67,19 @@
 	servers = "subscriber"
 	bindPath = "/subscriber"
 	methods = "GET"
+# /Configure endpoint "subscriber"
+
 
 # Cache URL (Redis only at the moment)
 [edgebus.runtime.cache]
 	url = "redis://your.redis.server:6379/0"
+# /Cache URL (Redis only at the moment)
 
 
 # Persistent storage URL (Postgres only at the moment)
 [edgebus.runtime.persist]
 	url = "postgres://your.postgres.server:5432/notifier"
+# /Persistent storage URL (Postgres only at the moment)
 
 
 # =======================
@@ -79,3 +89,4 @@
 # Persistent storage URL (Postgres only at the moment)
 [edgebus.migration.persist]
 	url = "postgres://your.postgres.server:5432/notifier"
+# /Persistent storage URL (Postgres only at the moment)

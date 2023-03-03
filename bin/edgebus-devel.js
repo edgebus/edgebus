@@ -2,19 +2,20 @@
 
 "use strict";
 
-const fs = require("fs");
-const { Container } = require("typescript-ioc");
 const { Flauncher } = require("@freemework/hosting");
 
-const { default: runtimeFactory, Configuration } = require("..");
+const fs = require("fs");
+const { Container } = require("typescript-ioc");
+
+const { default: runtimeFactory, Settings } = require("..");
 
 
 // Contract providers
-const { BuildInfo } = require("../src/provider/BuildInfo");
+const { BuildInfoProvider } = require("../src/provider/build_info_provider");
 
 
 // Devel implementation providers
-const { DevelBuildInfo } = require("../src-devel/provider/DevelBuildInfo");
+const { DevelBuildInfoProvider } = require("../src-devel/provider/devel_build_info");
 
 
 const logoFile = __filename.replace(/.js$/, ".logo");
@@ -24,8 +25,8 @@ if (fs.existsSync(logoFile)) {
 
 
 // Make Devel environment
-Container.bind(BuildInfo).provider({ get() { return new DevelBuildInfo(); } });
+Container.bind(BuildInfoProvider).provider({ get() { return new DevelBuildInfoProvider(); } });
 
 
 // Launch app
-Flauncher(Configuration.parse, runtimeFactory);
+Flauncher(Settings.parse, runtimeFactory);

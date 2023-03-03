@@ -4,14 +4,14 @@ import { v4 as uuid } from "uuid";
 import * as _ from "lodash";
 
 // Model
-import { Topic } from "../../model/Topic";
-import { Subscriber } from "../../model/Subscriber";
+import { Topic } from "../../model/topic";
+import { Subscriber } from "../../model/subscriber";
 
 // SQL Tools
 import * as sqlToolsTopicSubscriberSecurity from "./tb_topic_subscriber_secuity";
 import * as sqlToolsTopic from "./tb_topic";
 import { NoRecordPersistentStorageError } from "../errors";
-import { Security } from "../../model/Security";
+import { Security } from "../../model/security";
 
 export async function create<TVariant extends Subscriber.DataVariant>(
 	executionContext: FExecutionContext,

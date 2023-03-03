@@ -4,35 +4,35 @@ import { FLauncherRuntime } from "@freemework/hosting";
 import * as _ from "lodash";
 
 // Providers
-import { ConfigurationProvider, ConfigurationProviderImpl } from "./provider/ConfigurationProvider";
-import { StorageProvider } from "./provider/StorageProvider";
-import { EndpointsProvider } from "./provider/EndpointsProvider";
-import { HostingProvider } from "./provider/HostingProvider";
-import { MessageBusProvider } from "./provider/MessageBusProvider";
-import { HttpPublisher } from "./publisher/HttpPublisher";
-import { WebSocketHostSubscriber } from "./subscriber/WebSocketHostSubscriber";
-import { MessageBus } from "./messaging/MessageBus";
+import { SettingsProvider, ConfigurationProviderImpl } from "./provider/configuration_provider";
+import { StorageProvider } from "./provider/storage_provider";
+import { EndpointsProvider } from "./provider/endpoints_provider";
+import { HostingProvider } from "./provider/hosting_provider";
+import { MessageBusProvider } from "./provider/message_bus_provider";
+import { HttpHostPublisher } from "./publisher/http_host_publisher";
+import { WebSocketHostSubscriber } from "./subscriber/web_socket_host_subscriber";
+import { MessageBus } from "./messaging/message_bus";
 import { Container } from "typescript-ioc";
-import { Configuration } from "./Configuration";
-import { HttpClientSubscriber } from "./subscriber/HttpClientSubscriber";
+import { Settings } from "./settings";
+import { HttpClientSubscriber } from "./subscriber/http_client_subscriber";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
-export { ManagementApi } from "./api/ManagementApi";
-export { PublisherApi } from "./api/PublisherApi";
-export { SubscriberApi } from "./api/SubscriberApi";
-export { ApiProvider } from "./provider/ApiProvider";
-export { Configuration } from "./Configuration";
+export { ManagementApi } from "./api/management_api";
+export { PublisherApi } from "./api/publisher_api";
+export { SubscriberApi } from "./api/subscriber_api";
+export { ApiProvider } from "./provider/api_provider";
+export { Settings } from "./settings";
 // export { ConfigurationProvider } from "./provider/ConfigurationProvider";
 //export { EndpointsProvider } from "./provider/EndpointsProvider";
-export { HostingProvider } from "./provider/HostingProvider";
+export { HostingProvider } from "./provider/hosting_provider";
 //export { MessageBusProvider } from "./provider/MessageBusProvider";
 //export { StorageProvider } from "./provider/StorageProvider";
 
 
 const { name: serviceName, version: serviceVersion } = require("../package.json");
 
-export default async function (executionContext: FExecutionContext, configuration: Configuration): Promise<FLauncherRuntime> {
+export default async function (executionContext: FExecutionContext, configuration: Settings): Promise<FLauncherRuntime> {
 	executionContext = new FLoggerLabelsExecutionContext(executionContext, { serviceName, serviceVersion });
 
 	const log: FLogger = FLogger.create("EdgeBus");
@@ -40,8 +40,8 @@ export default async function (executionContext: FExecutionContext, configuratio
 	{
 		log.info(executionContext, "Initializing ConfigurationProvider...");
 		// const dbEncriptionKey = await passwordDerivation(configuration.dbEncryptionPassword);
-		const ownProvider: ConfigurationProvider = new ConfigurationProviderImpl(configuration);
-		Container.bind(ConfigurationProvider).provider({ get() { return ownProvider; } });
+		const ownProvider: SettingsProvider = new ConfigurationProviderImpl(configuration);
+		Container.bind(SettingsProvider).provider({ get() { return ownProvider; } });
 	}
 
 
@@ -160,7 +160,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 
 		// Setup HTTP publisher
 		for (const hardcodedPublisherConfiguration of hardcodedPublisherConfigurations) {
-			const httpPublisherInstance: HttpPublisher = new HttpPublisher(
+			const httpPublisherInstance: HttpHostPublisher = new HttpHostPublisher(
 				{
 					topicName: hardcodedPublisherConfiguration.topicName,
 					topicDomain: null,

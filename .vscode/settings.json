@@ -50,6 +50,7 @@
 		"Encrypter",
 		"freemework",
 		"Initable",
+		"rabbitmq",
 		"websockethost"
 	],
 }

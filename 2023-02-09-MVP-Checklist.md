@@ -1,5 +1,12 @@
 - [x] Setup database migrations
 - [x] Bump Freemework version
+- [ ] Make prefixed identifier class (copy/refactor from processing)
+	- DLVR319ef1447b054a5292acecf40345b89b - sample of Delivery ID
+	- MSSG319ef1447b054a5292acecf40345b89b - sample of Message ID
+	- PUBR319ef1447b054a5292acecf40345b89b - sample of Publisher ID
+	- SUBR319ef1447b054a5292acecf40345b89b - sample of Subscriber ID
+	- TOPC319ef1447b054a5292acecf40345b89b - sample of Topic ID
+- [ ] Implement class MessageBusRabbitMQ
 - [ ] Review/update DB structure for the MVP
 - [ ] Add audit middleware/SQLs and setup for publisher router
 - [ ] Implement DBFacade with necessary set of methods to save:

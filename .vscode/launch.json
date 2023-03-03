@@ -19,7 +19,7 @@
 			},
 			"envFile": "${workspaceFolder}/.env",
 			"args": [
-				"--config-toml-file=${workspaceRoot}/edgebus-service.toml",
+				"--config-toml-file=${workspaceRoot}/edgebus-runtime.toml",
 				"--config-toml-file=${workspaceRoot}/edgebus-setup.toml",
 				"--config-env"
 			],

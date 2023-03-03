@@ -1,7 +1,7 @@
 import { FSqlConnection, FSqlResultRecord, FSqlData, FExecutionContext } from "@freemework/common";
 
-import { Security } from "../../model/Security";
-import { Topic } from "../../model/Topic";
+import { Security } from "../../model/security";
+import { Topic } from "../../model/topic";
 
 export async function create(
 	executionContext: FExecutionContext,
