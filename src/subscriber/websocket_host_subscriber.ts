@@ -1,7 +1,7 @@
 import { FExceptionArgument, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 import { FWebServer } from "@freemework/hosting";
 
-import { WebSocketHostSubscriberEndpoint } from "../endpoints/web_socket_host_subscriber_endpoint";
+import { WebSocketHostSubscriberEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
 import { MessageBus } from "../messaging/message_bus";
 import { Message } from "../model/message";
 import { Subscriber } from "../model/subscriber";
@@ -31,13 +31,13 @@ export class WebSocketHostSubscriber extends FInitableBase {
 		if (prefix !== "subscriber") {
 			throw new FExceptionArgument(`Wrong subscriberId prefix: '${prefix}'. Expected: 'subscriber'`, "opts.subscriberId");
 		}
-		if (kind !== "websockethost") {
-			throw new FExceptionArgument(`Wrong subscriberId kind: '${kind}'. Expected: 'websockethost'`, "opts.subscriberId");
+		if (kind !== "websocket_host") {
+			throw new FExceptionArgument(`Wrong subscriberId kind: '${kind}'. Expected: 'websocket_host'`, "opts.subscriberId");
 		}
 
 		// TODO validate "id" for UUID
 
-		const bindPath = `${baseBindPath}/websockethost/${id}`;
+		const bindPath = `${baseBindPath}/websocket_host/${id}`;
 
 		this._log.debug(FExecutionContext.Empty, `Construct ${WebSocketHostSubscriber.name} with bind path '${bindPath}'.`);
 

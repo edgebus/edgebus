@@ -19,7 +19,7 @@ export abstract class SettingsProvider implements Settings {
 /**
  * The adapter class implements DI Provider + Settings
  */
-export class ConfigurationProviderImpl extends SettingsProvider {
+export class SettingsProviderImpl extends SettingsProvider {
 	private readonly _configuration: Settings;
 
 	public constructor(configuration: Settings) {

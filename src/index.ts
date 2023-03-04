@@ -4,13 +4,13 @@ import { FLauncherRuntime } from "@freemework/hosting";
 import * as _ from "lodash";
 
 // Providers
-import { SettingsProvider, ConfigurationProviderImpl } from "./provider/configuration_provider";
+import { SettingsProvider, SettingsProviderImpl } from "./provider/settings_provider";
 import { StorageProvider } from "./provider/storage_provider";
 import { EndpointsProvider } from "./provider/endpoints_provider";
 import { HostingProvider } from "./provider/hosting_provider";
 import { MessageBusProvider } from "./provider/message_bus_provider";
 import { HttpHostPublisher } from "./publisher/http_host_publisher";
-import { WebSocketHostSubscriber } from "./subscriber/web_socket_host_subscriber";
+import { WebSocketHostSubscriber } from "./subscriber/websocket_host_subscriber";
 import { MessageBus } from "./messaging/message_bus";
 import { Container } from "typescript-ioc";
 import { Settings } from "./settings";
@@ -40,7 +40,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 	{
 		log.info(executionContext, "Initializing ConfigurationProvider...");
 		// const dbEncriptionKey = await passwordDerivation(configuration.dbEncryptionPassword);
-		const ownProvider: SettingsProvider = new ConfigurationProviderImpl(configuration);
+		const ownProvider: SettingsProvider = new SettingsProviderImpl(configuration);
 		Container.bind(SettingsProvider).provider({ get() { return ownProvider; } });
 	}
 
@@ -58,102 +58,79 @@ export default async function (executionContext: FExecutionContext, configuratio
 	/* ---------HARDCODE--------------- */
 	const itemsToDispose: Array<FDisposable> = [];
 	try {
-		const hardcodedPublisherConfigurations = [
-			// {
-			// 	topicName: "GITLAB",
-			// 	topicDescription: "GITLAB Webhooks test topic",
-			// 	publisherId: "publisher.http.5034c67f-f1cb-4fab-aed3-d2cd3b3d50ad"
-			// },
-			// {
-			// 	topicName: "WTF1_WALLET_CREATE_TX",
-			// 	topicDescription: "WALLET_CREATE_TX уведомление о
-			//создании транзакции, либо подписи существующей (происходит при вызове таких методов как sendtoaddress, signtx)",
-			// 	publisherId: "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-			// 	publisherPath: "/v1/notifications/wallet_create_tx",
-			// 	publisherSuccessResponseGenerator: function () {
-			// 		return {
-			// 			headers: {
-			// 				"Content-Type": "application/json"
-			// 			},
-			// 			body: Buffer.from(JSON.stringify({
-			// 				success: true,
-			// 				timestamp: Date.now()
-			// 			})),
-			// 			status: 200,
-			// 			statusDescription: "OK"
-			// 		};
-			// 	}
-			// },
-			// {
-			// 	topicName: "WTF1_WALLET_TX",
-			// 	topicDescription: "WALLET_TX уведомление о поступлении транзакции,
-			//на которую мы подписаны, имеется возможность подписаться только на приходящие(receive) или исходящие(send) транзакции.",
-			// 	publisherId: "publisher.http.991b9ba2-7a76-4de9-8149-3489412a1288",
-			// 	publisherPath: "/v1/notifications/wallet_tx",
-			// 	publisherSuccessResponseGenerator: function () {
-			// 		return {
-			// 			headers: {
-			// 				"Content-Type": "application/json"
-			// 			},
-			// 			body: Buffer.from(JSON.stringify({
-			// 				success: true,
-			// 				timestamp: Date.now()
-			// 			})),
-			// 			status: 200,
-			// 			statusDescription: "OK"
-			// 		};
-			// 	}
-			// },
-			{
-				topicName: "pss-provider-wtf2",
-				topicDescription: "PSS Provider WTF2 callbacks",
-				publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
-				publisherPath: "/v2/callback/cryptoproviders/pss-provider-wtf2"
-			},
-			{
-				topicName: "wtf2",
-				topicDescription: "WTF2 callbacks",
-				publisherId: "publisher.http.afb0ff9b-217d-4a5c-8b33-d76291bb7d81",
-				publisherPath: "/v2/callback/cryptoproviders/wtf2"
-			}
-		];
-		const hardcodedSubscriberConfigurations = [
-			{
-				topicNames: ["pss-provider-wtf2", "wtf2"],
-				subscriberIds: [
-					"subscriber.websockethost.devel",
-					"subscriber.websockethost.evolution",
-					"subscriber.websockethost.presentation",
-					"subscriber.websockethost.serg4683-a00d-4269-b116-6959fb9ac889",
-					"subscriber.websockethost.maks4683-a00d-4269-b116-6959fb9ac889"
-				]
+		const hardcodedPublisherConfigurations: Array<{
+			readonly topicName: string;
+			readonly topicDescription: string;
+			readonly publisherId: string;
+			readonly publisherPath: string;
+		}> = [
+				// {
+				// 	topicName: "pss-provider-wtf2",
+				// 	topicDescription: "PSS Provider WTF2 callbacks",
+				// 	publisherId: "publisher.http.9028c574-98b6-4198-8fc7-1355e9ac622e",
+				// 	publisherPath: "/v2/callback/cryptoproviders/pss-provider-wtf2"
 				// },
 				// {
-				// 	topicNames: ["wtf2"],
+				// 	topicName: "wtf2",
+				// 	topicDescription: "WTF2 callbacks",
+				// 	publisherId: "publisher.http.afb0ff9b-217d-4a5c-8b33-d76291bb7d81",
+				// 	publisherPath: "/v2/callback/cryptoproviders/wtf2"
+				// }
+			];
+		const hardcodedSubscriberConfigurations: Array<{
+			readonly topicNames: ReadonlyArray<string>;
+			readonly subscriberIds: ReadonlyArray<string>;
+		}> = [
+				// {
+				// 	topicNames: ["pss-provider-wtf2", "wtf2"],
 				// 	subscriberIds: [
-				// 		"subscriber.websockethost.19ee1bff-d469-4b8c-b5a8-0fd66a8b4b96",
-				// 		"subscriber.websockethost.serge263-11f9-4df6-acc8-88faee098c99",
-				// 		"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
-				// 		"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
+				// 		"subscriber.websockethost.devel",
+				// 		"subscriber.websockethost.evolution",
+				// 		"subscriber.websockethost.presentation",
+				// 		"subscriber.websockethost.serg4683-a00d-4269-b116-6959fb9ac889",
+				// 		"subscriber.websockethost.maks4683-a00d-4269-b116-6959fb9ac889"
 				// 	]
-			},
-			{
-				topicNames: ["pss-provider-wtf2", "wtf2"],
-				subscriberIds: [
-					"subscriber.httpclient.POST.http://localhost:8020",
-				]
 				// },
 				// {
-				// 	topicNames: ["wtf2"],
+				// 	topicNames: ["pss-provider-wtf2", "wtf2"],
 				// 	subscriberIds: [
-				// 		"subscriber.websockethost.19ee1bff-d469-4b8c-b5a8-0fd66a8b4b96",
-				// 		"subscriber.websockethost.serge263-11f9-4df6-acc8-88faee098c99",
-				// 		"subscriber.websockethost.vovad688-f1c3-49fd-82b0-09cfb59d0c76",
-				// 		"subscriber.websockethost.maksbaad-5b66-4378-8fe4-50f8033a5cee"
+				// 		"subscriber.httpclient.POST.http://localhost:8020",
 				// 	]
-			}
-		];
+				// }
+			];
 
+		const { setup } = configuration;
+		if (setup !== null) {
+			const { publishers, subscribers, topics } = setup;
+
+			const topicsByIdMap = new Map<string, Settings.Setup.Topic>();
+			for (const topic of topics) {
+				topicsByIdMap.set(topic.topicId, topic);
+			}
+
+			for (const publisher of publishers) {
+				hardcodedPublisherConfigurations.push({
+					topicName: topicsByIdMap.get(publisher.targetTopicId)!.name,
+					topicDescription: topicsByIdMap.get(publisher.targetTopicId)!.description,
+					publisherId: publisher.publisherId,
+					publisherPath: publisher.path
+				});
+			}
+
+			for (const subscriber of subscribers) {
+				if (subscriber.type === Settings.Setup.Subscriber.Type.HTTP_CLIENT) {
+					hardcodedSubscriberConfigurations.push({
+						topicNames: subscriber.sourceTopicIds.map(s => topicsByIdMap.get(s)!.name),
+						subscriberIds: [`subscriber.http_client.${subscriber.httpMethod}.${subscriber.httpUrl}`]
+					});
+				} else if (subscriber.type === Settings.Setup.Subscriber.Type.WEBSOCKET_HOST) {
+					hardcodedSubscriberConfigurations.push({
+						topicNames: subscriber.sourceTopicIds.map(s => topicsByIdMap.get(s)!.name),
+						subscriberIds: [`subscriber.websocket_host.${subscriber.subscriberId}`]
+					});
+				}
+			}
+		}
 
 		const endpointsProvider: EndpointsProvider = Container.get(EndpointsProvider);
 		const messageBusProvider: MessageBusProvider = Container.get(MessageBusProvider);
@@ -196,7 +173,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
 					const subscriberType = subscriberId.split(".")[1];
 					switch (subscriberType) {
-						case "websockethost":
+						case "websocket_host":
 							const webSocketHostSubscriber = new WebSocketHostSubscriber(
 								{
 									baseBindPath: subscriberApiRestEndpoint.bindPath,
@@ -209,7 +186,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 							await webSocketHostSubscriber.init(executionContext);
 							itemsToDispose.push(webSocketHostSubscriber);
 							break;
-						case "httpclient":
+						case "http_client":
 							const httpClientSubscriber = new HttpClientSubscriber(
 								{
 									deliveryHttpMethod: subscriberId.split(".")[2],

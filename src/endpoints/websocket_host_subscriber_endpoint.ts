@@ -37,7 +37,7 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 		return this;
 	}
 
-	// public async createBinaryChannel(
+	// protected async createBinaryChannel(
 	// 	executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
 	// ): Promise<WebSocketChannelFactoryEndpoint.BinaryChannel> {
 	// 	const channel = new BinaryChannel(() => {
@@ -52,10 +52,10 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 	// 	return channel;
 	// }
 
-	public async createTextChannel(
+	protected override async createTextChannel(
 		executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
 	): Promise<FWebSocketChannelFactoryEndpoint.TextChannel> {
-		const channel = new TextChannel(() => {
+		const channel: TextChannel = new TextChannel(() => {
 			const indexToDelete = this._textChannels.indexOf(channel);
 			if (indexToDelete !== -1) {
 				this._textChannels.splice(indexToDelete, 1);
@@ -74,9 +74,10 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 		return channel;
 	}
 
-
 	public async delivery(
-		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message.Id & Message.Data
+		executionContext: FExecutionContext,
+		topicName: Topic["topicName"],
+		message: Message.Id & Message.Data
 	): Promise<void> {
 		const mediaType: string = message.mediaType;
 		const messageBody: Buffer = message.messageBody;

@@ -21,7 +21,7 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 1. Run WebSocket consumer to obtain messages
 	```shell
 	npm install --global wscat
-	wscat --connect ws://127.0.0.1:8083/subscriber/websockethost/devel
+	wscat --connect ws://127.0.0.1:8083/subscriber/websocket_host/SUBR319ef1447b054a5292acecf40345b89b
 	```
 
 ### Sender >--HTTP--> EdgeBus >--WebSocket connection established by Consumer--> Consumer

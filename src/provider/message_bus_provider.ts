@@ -9,7 +9,7 @@ import { MessageBusRabbitMQ } from "../messaging/message_bus_rabbitmq";
 import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 
-import { SettingsProvider } from "./configuration_provider";
+import { SettingsProvider } from "./settings_provider";
 
 export abstract class MessageBusProvider extends FInitableBase implements MessageBus {
 	protected readonly log: FLogger;

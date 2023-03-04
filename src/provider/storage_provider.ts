@@ -3,7 +3,7 @@ import { Container, Provides, Singleton } from "typescript-ioc";
 
 import * as _ from "lodash";
 
-import { SettingsProvider } from "./configuration_provider";
+import { SettingsProvider } from "./settings_provider";
 import { PersistentStorage } from "../data/persistent_storage";
 import { PostgresPersistentStorage } from "../data/postgres_persistent_storage";
 

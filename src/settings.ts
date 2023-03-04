@@ -114,17 +114,76 @@ export namespace Settings {
 	}
 
 	export namespace Setup {
-		export interface Publisher {
-			readonly name: string;
-			readonly description: string;
+		export type Publisher =
+			| Publisher.HttpHost;
+		export namespace Publisher {
+			export const enum Type {
+				HTTP_HOST = "http_host",
+			}
+
+			export interface Base {
+				/**
+				 * Publisher API Identifier
+				 */
+				readonly publisherId: string;
+
+				readonly type: Type;
+
+				/**
+				 * API ID of target topic
+				 */
+				readonly targetTopicId: string;
+			}
+
+			export interface HttpHost extends Base {
+				readonly type: Type.HTTP_HOST;
+				readonly path: string;
+			}
 		}
 
-		export interface Subscriber {
-			readonly name: string;
-			readonly description: string;
+		export type Subscriber =
+			| Subscriber.HttpClient
+			| Subscriber.WebsocketHost;
+
+		export namespace Subscriber {
+			export const enum Type {
+				WEBSOCKET_HOST = "websocket_host",
+				HTTP_CLIENT = "http_client",
+			}
+
+			export interface Base {
+				/**
+				 * Subscriber API Identifier
+				 */
+				readonly subscriberId: string;
+
+				readonly type: Type;
+
+				/**
+				 * API IDs of source topics
+				 */
+				readonly sourceTopicIds: ReadonlyArray<string>;
+
+
+			}
+
+			export interface HttpClient extends Base {
+				readonly type: Type.HTTP_CLIENT;
+				readonly httpMethod: string;
+				readonly httpUrl: URL;
+			}
+
+			export interface WebsocketHost extends Base {
+				readonly type: Type.WEBSOCKET_HOST;
+			}
+
 		}
 
 		export interface Topic {
+			/**
+			 * Topic API Identifier
+			 */
+			readonly topicId: string;
 			readonly name: string;
 			readonly description: string;
 		}
@@ -207,7 +266,7 @@ function parseCors(corsConfiguration: FConfiguration): Settings.Cors {
 	return Object.freeze({ methods, whiteList, allowedHeaders });
 }
 
-function parseSetup(setupConfiguration: FConfiguration) {
+function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 
 	const publishers: Array<Settings.Setup.Publisher> = [];
 	const subscribers: Array<Settings.Setup.Subscriber> = [];
@@ -216,31 +275,78 @@ function parseSetup(setupConfiguration: FConfiguration) {
 	const publisherKey: string = "publisher";
 	if (setupConfiguration.hasNamespace(publisherKey)) {
 		const publishersConfiguration = setupConfiguration.getArray(publisherKey);
-		// TODO
-	}
-
-	const subscriberKey: string = "subscriber";
-	if (setupConfiguration.hasNamespace(subscriberKey)) {
-		const subscribersConfiguration = setupConfiguration.getArray(subscriberKey);
-		// TODO
-	}
-
-	const topicKey: string = "topic";
-	if (setupConfiguration.hasNamespace(topicKey)) {
-		const topicsConfiguration = setupConfiguration.getArray(topicKey);
-		for (const topicConfiguration of topicsConfiguration) {
-			const name: string = topicConfiguration.get("index").asString;
-			const description: string = topicConfiguration.get("description").asString;
-			const topicSettings: Settings.Setup.Topic = { name, description };
-			topics.push(Object.freeze(topicSettings));
+		for (const publisherConfiguration of publishersConfiguration) {
+			const publisherId: string = publisherConfiguration.get("index").asString;
+			const type: string = publisherConfiguration.get("type").asString;
+			const targetTopicId: string = publisherConfiguration.get("target_topic_id").asString;
+			const basePublisherSettings = { publisherId, targetTopicId };
+			let publisherSettings: Settings.Setup.Publisher;
+			switch (type) {
+				case Settings.Setup.Publisher.Type.HTTP_HOST:
+					publisherSettings = {
+						...basePublisherSettings,
+						type,
+						path: publisherConfiguration.get("path").asString
+					};
+					break;
+				default:
+					throw new FExceptionInvalidOperation(`Unsupported ${publisherConfiguration.configurationNamespace}.type '${type}'.`);
+			}
+			publishers.push(Object.freeze(publisherSettings));
 		}
-	}
 
-	return Object.freeze({
-		publishers: Object.freeze(publishers),
-		subscribers: Object.freeze(subscribers),
-		topics: Object.freeze(topics),
-	});
+		const subscriberKey: string = "subscriber";
+		if (setupConfiguration.hasNamespace(subscriberKey)) {
+			const subscribersConfiguration = setupConfiguration.getArray(subscriberKey);
+			for (const subscriberConfiguration of subscribersConfiguration) {
+				const subscriberId: string = subscriberConfiguration.get("index").asString;
+				const type: string = subscriberConfiguration.get("type").asString;
+				const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
+				const baseSubscriberSettings = { subscriberId, sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== "") };
+				let subscriberSettings: Settings.Setup.Subscriber;
+				switch (type) {
+					case Settings.Setup.Subscriber.Type.HTTP_CLIENT:
+						subscriberSettings = {
+							...baseSubscriberSettings,
+							type,
+							httpMethod: subscriberConfiguration.get("http_method").asString,
+							httpUrl: subscriberConfiguration.get("http_url").asUrl,
+						};
+						break;
+					case Settings.Setup.Subscriber.Type.WEBSOCKET_HOST:
+						subscriberSettings = {
+							...baseSubscriberSettings,
+							type,
+						};
+						break;
+					default:
+						throw new FExceptionInvalidOperation(`Unsupported ${subscriberConfiguration.configurationNamespace}.type '${type}'.`);
+				}
+				subscribers.push(Object.freeze(subscriberSettings));
+			}
+		}
+
+		const topicKey: string = "topic";
+		if (setupConfiguration.hasNamespace(topicKey)) {
+			const topicsConfiguration = setupConfiguration.getArray(topicKey);
+			for (const topicConfiguration of topicsConfiguration) {
+				const topicId: string = topicConfiguration.get("index").asString;
+				const name: string = topicConfiguration.get("name").asString;
+				const description: string = topicConfiguration.get("description").asString;
+				const topicSettings: Settings.Setup.Topic = { topicId, name, description };
+				topics.push(Object.freeze(topicSettings));
+			}
+		}
+
+		return Object.freeze({
+			publishers: Object.freeze(publishers),
+			subscribers: Object.freeze(subscribers),
+			topics: Object.freeze(topics),
+		});
+	}
+	else {
+		return null;
+	}
 }
 
 class UnreachableNotSupportedEndpointError extends Error {

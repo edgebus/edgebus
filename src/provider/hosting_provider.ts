@@ -5,7 +5,7 @@ import * as hosting from "@freemework/hosting";
 import * as express from "express";
 import * as _ from "lodash";
 
-import { SettingsProvider } from "./configuration_provider";
+import { SettingsProvider } from "./settings_provider";
 
 @Singleton
 export abstract class HostingProvider extends FInitableBase {

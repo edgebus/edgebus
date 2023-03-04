@@ -44,13 +44,18 @@
 	"cSpell.words": [
 		"auditability",
 		"devel",
+		"DLVR",
 		"dockerhub",
 		"edgebus",
 		"embeddable",
 		"Encrypter",
 		"freemework",
 		"Initable",
+		"MSSG",
+		"PUBR",
 		"rabbitmq",
+		"SUBR",
+		"TOPC",
 		"websockethost"
 	],
 }

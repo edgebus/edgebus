@@ -9,7 +9,7 @@ import { Settings, SettingsException } from "../settings";
 
 // Providers
 import { ApiProvider } from "./api_provider";
-import { SettingsProvider } from "./configuration_provider";
+import { SettingsProvider } from "./settings_provider";
 import { HostingProvider } from "./hosting_provider";
 
 // Endpoints
@@ -17,7 +17,7 @@ import { InfoRestEndpoint } from "../endpoints/info_rest_endpoint";
 import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endpoint";
 import { PublisherApiRestEndpoint } from "../endpoints/publisher_api_rest_endpoint";
 import { SubscriberApiRestEndpoint } from "../endpoints/subscriber_api_rest_endpoint";
-import { WebSocketHostSubscriberEndpoint } from "../endpoints/web_socket_host_subscriber_endpoint";
+import { WebSocketHostSubscriberEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
 
 @Singleton
 export abstract class EndpointsProvider extends FInitableBase {

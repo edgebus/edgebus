@@ -16,5 +16,5 @@
 - [ ] Implement retry policy for HttpSubscriber.ts
 - [ ] Inject DBFacade calls into MessageBusLocal.ts/HttpSubscriber.ts
 - [x] Refactor Dockerfile
-- [ ] Setup Manager for Publisher/Subscriber to be able to launch from scratch
+- [x] Setup Manager for Publisher/Subscriber to be able to launch from scratch
 - [x] Migrate to .toml configuration file
