@@ -1,6 +1,6 @@
 - [x] Setup database migrations
 - [x] Bump Freemework version
-- [ ] Make prefixed identifier class (copy/refactor from processing)
+- [x] Make prefixed identifier classes (copy/refactor from processing)
 	- DLVR319ef1447b054a5292acecf40345b89b - sample of Delivery ID
 	- MSSG319ef1447b054a5292acecf40345b89b - sample of Message ID
 	- PUBR319ef1447b054a5292acecf40345b89b - sample of Publisher ID
