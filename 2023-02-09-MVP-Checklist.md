@@ -6,15 +6,22 @@
 	- PUBR319ef1447b054a5292acecf40345b89b - sample of Publisher ID
 	- SUBR319ef1447b054a5292acecf40345b89b - sample of Subscriber ID
 	- TOPC319ef1447b054a5292acecf40345b89b - sample of Topic ID
-- [ ] Implement class MessageBusRabbitMQ
 - [ ] Review/update DB structure for the MVP
-- [ ] Add audit middleware/SQLs and setup for publisher router
 - [ ] Implement DBFacade with necessary set of methods to save:
   - [ ] Add tb_message record
   - [ ] Add tb_delivery/tb_delivery_failure/tb_delivery_success record
 - [x] Implement HttpSubscriber.ts
-- [ ] Implement retry policy for HttpSubscriber.ts
-- [ ] Inject DBFacade calls into MessageBusLocal.ts/HttpSubscriber.ts
+- [ ] Implement retry policy for MessageBusLocal (see `MessageBusLocal.Opts.deliveryPolicy`)
+	- Sequence delivery policy
+	- Parallel delivery policy
+	- Fibonacci retry scale
+- [ ] Inject DBFacade calls into HttpHostPublisher/MessageBusLocal/HttpClientSubscriber
+	- For example: HttpHostPublisher should create MessageEntry in database
+	- For example: MessageBusLocal should create DeliveryEntry in database
 - [x] Refactor Dockerfile
 - [x] Setup Manager for Publisher/Subscriber to be able to launch from scratch
 - [x] Migrate to .toml configuration file
+- [ ] Minimal API to read data in Console (Web) App.
+	- Need to see list of topics
+	- Need to see list of messages in a topic
+	- Need to see list of deliveries of a message

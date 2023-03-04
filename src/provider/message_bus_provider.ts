@@ -52,7 +52,11 @@ class MessageBusProviderImpl extends MessageBusProvider {
 
 		this._messageBus = new MessageBusLocal({
 			// url: rabbitUrl,
-			// ssl: rabbitSsl
+			// ssl: rabbitSsl,
+			deliveryPolicy: {
+				type: MessageBus.DeliveryPolicy.Type.SEQUENCE,
+				retryOpts: "TBD"
+			}
 		});
 	}
 

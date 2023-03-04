@@ -83,6 +83,7 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 
 export namespace MessageBusLocal {
 	export interface Opts {
+		readonly deliveryPolicy: MessageBus.DeliveryPolicy;
 		// TODO
 	}
 }
