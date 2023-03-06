@@ -163,11 +163,13 @@ export default async function (executionContext: FExecutionContext, configuratio
 		// Setup WebSocketHost subscriber
 		for (const hardcodedSubscriberConfiguration of hardcodedSubscriberConfigurations) {
 			for (const subscriberId of hardcodedSubscriberConfiguration.subscriberIds) {
-				const channels: Array<MessageBus.Channel> = [];
+				const channelFactories: Array<MessageBus.ChannelFactory> = [];
 				for (const topicName of hardcodedSubscriberConfiguration.topicNames) {
-					const channel = await messageBusProvider.retainChannel(executionContext, topicName, subscriberId);
-					itemsToDispose.push(channel);
-					channels.push(channel);
+					const channelFactory = async (): Promise<MessageBus.Channel> => {
+						const channel = await messageBusProvider.retainChannel(executionContext, topicName, subscriberId);
+						return channel;
+					}
+					channelFactories.push(channelFactory);
 				}
 
 				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
@@ -178,10 +180,10 @@ export default async function (executionContext: FExecutionContext, configuratio
 								{
 									baseBindPath: subscriberApiRestEndpoint.bindPath,
 									bindServers: subscriberApiRestEndpoint.servers,
-									subscriberId: subscriberId
+									subscriberId: subscriberId,
+									channelFactories
 								},
 								FLogger.create(log.name + "." + WebSocketHostSubscriber.name),
-								...channels
 							);
 							await webSocketHostSubscriber.init(executionContext);
 							itemsToDispose.push(webSocketHostSubscriber);
@@ -192,8 +194,8 @@ export default async function (executionContext: FExecutionContext, configuratio
 									deliveryHttpMethod: subscriberId.split(".")[2],
 									deliveryUrl: new URL(subscriberId.split(".")[3]),
 									subscriberId,
-								},
-								...channels
+									channelFactories
+								}
 							);
 							await httpClientSubscriber.init(executionContext);
 							itemsToDispose.push(httpClientSubscriber);

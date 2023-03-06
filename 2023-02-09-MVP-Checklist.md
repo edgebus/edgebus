@@ -11,6 +11,7 @@
   - [ ] Add tb_message record
   - [ ] Add tb_delivery/tb_delivery_failure/tb_delivery_success record
 - [x] Implement HttpSubscriber.ts
+- [x] Allow to retainChannel 2+ times + round-robin
 - [ ] Implement retry policy for MessageBusLocal (see `MessageBusLocal.Opts.deliveryPolicy`)
 	- Sequence delivery policy
 	- Parallel delivery policy

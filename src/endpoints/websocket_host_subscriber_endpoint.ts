@@ -1,27 +1,25 @@
-import { FLogger, FExceptionAggregate, FException, FExecutionContext } from "@freemework/common";
+import { FDisposableBase, FException, FExceptionAggregate, FExecutionContext } from "@freemework/common";
 import { FHostingConfiguration, FWebServer, FWebSocketChannelFactoryEndpoint } from "@freemework/hosting";
 
 import { EventEmitter } from "events";
 import * as WebSocket from "ws";
 
+import { MessageBus } from "../messaging/message_bus";
 import { Message } from "../model/message";
-import { EventChannelBase } from "../utils/event_channel_base";
 import { Topic } from "../model/topic";
+import { EventChannelBase } from "../utils/event_channel_base";
 
 export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEndpoint {
 	private readonly _emitter: EventEmitter;
-	//private readonly _binaryChannels: Array<BinaryChannel> = [];
 	private readonly _textChannels: Array<TextChannel> = [];
-	//private readonly _topicNames: ReadonlyArray<string>;
+	private readonly _channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
 
 	public constructor(
-		//topicNames: ReadonlyArray<string>,
 		servers: ReadonlyArray<FWebServer>,
-		opts: FHostingConfiguration.WebSocketEndpoint,
-		log: FLogger
+		opts: WebSocketHostSubscriberEndpoint.Opts,
 	) {
 		super(servers, opts, { text: true });
-		//this._topicNames = topicNames;
+		this._channelsFactories = opts.channelsFactories;
 		this._emitter = new EventEmitter();
 	}
 
@@ -37,25 +35,10 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 		return this;
 	}
 
-	// protected async createBinaryChannel(
-	// 	executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
-	// ): Promise<WebSocketChannelFactoryEndpoint.BinaryChannel> {
-	// 	const channel = new BinaryChannel(() => {
-	// 		const indexToDelete = this._binaryChannels.indexOf(channel);
-	// 		if (indexToDelete !== -1) {
-	// 			this._binaryChannels.splice(indexToDelete, 1);
-	// 		}
-	// 	});
-
-	// 	this._binaryChannels.push(channel);
-
-	// 	return channel;
-	// }
-
 	protected override async createTextChannel(
 		executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
 	): Promise<FWebSocketChannelFactoryEndpoint.TextChannel> {
-		const channel: TextChannel = new TextChannel(() => {
+		const channel: TextChannel = new TextChannel(this._channelsFactories, () => {
 			const indexToDelete = this._textChannels.indexOf(channel);
 			if (indexToDelete !== -1) {
 				this._textChannels.splice(indexToDelete, 1);
@@ -65,6 +48,7 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 				this._emitter.emit("lastConsumerRemoved");
 			}
 		});
+		await channel.init(executionContext);
 
 		this._textChannels.push(channel);
 		this._emitter.emit("consumersCountChanged");
@@ -73,8 +57,77 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 		}
 		return channel;
 	}
+}
 
-	public async delivery(
+export namespace WebSocketHostSubscriberEndpoint {
+	export interface Opts extends FHostingConfiguration.WebSocketEndpoint {
+		readonly channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
+	}
+}
+
+class TextChannel extends EventChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
+	private readonly _channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
+	private _channels: ReadonlyArray<MessageBus.Channel> | null;
+	private readonly _disposer: () => void | Promise<void>;
+	private readonly _onMessageBound: MessageBus.Channel.Callback;
+
+	public constructor(
+		channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>,
+		disposer: () => void | Promise<void>,
+	) {
+		super();
+		this._channelsFactories = channelsFactories;
+		this._channels = null;
+		this._disposer = disposer;
+		this._onMessageBound = this._onMessage.bind(this);
+	}
+
+	public async send(executionContext: FExecutionContext, data: string): Promise<void> {
+		// Echo any message from client
+		return this.notify(executionContext, { data });
+	}
+
+	protected async onInit(): Promise<void> {
+		const channels: Array<MessageBus.Channel> = [];
+		try {
+			for (const channelFactory of this._channelsFactories) {
+				const channel: MessageBus.Channel = await channelFactory();
+				channels.push(channel);
+				channel.addHandler(this._onMessageBound);
+			}
+		} catch (e) {
+			await FDisposableBase.disposeAll(...channels);
+			throw e;
+		}
+		this._channels = Object.freeze(channels);
+	}
+
+	protected async onDispose(): Promise<void> {
+		if (this._channels !== null) {
+			for (const channel of this._channels) {
+				await channel.dispose();
+				channel.removeHandler(this._onMessageBound); // Prevent memory leaks
+			}
+			this._channels = null;
+		}
+
+		return this._disposer();
+	}
+
+	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
+		try {
+			const topicName: Topic["topicName"] = event.source.topicName;
+			const message: Message.Id & Message.Data = event.data;
+
+			await this._delivery(this.initExecutionContext, topicName, message);
+			event.delivered = true;
+		} catch (e) {
+			event.delivered = false;
+			console.error(e);
+		}
+	}
+
+	private async _delivery(
 		executionContext: FExecutionContext,
 		topicName: Topic["topicName"],
 		message: Message.Id & Message.Data
@@ -98,70 +151,6 @@ export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEnd
 			params: { mediaType, data }
 		});
 
-		const textChannelDeliveryErrors: Array<FException> = [];
-		for (const textChannel of this._textChannels) {
-			try {
-				await textChannel.rpcDelivery(executionContext, messageStr);
-			} catch (e) {
-				textChannelDeliveryErrors.push(FException.wrapIfNeeded(e));
-			}
-		}
-		if (textChannelDeliveryErrors.length > 0) { throw new FExceptionAggregate(textChannelDeliveryErrors); }
-
-		// if (this._binaryChannels.length > 0) {
-		// 	const messageBinary = Buffer.from(messageStr);
-		// 	for (const binaryChannel of this._binaryChannels) {
-		// 		await binaryChannel.delivery(messageBinary);
-		// 	}
-		// }
-	}
-}
-
-class TextChannel extends EventChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
-	private readonly _disposer: () => void | Promise<void>;
-
-	public constructor(disposer: () => void | Promise<void>) {
-		super();
-		this._disposer = disposer;
-	}
-
-	public async send(executionContext: FExecutionContext, data: string): Promise<void> {
-		// Echo any message from client
-		return this.notify(executionContext, { data });
-	}
-
-	public async rpcDelivery(executionContext: FExecutionContext, messageStr: string) {
 		await this.notify(executionContext, { data: messageStr });
-		// TODO wait for deliver ACK message
-	}
-
-	protected onInit(): void | Promise<void> {
-		// NOP
-	}
-
-	protected onDispose(): void | Promise<void> {
-		return this._disposer();
 	}
 }
-
-// class BinaryChannel extends SubscriberChannelBase<Uint8Array> implements WebSocketChannelFactoryEndpoint.BinaryChannel {
-// 	private readonly _disposer: () => void | Promise<void>;
-
-// 	public constructor(disposer: () => void | Promise<void>) {
-// 		super();
-// 		this._disposer = disposer;
-// 	}
-
-// 	public async send(executionContext: FExecutionContext, data: Uint8Array): Promise<void> {
-// 		// Echo any message from client
-// 		return this.notify({ data });
-// 	}
-
-// 	public delivery(messageBinary: Uint8Array) {
-// 		return this.notify({ data: messageBinary });
-// 	}
-
-// 	protected onDispose(): void | Promise<void> {
-// 		return this._disposer();
-// 	}
-// }

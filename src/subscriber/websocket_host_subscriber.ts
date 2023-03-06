@@ -10,16 +10,12 @@ import { Topic } from "../model/topic";
 export class WebSocketHostSubscriber extends FInitableBase {
 
 	private readonly _webSocketHostSubscriberEndpoint: WebSocketHostSubscriberEndpoint;
-	private readonly _channels: ReadonlyArray<MessageBus.Channel>;
 
 	public constructor(
 		opts: WebSocketHostSubscriber.Opts,
 		private readonly _log: FLogger,
-		...channels: ReadonlyArray<MessageBus.Channel>
 	) {
 		super();
-
-		this._channels = channels;
 
 		let baseBindPath = opts.baseBindPath;
 		while (baseBindPath.length > 0 && baseBindPath.endsWith("/")) {
@@ -42,26 +38,14 @@ export class WebSocketHostSubscriber extends FInitableBase {
 		this._log.debug(FExecutionContext.Empty, `Construct ${WebSocketHostSubscriber.name} with bind path '${bindPath}'.`);
 
 		this._webSocketHostSubscriberEndpoint = new WebSocketHostSubscriberEndpoint(
-			//messagesChannel.topicName,
 			opts.bindServers,
 			{
 				allowedProtocols: ["jsonrpc"],
 				defaultProtocol: "jsonrpc",
-				bindPath
-			},
-			FLogger.create(_log.name + WebSocketHostSubscriberEndpoint.name)
+				bindPath,
+				channelsFactories: opts.channelFactories
+			}
 		);
-
-		const onMessageBound: MessageBus.Channel.Callback = this._onMessage.bind(this);
-
-		this._webSocketHostSubscriberEndpoint.on("firstConsumerAdded", () => {
-			this._channels.forEach(channel => {
-				channel.addHandler(onMessageBound);
-			});
-		});
-		this._webSocketHostSubscriberEndpoint.on("lastConsumerRemoved", () => {
-			this._channels.forEach(channel => channel.removeHandler(onMessageBound));
-		});
 	}
 
 	protected async onInit(): Promise<void> {
@@ -70,24 +54,6 @@ export class WebSocketHostSubscriber extends FInitableBase {
 	protected async onDispose(): Promise<void> {
 		await this._webSocketHostSubscriberEndpoint.dispose();
 	}
-
-	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
-		try {
-			if (this._webSocketHostSubscriberEndpoint.consumersCount === 0) {
-				event.delivered = false;
-				return;
-			}
-
-			const topicName: Topic["topicName"] = event.source.topicName;
-			const message: Message.Id & Message.Data = event.data;
-
-			await this._webSocketHostSubscriberEndpoint.delivery(this.initExecutionContext, topicName, message);
-			event.delivered = true;
-		} catch (e) {
-			event.delivered = false;
-			console.error(e);
-		}
-	}
 }
 
 export namespace WebSocketHostSubscriber {
@@ -95,5 +61,6 @@ export namespace WebSocketHostSubscriber {
 		readonly subscriberId: Subscriber["subscriberId"];
 		readonly bindServers: ReadonlyArray<FWebServer>;
 		readonly baseBindPath: string;
+		readonly channelFactories: ReadonlyArray<MessageBus.ChannelFactory>;
 	}
 }

@@ -1,29 +1,30 @@
-import { FException, FExecutionContext, FHttpClient, FInitableBase, FLogger } from "@freemework/common";
+import { FDisposableBase, FException, FExecutionContext, FHttpClient, FInitableBase, FLogger } from "@freemework/common";
 
 import { OutgoingHttpHeaders } from "http";
 
-import { Message } from "../model/message";
 import { MessageBus } from "../messaging/message_bus";
+import { Message } from "../model/message";
 import { Subscriber } from "../model/subscriber";
 
 export class HttpClientSubscriber extends FInitableBase {
 
 	private readonly _log: FLogger;
-	private readonly _channels: ReadonlyArray<MessageBus.Channel>;
+	private readonly _channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
 	private readonly _method: string | null;
 	private readonly _url: URL;
 	private readonly _client: FHttpClient;
 	private readonly _onMessageBound: MessageBus.Channel.Callback;
+	private _channels: ReadonlyArray<MessageBus.Channel> | null;
 
 	public constructor(
-		opts: HttpClientSubscriber.Opts,
-		...channels: ReadonlyArray<MessageBus.Channel>
+		opts: HttpClientSubscriber.Opts
 	) {
 		super();
 
 		this._log = FLogger.create(this.constructor.name);
 		this._client = new FHttpClient();
-		this._channels = channels;
+		this._channelsFactories = opts.channelFactories;
+		this._channels = null;
 
 		this._onMessageBound = this._onMessage.bind(this);
 
@@ -34,10 +35,27 @@ export class HttpClientSubscriber extends FInitableBase {
 	}
 
 	protected async onInit(): Promise<void> {
-		this._channels.forEach(channel => channel.addHandler(this._onMessageBound));
+		const channels: Array<MessageBus.Channel> = [];
+		try {
+			for (const channelFactory of this._channelsFactories) {
+				const channel: MessageBus.Channel = await channelFactory();
+				channels.push(channel);
+				channel.addHandler(this._onMessageBound);
+			}
+		} catch (e) {
+			await FDisposableBase.disposeAll(...channels);
+			throw e;
+		}
+		this._channels = Object.freeze(channels);
 	}
 	protected async onDispose(): Promise<void> {
-		this._channels.forEach(channel => channel.removeHandler(this._onMessageBound));
+		if (this._channels !== null) {
+			for (const channel of this._channels) {
+				await channel.dispose();
+				channel.removeHandler(this._onMessageBound); // Prevent memory leaks
+			}
+			this._channels = null;
+		}
 	}
 
 	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
@@ -110,5 +128,6 @@ export namespace HttpClientSubscriber {
 		readonly subscriberId: Subscriber["subscriberId"];
 		readonly deliveryUrl: URL;
 		readonly deliveryHttpMethod?: "GET" | "POST" | "PUT" | "DELETE" | string;
+		readonly channelFactories: ReadonlyArray<MessageBus.ChannelFactory>;
 	}
 }

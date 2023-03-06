@@ -62,4 +62,8 @@ export namespace MessageBus {
 			delivered?: boolean;
 		}
 	}
+
+	export interface ChannelFactory {
+		(): Promise<Channel>;
+	}
 }

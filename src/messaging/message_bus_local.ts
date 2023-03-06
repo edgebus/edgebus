@@ -9,7 +9,7 @@ import { MessageBus } from "./message_bus";
 
 export class MessageBusLocal extends FInitableBase implements MessageBus {
 	private readonly _messageQueues: Map<Topic["topicName"], Map<Subscriber["subscriberId"], Array<Message>>>;
-	private readonly _channels: Map<Subscriber["subscriberId"], MessageBusLocalChannel>;
+	private readonly _channels: Map<Subscriber["subscriberId"], Set<MessageBusLocalChannel>>;
 
 	public constructor(opts?: MessageBusLocal.Opts) {
 		super();
@@ -32,9 +32,20 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 			console.log(`Forward message '${messageId}' to subscriber ${subscriberId}`);
 			queue.push(message);
 			const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
-			const channel = this._channels.get(channelId);
-			if (channel !== undefined) {
-				channel.wakeUp();
+			const channels: Set<MessageBusLocalChannel> | undefined = this._channels.get(channelId);
+			if (channels !== undefined) {
+				if (channels.size === 1) {
+					const [channel] = channels;
+					channel.wakeUp();
+				} else if (channels.size > 1) {
+					// When several active subscribers used same channel,
+					// do some round-robin (wake up random channel)
+					const friendlyChannels = [...channels];
+					const randomValue = Math.random();
+					const randomChannelIndex = Math.round(randomValue * (friendlyChannels.length - 1));
+					const randomChannel = friendlyChannels[randomChannelIndex];
+					randomChannel.wakeUp();
+				}
 			}
 		}
 	}
@@ -44,8 +55,8 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 	): Promise<MessageBus.Channel> {
 		const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
 
-		if (this._channels.has(channelId)) {
-			throw new FExceptionInvalidOperation("Wrong operation. Cannot retain chanel twice.");
+		if (!this._channels.has(channelId)) {
+			this._channels.set(channelId, new Set());
 		}
 
 		let topicQueuesMap: Map<Subscriber["subscriberId"], Array<Message>> | undefined = this._messageQueues.get(topicName);
@@ -60,10 +71,13 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 			topicQueuesMap.set(subscriberId, queue);
 		}
 
-		const channel = new MessageBusLocalChannel(topicName, subscriberId, queue);
+		let channel: MessageBusLocalChannel;
+		const channelDisposer = () => {
+			this._channels.get(channelId)!.delete(channel);
+		};
+		channel = new MessageBusLocalChannel(topicName, subscriberId, queue, channelDisposer);
 		await channel.init(executionContext);
-		this._channels.set(channelId, channel);
-
+		this._channels.get(channelId)!.add(channel);
 		return channel;
 	}
 
@@ -91,14 +105,21 @@ export namespace MessageBusLocal {
 
 class MessageBusLocalChannel extends EventChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
 	implements MessageBus.Channel {
+	private readonly _disposer: () => void | Promise<void>;
 	private readonly _queue: Array<Message>;
 	private readonly _topicName: Topic["topicName"];
 	private readonly _subscriberId: Subscriber["subscriberId"];
 	private _tickInterval: NodeJS.Timeout | null;
 	private _insideTick: boolean;
 
-	public constructor(topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"], queue: Array<Message>) {
+	public constructor(
+		topicName: Topic["topicName"],
+		subscriberId: Subscriber["subscriberId"],
+		queue: Array<Message>,
+		disposer: () => void | Promise<void>,
+	) {
 		super();
+		this._disposer = disposer;
 		this._topicName = topicName;
 		this._subscriberId = subscriberId;
 		this._insideTick = false;
@@ -131,8 +152,8 @@ class MessageBusLocalChannel extends EventChannelBase<Message.Id & Message.Data,
 		// NOP
 	}
 
-	protected onDispose() {
-		// NOP
+	protected onDispose(): void | Promise<void> {
+		return this._disposer();
 	}
 
 	private async _tick(): Promise<void> {
