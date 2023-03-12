@@ -30,6 +30,10 @@ export interface PersistentStorage extends FInitableBase {
 		domain: string | null
 	): Promise<Array<Topic>>;
 
+	savePublisherMessage(
+		executionContext: FExecutionContext,
+	): Promise<void>
+
 	// getSubscriber(
 		// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]

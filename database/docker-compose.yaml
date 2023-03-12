@@ -1,0 +1,37 @@
+version: '3.9'
+networks:
+  default:
+    name: "edgebus-local-tier"
+
+volumes:
+  postgres-data:
+
+services:
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: zxteamorg/devel.postgres-13:20210703
+    restart: always
+    networks:
+      - default
+    volumes:
+      - postgres-data:/var/lib/posgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  pgadmin4:
+    container_name: pgadmin4
+    depends_on:
+      - postgres
+    networks:
+      - default
+    hostname: pgadmin4
+    image: dpage/pgadmin4:6.20
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=dev@edgebus.io
+      - PGADMIN_DEFAULT_PASSWORD=devel 
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    ports:
+    - "127.0.0.1:55080:80"

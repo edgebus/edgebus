@@ -12,6 +12,8 @@ import { Message } from "../model/message";
 import { Publisher } from "../model/publisher";
 
 import { BasePublisher } from "./base_publisher";
+import { PersistentStorage } from "../data/persistent_storage";
+
 
 const _supportedMediaTypes: Set<string> = new Set();
 _supportedMediaTypes.add("application/json");
@@ -29,12 +31,15 @@ export class HttpHostPublisher extends BasePublisher {
 	}) | null;
 	private readonly _messageBus: MessageBus;
 	private readonly _transformers: HttpHostPublisher.Opts["transformers"] | null;
+	private readonly _storage: PersistentStorage;
+
 
 	public static get supportedMediaTypes(): IterableIterator<string> {
 		return _supportedMediaTypes.keys();
 	}
 
 	public constructor(
+		storage: PersistentStorage,
 		topic: Topic.Id & Topic.Data,
 		publisherId: Publisher["publisherId"],
 		messageBus: MessageBus,
@@ -45,6 +50,7 @@ export class HttpHostPublisher extends BasePublisher {
 		this.bindPath = null;
 		this._successResponseGenerator = null;
 		this._transformers = null;
+		this._storage = storage;
 		if (opts !== undefined) {
 			this._transformers = opts.transformers;
 			if (opts.bindPath !== undefined) { this.bindPath = opts.bindPath; }
@@ -74,7 +80,7 @@ export class HttpHostPublisher extends BasePublisher {
 	private async _handleMessageApplicationJson(req: Request, res: Response): Promise<void> {
 		try {
 			const body = req.body;
-
+			this._storage.savePublisherMessage(this.initExecutionContext);
 			let messageBody = {
 				method: req.method,
 				httpVersion: req.httpVersion,

@@ -54,7 +54,7 @@ class MessageBusProviderImpl extends MessageBusProvider {
 			// url: rabbitUrl,
 			// ssl: rabbitSsl,
 			deliveryPolicy: {
-				type: MessageBus.DeliveryPolicy.Type.PARALLEL,
+				type: MessageBus.DeliveryPolicy.Type.SEQUENCE,
 				retryOpts: "TBD"
 			}
 		});

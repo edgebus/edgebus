@@ -134,10 +134,12 @@ export default async function (executionContext: FExecutionContext, configuratio
 
 		const endpointsProvider: EndpointsProvider = Container.get(EndpointsProvider);
 		const messageBusProvider: MessageBusProvider = Container.get(MessageBusProvider);
+		const storageProvider: StorageProvider = Container.get(StorageProvider);
 
 		// Setup HTTP publisher
 		for (const hardcodedPublisherConfiguration of hardcodedPublisherConfigurations) {
 			const httpPublisherInstance: HttpHostPublisher = new HttpHostPublisher(
+				storageProvider.persistentStorage,
 				{
 					topicName: hardcodedPublisherConfiguration.topicName,
 					topicDomain: null,

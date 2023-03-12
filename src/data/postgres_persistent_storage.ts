@@ -124,6 +124,16 @@ export class PostgresPersistentStorage extends FInitableBase implements Persiste
 		}
 	}
 
+	public async savePublisherMessage(
+		executionContext: FExecutionContext,
+	): Promise<void> {
+		this._sqlProviderFactory.usingProvider(executionContext, async (sqlProvider: FSqlConnection) => {
+			sqlProvider.statement(`INSERT INTO "edgebus_audit"."incoming_request_http"(
+				"http_method", "http_url", "request_headers")
+				VALUES ($1, $2, $3)`).execute(executionContext, "test", "GET", "{}");
+		});
+	}
+
 	// public async removeSubscriber(
 	// 	executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
