@@ -32,35 +32,38 @@ export interface PersistentStorage extends FInitableBase {
 
 	savePublisherMessage(
 		executionContext: FExecutionContext,
+		headers: Record<string, any>,
+		mimeType?: string,
+		bodyRaw?: Buffer
 	): Promise<void>
 
 	// getSubscriber(
-		// executionContext: FExecutionContext,
+	// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
 	// ): Promise<Subscriber>;
 
 	// getTopic(
-		// executionContext: FExecutionContext,
+	// executionContext: FExecutionContext,
 	// 	topic: Topic.Id
 	// ): Promise<Topic>;
 
 	// getTopicBySubscriber(
-		// executionContext: FExecutionContext,
+	// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
 	// ): Promise<Topic>;
 
 	// removePublish(
-		// executionContext: FExecutionContext,
+	// executionContext: FExecutionContext,
 	// 	publisherId: Publisher["publisherId"]
 	// ): Promise<void>;
 
 	// removeSubscriber(
-		// executionContext: FExecutionContext,
+	// executionContext: FExecutionContext,
 	// 	subscriberId: Subscriber["subscriberId"]
 	// ): Promise<void>;
 
 	// removeTopic(
-		// executionContext: FExecutionContext,
+	// executionContext: FExecutionContext,
 	// 	topic: Topic.Id
 	// ): Promise<void>;
 }

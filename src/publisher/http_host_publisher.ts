@@ -61,12 +61,14 @@ export class HttpHostPublisher extends BasePublisher {
 		switch (topic.topicMediaType) {
 			case "application/json":
 				this.router.use(bodyParser.json({
-					// TODO
+					verify: function (req, res, buf, encoding) {
+						(req as any).rawBody = buf;
+					}
 				}));
 				this.router.use(this._handleMessageApplicationJson.bind(this));
 				break;
 			default:
-				throw new FExceptionArgument( `Not supported mediaType: ${topic.topicMediaType}`, "topic");
+				throw new FExceptionArgument(`Not supported mediaType: ${topic.topicMediaType}`, "topic");
 		}
 	}
 
@@ -80,7 +82,15 @@ export class HttpHostPublisher extends BasePublisher {
 	private async _handleMessageApplicationJson(req: Request, res: Response): Promise<void> {
 		try {
 			const body = req.body;
-			this._storage.savePublisherMessage(this.initExecutionContext);
+			const headers = {
+				httpTransport: {
+					method: req.method,
+					url: req.url.toString()
+				}
+			};
+			const mimeType = req.headers['content-type'];
+
+			this._storage.savePublisherMessage(this.initExecutionContext, headers, mimeType, (req as any).rawBody);
 			let messageBody = {
 				method: req.method,
 				httpVersion: req.httpVersion,
