@@ -12,7 +12,7 @@ permalink: /
     <img src="assets/images/edgebus-overview-architecture.png" alt="EdgeBus Overview Architecture">
 </p>
 
-EdgeBus is a library and standalone server application that makes your life easy in production integration of different systems and make development a fun and easy experience.
+EdgeBus is a library and standalone server application that makes your life easy in integration of different systems and make development a fun and easy experience.
 
 There are two main goals:
 * **Asynchronous Messages** - manage, audit, transform, guarantee delivery

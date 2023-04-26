@@ -13,7 +13,7 @@ The branch contains documentation sources.
 ### Jekyll via Docker
 1. Build the site and make it available on a local server inside [Docker](https://www.docker.com/)
   ```shell
-  docker run --interactive --rm --volume ${PWD}:/data --publish 4000:4000 zxteamorg/jekyll:20220815
+  docker run --interactive --rm --volume ${PWD}:/data --publish 4000:4000 theanurin/jekyll:20230426
   ```
 1. Browse to http://127.0.0.1:4000
 
