@@ -23,7 +23,7 @@ export abstract class DevelBuildInfoProvider extends BuildInfoProvider {
 			contributors: ensure.array(contributors, "Incorrect 'contributors' field.").map(contributor => ensure.string(contributor, "Bad contributor value.")),
 			projectUrl: new URL("http://localhost"),
 			pipelineUrl: new URL("http://localhost"),
-			commitReference: "workcopy",
+			commitReference: "local-copy",
 			commitDate,
 			buildConfiguration: "local",
 		};

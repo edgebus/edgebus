@@ -29,10 +29,12 @@ export { HostingProvider } from "./provider/hosting_provider";
 //export { MessageBusProvider } from "./provider/MessageBusProvider";
 //export { StorageProvider } from "./provider/StorageProvider";
 
+export * from "./misc";
+
 
 const { name: serviceName, version: serviceVersion } = require("../package.json");
 
-export default async function (executionContext: FExecutionContext, configuration: Settings): Promise<FLauncherRuntime> {
+export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FLauncherRuntime> {
 	executionContext = new FLoggerLabelsExecutionContext(executionContext, { serviceName, serviceVersion });
 
 	const log: FLogger = FLogger.create("EdgeBus");
@@ -40,7 +42,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 	{
 		log.info(executionContext, "Initializing ConfigurationProvider...");
 		// const dbEncriptionKey = await passwordDerivation(configuration.dbEncryptionPassword);
-		const ownProvider: SettingsProvider = new SettingsProviderImpl(configuration);
+		const ownProvider: SettingsProvider = new SettingsProviderImpl(settings);
 		Container.bind(SettingsProvider).provider({ get() { return ownProvider; } });
 	}
 
@@ -99,7 +101,7 @@ export default async function (executionContext: FExecutionContext, configuratio
 				// }
 			];
 
-		const { setup } = configuration;
+		const { setup } = settings;
 		if (setup !== null) {
 			const { publishers, subscribers, topics } = setup;
 

@@ -87,6 +87,6 @@
 # =======================
 
 # Persistent storage URL (Postgres only at the moment)
-[edgebus.migration.persist]
+[edgebus.initialize.database]
 	url = "postgres://your.postgres.server:5432/notifier"
 # /Persistent storage URL (Postgres only at the moment)
