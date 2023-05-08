@@ -19,27 +19,27 @@ on:
     branches:
       - '*'
     tags:
-      - '*'
+      - 'typescript-service-*'
 
 jobs:
   configure:
     runs-on: ubuntu-latest
     outputs:
-      app_dockerfiles: ${{ steps.dockerfiles.outputs.app_dockerfiles }}
-      app_dockerfiles_count: ${{ steps.dockerfiles.outputs.app_dockerfiles_count }}
-      commit_short_sha: ${{ steps.build_vars.outputs.commit_short_sha }}
-      build_commit_ref: ${{ steps.build_vars.outputs.build_commit_ref }}
-      build_commit_timestamp: ${{ steps.build_vars.outputs.build_commit_timestamp }}
-      build_is_release_candidate: ${{ steps.build_vars.outputs.build_is_release_candidate }}
-      build_pipeline_url: ${{ steps.build_vars.outputs.build_pipeline_url }}
-      build_project_url: ${{ steps.build_vars.outputs.build_project_url }}
-      build_rc_version: ${{ steps.build_vars.outputs.build_rc_version }}
-      build_tag_version: ${{ steps.build_vars.outputs.build_tag_version }}
-      build_version_appender: ${{ steps.build_vars.outputs.build_version_appender }}
-      platforms: ${{ steps.platforms.outputs.platforms }}
-      platforms_count: ${{ steps.platforms.outputs.platforms_count }}
-      test_dockerfiles: ${{ steps.dockerfiles.outputs.test_dockerfiles }}
-      test_dockerfiles_count: ${{ steps.dockerfiles.outputs.test_dockerfiles_count }}
+      build_app_dockerfiles: ${{ steps.dockerfiles.outputs.app_dockerfiles }}
+      build_app_dockerfiles_count: ${{ steps.dockerfiles.outputs.app_dockerfiles_count }}
+      build_commit_short_sha: ${{ steps.build_vars.outputs.commit_short_sha }}
+      build_commit_ref: ${{ steps.build_vars.outputs.commit_ref }}
+      build_commit_timestamp: ${{ steps.build_vars.outputs.commit_timestamp }}
+      build_is_release_candidate: ${{ steps.build_vars.outputs.is_release_candidate }}
+      build_pipeline_url: ${{ steps.build_vars.outputs.pipeline_url }}
+      build_project_url: ${{ steps.build_vars.outputs.project_url }}
+      build_rc_version: ${{ steps.build_vars.outputs.rc_version }}
+      build_tag_version: ${{ steps.build_vars.outputs.tag_version }}
+      build_version_appender: ${{ steps.build_vars.outputs.version_appender }}
+      build_platforms: ${{ steps.platforms.outputs.platforms }}
+      build_platforms_count: ${{ steps.platforms.outputs.platforms_count }}
+      build_test_dockerfiles: ${{ steps.dockerfiles.outputs.test_dockerfiles }}
+      build_test_dockerfiles_count: ${{ steps.dockerfiles.outputs.test_dockerfiles_count }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -50,8 +50,8 @@ jobs:
         PLATFORMS_JSON_ARRAY=$(echo "\"$DOCKER_PLATFORMS\""  | jq -c 'split(",")')
         PLATFORMS_COUNT=$(echo "${PLATFORMS_JSON_ARRAY}" | jq '. | length')
         echo "Build for ${PLATFORMS_COUNT} platform(s): ${DOCKER_PLATFORMS}"
-        echo "::set-output name=platforms::${PLATFORMS_JSON_ARRAY}"
-        echo "::set-output name=platforms_count::${PLATFORMS_COUNT}"
+        echo "platforms=${PLATFORMS_JSON_ARRAY}" | tee -a "${GITHUB_OUTPUT}"
+        echo "platforms_count=${PLATFORMS_COUNT}" | tee -a "${GITHUB_OUTPUT}"
 
     - name: Detect Dockerfiles
       id: dockerfiles
@@ -76,10 +76,10 @@ jobs:
         DOCKER_APP_FILES_JSON_ARRAY=$(echo "\"$COMMA_SEPARATED_DOCKER_APP_FILES\""  | jq -c 'split(",")')
         DOCKER_TEST_FILES_JSON_ARRAY=$(echo "\"$COMMA_SEPARATED_DOCKER_TEST_FILES\""  | jq -c 'split(",")')
 
-        echo "::set-output name=app_dockerfiles::${DOCKER_APP_FILES_JSON_ARRAY}"
-        echo "::set-output name=test_dockerfiles::${DOCKER_TEST_FILES_JSON_ARRAY}"
-        echo "::set-output name=app_dockerfiles_count::${#DOCKER_APP_FILES[@]}"
-        echo "::set-output name=test_dockerfiles_count::${#DOCKER_TEST_FILES[@]}"
+        echo "app_dockerfiles=${DOCKER_APP_FILES_JSON_ARRAY}" | tee -a "${GITHUB_OUTPUT}"
+        echo "app_dockerfiles_count=${#DOCKER_APP_FILES[@]}" | tee -a "${GITHUB_OUTPUT}"
+        echo "test_dockerfiles=${DOCKER_TEST_FILES_JSON_ARRAY}" | tee -a "${GITHUB_OUTPUT}"
+        echo "test_dockerfiles_count=${#DOCKER_TEST_FILES[@]}" | tee -a "${GITHUB_OUTPUT}"
 
     - name: Build variables
       id: build_vars
@@ -107,29 +107,22 @@ jobs:
           BUILD_TAG_VERSION=""
           BUILD_VERSION_APPENDER="-${{github.ref_name}}.${SHORT_SHA}-snapshot"
         fi
-        echo "  BUILD_VERSION_APPENDER: ${BUILD_VERSION_APPENDER}"
-        echo "::set-output name=build_version_appender::${BUILD_VERSION_APPENDER}"
-        echo "  SHORT_SHA: ${SHORT_SHA}"
-        echo "::set-output name=commit_short_sha::${SHORT_SHA}"
-        echo "  BUILD_COMMIT_REF: ${BUILD_COMMIT_REF}"
-        echo "::set-output name=build_commit_ref::${BUILD_COMMIT_REF}"
-        echo "  BUILD_COMMIT_TIMESTAMP: ${BUILD_COMMIT_TIMESTAMP}"
-        echo "::set-output name=build_commit_timestamp::${BUILD_COMMIT_TIMESTAMP}"
-        echo "  BUILD_PIPELINE_URL: ${BUILD_PIPELINE_URL}"
-        echo "::set-output name=build_pipeline_url::${BUILD_PIPELINE_URL}"
-        echo "  BUILD_PROJECT_URL: ${BUILD_PROJECT_URL}"
-        echo "::set-output name=build_project_url::${BUILD_PROJECT_URL}"
-        echo "  BUILD_RC_VERSION: ${BUILD_RC_VERSION}"
-        echo "::set-output name=build_rc_version::${BUILD_RC_VERSION}"
-        echo "  BUILD_TAG_VERSION: ${BUILD_TAG_VERSION}"
-        echo "::set-output name=build_tag_version::${BUILD_TAG_VERSION}"
+
+        echo "version_appender=${BUILD_VERSION_APPENDER}" | tee -a "${GITHUB_OUTPUT}"
+        echo "commit_short_sha=${SHORT_SHA}" | tee -a "${GITHUB_OUTPUT}"
+        echo "commit_ref=${BUILD_COMMIT_REF}" | tee -a "${GITHUB_OUTPUT}"
+        echo "commit_timestamp=${BUILD_COMMIT_TIMESTAMP}" | tee -a "${GITHUB_OUTPUT}"
+        echo "pipeline_url=${BUILD_PIPELINE_URL}" | tee -a "${GITHUB_OUTPUT}"
+        echo "project_url=${BUILD_PROJECT_URL}" | tee -a "${GITHUB_OUTPUT}"
+        echo "rc_version=${BUILD_RC_VERSION}" | tee -a "${GITHUB_OUTPUT}"
+        echo "tag_version=${BUILD_TAG_VERSION}" | tee -a "${GITHUB_OUTPUT}"
 
   docker-build:
     needs:
     - configure
     strategy:
       matrix:
-        dockerfile: ${{ fromJson(needs.configure.outputs.app_dockerfiles) }}
+        dockerfile: ${{ fromJson(needs.configure.outputs.build_app_dockerfiles) }}
     runs-on: ubuntu-latest
     steps:
     - name: Set up environment variables
@@ -141,56 +134,6 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v3
-
-    # - name: Version guard
-    #   run: |
-    #     if [ -f package.json ]; then
-    #       # Looks like Node.js project
-    #       PROJ_VERSION="$(jq -r '.version' package.json)"
-    #     elif [ -f pubspec.yaml ]; then
-    #       # Looks like Dart/Flutter project
-    #       PROJ_VERSION="$(yq -r '.version' pubspec.yaml)"
-    #     elif [ -f Directory.Build.props ]; then
-    #       # Looks like .NET project
-    #       PROJ_VERSION=$(xmllint --xpath '/Project/PropertyGroup/Version/text()' Directory.Build.props)
-    #     else
-    #       echo "Unsupported project kind. Ask workflow developer to support this project." >&2
-    #       exit 1
-    #     fi
-
-    #     if [ "${{ github.ref_type }}" == "tag" ]; then
-    #       if [ "${{ needs.configure.outputs.build_is_release_candidate }}" != "yes" ]; then
-    #         if [[ "${{ github.ref_name }}" != "${PROJ_VERSION}"* ]]; then
-    #           echo "Project version '${PROJ_VERSION}' is not related to release candidate tag version '${{ github.ref_name }}'. Cannot continue. Try to set correct project before tag creation." >&2
-    #           exit 254
-    #         fi
-
-    #         if [ -f "package.json" ]; then
-    #           PROJ_SPEC=$(jq ".version = \"${{ github.ref_name }}\"" package.json)
-    #           echo -E "${PROJ_SPEC}" > package.json
-    #         elif [ -f pubspec.yaml ]; then
-    #           yq -y -i ".version = \"${{ github.ref_name }}\"" pubspec.yaml
-    #         elif [ -f Directory.Build.props ]; then
-    #           xmllint --shell Directory.Build.props <<EOF
-    #     cd /Project/PropertyGroup/Version
-    #     set ${{ github.ref_name }}
-    #     save
-    #     EOF
-    #         fi
-    #       else
-    #         if [ "${PROJ_VERSION}" != "${{ github.ref_name }}" ]; then
-    #           echo "Project version '${PROJ_VERSION}' is not equal to tag version '${{ github.ref_name }}'. Cannot continue. Try to set correct project before tag creation." >&2
-    #           exit 254
-    #         fi
-    #       fi
-    #     else
-    #       SHORT_SHA=$(echo "${{ github.sha }}" | head -c 8)
-    #       UPDATED_PROJ_VERSION="${PROJ_VERSION}-${{ github.ref_name }}.${SHORT_SHA}"
-
-    #       if [ -f "package.json" ]; then
-    #         jq ".version = \"${UPDATED_PROJ_VERSION}\"" package.json
-    #       fi
-    #     fi
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -219,7 +162,7 @@ jobs:
           BUILD_RC_VERSION=${{ needs.configure.outputs.build_rc_version }}
           BUILD_TAG_VERSION=${{ needs.configure.outputs.build_tag_version }}
           BUILD_VERSION_APPENDER=${{ needs.configure.outputs.build_version_appender }}
-        platforms: ${{ join(fromJson(needs.configure.outputs.platforms), ',') }}
+        platforms: ${{ join(fromJson(needs.configure.outputs.build_platforms), ',') }}
         push: true
         tags: "ghcr.io/${{ env.GHCR_REPOSITORY }}${{ env.DOCKERFILE_NAME_SUFFIX }}/snapshot:${{ github.ref_name }}.${{ github.sha }}"
 
@@ -227,11 +170,11 @@ jobs:
     needs:
     - configure
     - docker-build
-    if: needs.configure.outputs.test_dockerfiles_count > 0
+    if: needs.configure.outputs.build_test_dockerfiles_count > 0
     strategy:
       matrix:
-        dockerfile: ${{ fromJson(needs.configure.outputs.test_dockerfiles) }}
-        platform: ${{ fromJson(needs.configure.outputs.platforms) }}
+        dockerfile: ${{ fromJson(needs.configure.outputs.build_test_dockerfiles) }}
+        platform: ${{ fromJson(needs.configure.outputs.build_platforms) }}
     runs-on: ubuntu-latest
     steps:
     - name: Set up environment variables
@@ -301,7 +244,7 @@ jobs:
       !contains(needs.*.result, 'cancelled')
     strategy:
       matrix:
-        dockerfile: ${{ fromJson(needs.configure.outputs.app_dockerfiles) }}
+        dockerfile: ${{ fromJson(needs.configure.outputs.build_app_dockerfiles) }}
     runs-on: ubuntu-latest
     steps:
     - name: Set up environment variables
@@ -323,9 +266,9 @@ jobs:
         if [ "${{ github.ref_type }}" == "tag" ]; then
           skopeo copy --all \
             "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.commit_short_sha }}"
+            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.build_commit_short_sha }}"
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.commit_short_sha }}" \
+            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.build_commit_short_sha }}" \
             "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}"
           skopeo copy --all \
             "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}" \
@@ -333,9 +276,9 @@ jobs:
         else
           skopeo copy --all \
             "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.commit_short_sha }}"
+            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.build_commit_short_sha }}"
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.commit_short_sha }}" \
+            "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}.${{ needs.configure.outputs.build_commit_short_sha }}" \
             "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}"
           skopeo copy --all \
             "docker://ghcr.io/${{ env.GHCR_REPOSITORY }}${DOCKERFILE_NAME_SUFFIX}/snapshot:${{ github.ref_name }}" \
