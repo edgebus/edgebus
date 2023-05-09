@@ -42,10 +42,7 @@ RUN \
     fi; \
   fi; \
   if [ -n "${BUILD_RC_VERSION}" ]; then \
-    if [ "${BUILD_RC_VERSION}" != "${PROJ_VERSION}" ]; then \
-      echo "Project version '${PROJ_VERSION}' is not same to RC tag version '${BUILD_RC_VERSION}'. Cannot continue. Try to set correct project before tag creation." >&2; \
-      exit 1; \
-    fi; \
+    jq -M ".build.release_candidate=\"${BUILD_RC_VERSION}\"" < package.json | sponge package.json; \
   fi; \
   if [ -n "${BUILD_VERSION_APPENDER}" ]; then \
 	jq -M ".build.version=\"${PROJ_VERSION}${BUILD_VERSION_APPENDER}\"" < package.json | sponge package.json; \
