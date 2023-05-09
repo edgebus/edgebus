@@ -97,10 +97,10 @@ jobs:
         BUILD_PROJECT_URL="${{ github.server_url }}/${{ github.repository }}"
         if [ "${{ github.ref_type}}" == "tag" ]; then
           if [ -n "${BUILD_RC_VERSION}" ]; then
-            BUILD_TAG_VERSION="$(echo -n "${{ github.ref_name }}" | sed 's/-rc[0-9]\+$//')"
+            BUILD_TAG_VERSION=$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f2 | rev)
             BUILD_VERSION_APPENDER="-rc${BUILD_RC_VERSION}-snapshot"
           else
-            BUILD_TAG_VERSION="${{ github.ref_name }}"
+            BUILD_TAG_VERSION=$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f1 | rev)
             BUILD_VERSION_APPENDER="-snapshot"
           fi
         else
