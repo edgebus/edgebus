@@ -7,6 +7,7 @@ import * as express from "express";
 import { BaseRestEndpoint, HttpGet } from "./base_rest_endpoint";
 import { Settings } from "../settings";
 import { BuildInfoProvider } from "../provider/build_info_provider";
+import { ProviderLocator } from "../provider_locator";
 
 export class InfoRestEndpoint extends BaseRestEndpoint {
 	private readonly _buildInfo: BuildInfoProvider;
@@ -17,7 +18,7 @@ export class InfoRestEndpoint extends BaseRestEndpoint {
 		log: FLogger,
 	) {
 		super(servers, opts);
-		this._buildInfo = Container.get(BuildInfoProvider);
+		this._buildInfo = ProviderLocator.default.get(BuildInfoProvider);
 	}
 
 	// protected setupBodyObjectParser(): void {

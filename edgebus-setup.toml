@@ -1,8 +1,8 @@
 # Enable (turn on) specific topics ONLY
 #"edgebus.setup.topic.indexes" = "..."
 
-# Enable (turn on) specific publishers ONLY
-#"edgebus.setup.publisher.indexes" = "..."
+# Enable (turn on) specific ingresses ONLY
+#"edgebus.setup.ingress.indexes" = "..."
 
 # Enable (turn on) specific subscribers ONLY
 #"edgebus.setup.subscriber.indexes" = "..."
@@ -11,55 +11,71 @@
 # Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 [[edgebus.setup.topic]]
 	index = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-	name = "pss-provider-wtf2"
-	description = "PSS Provider WTF2 callbacks"
+	name = "sumsub"
+	description = "Sumsub's callbacks"
+	mediaType = "application/json"
 # /Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 
 # Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 [[edgebus.setup.topic]]
 	index = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-	name = "wtf2"
-	description = "WTF2 callbacks"
+	name = "fireblocks"
+	description = "Fireblock's callbacks"
+	mediaType = "application/json"
 # /Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 
 
-# Setup HTTP-host publisher "PUBR9028c57498b641988fc71355e9ac622e"
-[[edgebus.setup.publisher]]
+# Setup HTTP-host ingress "PUBR9028c57498b641988fc71355e9ac622e"
+[[edgebus.setup.ingress]]
 	index = "PUBR9028c57498b641988fc71355e9ac622e"
-	type = "http_host"
-	path = "/v2/callback/cryptoproviders/pss-provider-wtf2"
+	kind = "HTTP_HOST"
+	path = "/v2/callback/sumsub"
 	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-# /Setup HTTP-host publisher "PUBR9028c57498b641988fc71355e9ac622e"
+	[edgebus.setup.ingress.response]
+		status_code = 201
+		status_message = "Accepted"
+		body = '{ "success": true }'
+	[edgebus.setup.ingress.response.header]
+		"Content-Type" = "application/json"
+		"X-EdgeBus-Token" = "abc"
+# /Setup HTTP-host ingress "PUBR9028c57498b641988fc71355e9ac622e"
 
-# Setup HTTP-host publisher "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
-[[edgebus.setup.publisher]]
+# Setup HTTP-host ingress "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
+[[edgebus.setup.ingress]]
 	index = "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
-	type = "http_host"
-	path = "/v2/callback/cryptoproviders/wtf2"
+	kind = "HTTP_HOST"
+	path = "/v2/callback/fireblocks"
 	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-# /Setup HTTP-host publisher "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
+	[edgebus.setup.ingress.response]
+		status_code = 200
+		status_message = "OK"
+		body = '{ "ok": "ok" }'
+	[edgebus.setup.ingress.response.header]
+		"Content-Type" = "application/json"
+		"X-EdgeBus-Token" = "abc"
+# /Setup HTTP-host ingress "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
 
 
-# Setup Websocket-host subscriber "SUBR319ef1447b054a5292acecf40345b89b"
-[[edgebus.setup.subscriber]]
+# Setup Web Socket Host egress "SUBR319ef1447b054a5292acecf40345b89b"
+[[edgebus.setup.egress]]
 	index = "SUBR319ef1447b054a5292acecf40345b89b"
-	type = "websocket_host"
+	kind = "WEB_SOCKET_HOST"
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6 TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-# /Setup Websocket-host subscriber "SUBR319ef1447b054a5292acecf40345b89b"
+# /Setup Web Socket Host egress "SUBR319ef1447b054a5292acecf40345b89b"
 
-# Setup Websocket-host subscriber "SUBR707ef6997dc64f79b7449d599a36c5fd"
-[[edgebus.setup.subscriber]]
+# Setup Web Socket Host subscriber "SUBR707ef6997dc64f79b7449d599a36c5fd"
+[[edgebus.setup.egress]]
 	index = "SUBR707ef6997dc64f79b7449d599a36c5fd"
-	type = "websocket_host"
+	kind = "WEB_SOCKET_HOST"
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6 TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-# /Setup Websocket-host subscriber "SUBR707ef6997dc64f79b7449d599a36c5fd"
+# /Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
 
-# Setup HTTP-client subscriber "SUBRec84237fe6674a15820407ab5a93e97b"
-[[edgebus.setup.subscriber]]
-	index = "SUBRec84237fe6674a15820407ab5a93e97b"
-	type = "http_client"
-	http_method="POST"
-	http_url="http://localhost:8020/v2/callback/cryptoproviders/pss-provider-wtf2"
-	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-# /Setup Websocket-host subscriber "SUBRec84237fe6674a15820407ab5a93e97b"
+# # Setup WebHook egress "SUBRec84237fe6674a15820407ab5a93e97b"
+# [[edgebus.setup.egress]]
+# 	index = "SUBRec84237fe6674a15820407ab5a93e97b"
+# 	kind = "WEBHOOK"
+# 	http_method="POST"
+# 	http_url="http://localhost:8020/v2/callback/cryptoproviders/pss-provider-wtf2"
+# 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# # /Setup Web Socket Host egress "SUBRec84237fe6674a15820407ab5a93e97b"
 

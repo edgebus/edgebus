@@ -1,23 +1,29 @@
+import { MessageApiIdentifier } from "../misc/api-identifier";
+
 export namespace Message {
 	export interface Id {
 		/**
 		 * An identifier of the `Message`
 		 */
-		readonly messageId: string;
+		readonly messageId: MessageApiIdentifier;
 	}
 
+	export type Headers = Readonly<Record<string, string>>;
+
 	export interface Data {
-		readonly headers: {
-			readonly [name: string]: string;
-		};
+		readonly headers: Headers;
 		/**
 		 * https://en.wikipedia.org/wiki/Media_type
 		 */
 		readonly mediaType: string;
 		/**
-		 * Binary data of the message
+		 * Binary data of the ingress(original) message
 		 */
-		readonly messageBody: Buffer;
+		readonly ingressBody: Uint8Array;
+		/**
+		 * Binary data of the transformed message
+		 */
+		readonly transformedBody: Uint8Array;
 	}
 
 	export interface StatusBase {

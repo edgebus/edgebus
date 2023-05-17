@@ -1,8 +1,8 @@
 # Enable (turn on) specific servers ONLY
-#"edgebus.runtime.server.indexes" = "management publisher subscriber"
+#"edgebus.runtime.server.indexes" = "management ingress subscriber"
 
 # Enable (turn on) specific endpoints ONLY
-#"edgebus.runtime.endpoint.indexes" = "info management publisher subscriber"
+#"edgebus.runtime.endpoint.indexes" = "info management ingress subscriber"
 
 
 # Configure web server "management"
@@ -13,13 +13,13 @@
 	type = "https"
 # /Configure web server "management"
 
-# Configure web server "publisher"
+# Configure web server "ingress"
 [[edgebus.runtime.server]]
-	index = "publisher"
+	index = "ingress"
 	listenHost = "0.0.0.0"
 	listenPort = "8444"
 	type = "https"
-# /Configure web server "publisher"
+# /Configure web server "ingress"
 
 # Configure web server "subscriber"
 [[edgebus.runtime.server]]
@@ -34,7 +34,7 @@
 [[edgebus.runtime.endpoint]]
 	index = "info"
 	type = "rest-info"
-	servers = "management publisher subscriber"
+	servers = "management ingress subscriber"
 	bindPath = "/info"
 	[edgebus.runtime.endpoint.info.cors]
 		methods = "GET"
@@ -48,17 +48,15 @@
 	type = "rest-management"
 	servers = "management"
 	bindPath = "/management"
-	methods = "GET"
 # /Configure endpoint "management"
 
-# Configure endpoint "publisher"
+# Configure endpoint "ingress"
 [[edgebus.runtime.endpoint]]
-	index = "publisher"
-	type = "rest-publisher"
-	servers = "publisher"
-	bindPath = "/publisher"
-	methods = "GET"
-# /Configure endpoint "publisher"
+	index = "ingress"
+	type = "rest-ingress"
+	servers = "ingress"
+	bindPath = "/ingress"
+# /Configure endpoint "ingress"
 
 # Configure endpoint "subscriber"
 [[edgebus.runtime.endpoint]]
@@ -66,7 +64,6 @@
 	type = "rest-subscriber"
 	servers = "subscriber"
 	bindPath = "/subscriber"
-	methods = "GET"
 # /Configure endpoint "subscriber"
 
 
@@ -77,7 +74,7 @@
 
 
 # Persistent storage URL (Postgres only at the moment)
-[edgebus.runtime.persist]
+[edgebus.runtime.persistent]
 	url = "postgres://your.postgres.server:5432/notifier"
 # /Persistent storage URL (Postgres only at the moment)
 

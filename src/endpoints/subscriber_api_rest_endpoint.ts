@@ -10,7 +10,7 @@ import { SubscriberApi } from "../api/subscriber_api";
 import { endpointHandledException } from "./errors";
 
 import { Topic } from "../model/topic";
-import { Subscriber } from "../model/subscriber";
+import { Egress } from "../model/egress";
 import { Security } from "../model/security";
 
 const ensure: FEnsure = FEnsure.create();
@@ -86,7 +86,7 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 
 	// 		const security: Security = { kind, token };
 
-	// 		const subscribers: Array<Subscriber> = await this._api.list(DUMMY_CANCELLATION_TOKEN, security);
+	// 		const subscribers: Array<Egress> = await this._api.list(DUMMY_CANCELLATION_TOKEN, security);
 	// 		// TODO: repack response
 	// 		res.end(JSON.stringify(subscribers, null, "\t") + "\n");
 	// 	} catch (e) {
@@ -120,15 +120,15 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 			topicDomain
 	// 		};
 
-	// 		const webhookData: Subscriber.Webhook & SubscriberSecurity = {
-	// 			kind: Subscriber.Kind.Webhook,
+	// 		const webhookData: Egress.Webhook & SubscriberSecurity = {
+	// 			kind: Egress.Kind.Webhook,
 	// 			subscriberSecurity: { kind, token },
 	// 			url: new URL(reqUrl),
 	// 			trustedCaCertificate: trustedCA,
 	// 			headerToken
 	// 		};
 
-	// 		const webhook: Subscriber<Subscriber.Webhook> = await this._api
+	// 		const webhook: Egress<Egress.Webhook> = await this._api
 	// 			.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
 
 	// 		return res
@@ -136,7 +136,7 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 			.header("Content-Type", "application/json")
 	// 			.end(Buffer.from(JSON.stringify({
 	// 				kind: "webhook",
-	// 				subscriberId: webhook.subscriberId,
+	// 				egressId: webhook.egressId,
 	// 				topic: webhook.topicName,
 	// 				url: webhook.url,
 	// 				trustedCA: webhook.trustedCaCertificate,
@@ -168,8 +168,8 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 			topicName: reqTopic,
 	// 			topicDomain: null
 	// 		};
-	// 		const webhookData: Subscriber.Webhook & SubscriberSecurity = {
-	// 			kind: Subscriber.Kind.Webhook,
+	// 		const webhookData: Egress.Webhook & SubscriberSecurity = {
+	// 			kind: Egress.Kind.Webhook,
 	// 			subscriberSecurity: {
 	// 				kind: subscriberSecurityKind,
 	// 				token: subscriberSecurityToken
@@ -179,14 +179,14 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 			headerToken
 	// 		};
 
-	// 		const webhook: Subscriber<Subscriber.Webhook> = await this._api
+	// 		const webhook: Egress<Egress.Webhook> = await this._api
 	// 			.subscribeWebhook(DUMMY_CANCELLATION_TOKEN, topicData, webhookData);
 
 	// 		return res
 	// 			.status(201)
 	// 			.header("Content-Type", "application/json")
 	// 			.end(Buffer.from(JSON.stringify({
-	// 				webhookId: webhook.subscriberId,
+	// 				webhookId: webhook.egressId,
 	// 				url: webhook.url,
 	// 				topicName: webhook.topicName
 	// 			}), "utf-8"));

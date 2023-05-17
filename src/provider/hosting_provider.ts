@@ -6,6 +6,7 @@ import * as express from "express";
 import * as _ from "lodash";
 
 import { SettingsProvider } from "./settings_provider";
+import { ProviderLocator } from "../provider_locator";
 
 @Singleton
 export abstract class HostingProvider extends FInitableBase {
@@ -42,7 +43,7 @@ class HostingProviderImpl extends HostingProvider {
 
 		this.log.info(FExecutionContext.Empty, "Constructing Web servers...");
 
-		this._configProvider = Container.get(SettingsProvider);
+		this._configProvider = ProviderLocator.default.get(SettingsProvider);
 
 		this._serverInstances = this._configProvider.servers.map((serverOpts) => {
 			if (hosting.instanceofWebServer(serverOpts)) {

@@ -2,39 +2,41 @@ import { FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@f
 
 import { Message } from "../model/message";
 import { Topic } from "../model/topic";
-import { Subscriber } from "../model/subscriber";
 
 import { MessageBus } from "./message_bus";
 import { MessageBusLocalChannelParallel } from "./message_bus_local_parallel";
 import { MessageBusLocalChannelSequence } from "./message_bus_local_sequence";
+import { MessageBusBase } from "./message_bus_base";
+import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { DatabaseFactory } from "../data/database_factory";
 
-export class MessageBusLocal extends FInitableBase implements MessageBus {
-	private readonly _messageQueues: Map<Topic["topicName"], Map<Subscriber["subscriberId"], Array<Message>>>;
-	private readonly _channels: Map<Subscriber["subscriberId"], Set<MessageBusLocalChannel>>;
+export class MessageBusLocal extends MessageBusBase implements MessageBus {
+	private readonly _messageQueues: Map<Topic["topicName"], Map<EgressApiIdentifier, Array<Message>>>;
+	private readonly _channels: Map<string, Set<MessageBusLocalChannel>>;
 	private _opts: MessageBusLocal.Opts;
 
-	public constructor(opts: MessageBusLocal.Opts) {
-		super();
+	public constructor(storage: DatabaseFactory, opts: MessageBusLocal.Opts) {
+		super(storage);
 		this._messageQueues = new Map();
 		this._channels = new Map();
 		this._opts = opts;
 	}
 
-	public async publish(
-		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message
+	protected async onPublish(
+		executionContext: FExecutionContext, ingressId: IngressApiIdentifier, topicName: Topic["topicName"], message: Message
 	): Promise<void> {
 		const messageId = message.messageId;
 
-		let topicQueuesMap: Map<Subscriber["subscriberId"], Array<Message>> | undefined = this._messageQueues.get(topicName);
+		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topicName);
 		if (topicQueuesMap === undefined) {
 			topicQueuesMap = new Map();
 			this._messageQueues.set(topicName, topicQueuesMap);
 		}
 
-		for (const [subscriberId, queue] of topicQueuesMap) {
-			console.log(`Forward message '${messageId}' to subscriber ${subscriberId}`);
+		for (const [egressId, queue] of topicQueuesMap) {
+			console.log(`Forward message '${messageId}' to subscriber ${egressId}`);
 			queue.push(message);
-			const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
+			const channelId: string = MessageBusLocal._makeChannelId(topicName, egressId);
 			const channels: Set<MessageBusLocalChannel> | undefined = this._channels.get(channelId);
 			if (channels !== undefined) {
 				if (channels.size === 1) {
@@ -53,25 +55,28 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 		}
 	}
 
-	public async retainChannel(
-		executionContext: FExecutionContext, topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]
+	protected async onRetainChannel(
+		executionContext: FExecutionContext,
+		topicId: TopicApiIdentifier,
+		topicName: Topic["topicName"],
+		egressId: EgressApiIdentifier
 	): Promise<MessageBus.Channel> {
-		const channelId: string = MessageBusLocal._makeChannelId(topicName, subscriberId);
+		const channelId: string = MessageBusLocal._makeChannelId(topicName, egressId);
 
 		if (!this._channels.has(channelId)) {
 			this._channels.set(channelId, new Set());
 		}
 
-		let topicQueuesMap: Map<Subscriber["subscriberId"], Array<Message>> | undefined = this._messageQueues.get(topicName);
+		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topicName);
 		if (topicQueuesMap === undefined) {
 			topicQueuesMap = new Map();
 			this._messageQueues.set(topicName, topicQueuesMap);
 		}
 
-		let queue = topicQueuesMap.get(subscriberId);
+		let queue = topicQueuesMap.get(egressId);
 		if (queue === undefined) {
 			queue = [];
-			topicQueuesMap.set(subscriberId, queue);
+			topicQueuesMap.set(egressId, queue);
 		}
 
 		let channel: MessageBusLocalChannel;
@@ -81,10 +86,10 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 
 		switch (this._opts.deliveryPolicy.type) {
 			case MessageBus.DeliveryPolicy.Type.SEQUENCE:
-				channel = new MessageBusLocalChannelSequence(topicName, subscriberId, queue, channelDisposer);
+				channel = new MessageBusLocalChannelSequence(topicName, egressId, queue, channelDisposer);
 				break;
 			case MessageBus.DeliveryPolicy.Type.PARALLEL:
-				channel = new MessageBusLocalChannelParallel(topicName, subscriberId, queue, channelDisposer);
+				channel = new MessageBusLocalChannelParallel(topicName, egressId, queue, channelDisposer);
 				break;
 			default:
 				throw new FExceptionInvalidOperation("Unexpected channel type.");
@@ -103,8 +108,8 @@ export class MessageBusLocal extends FInitableBase implements MessageBus {
 		// TODO
 	}
 
-	private static _makeChannelId(topicName: Topic["topicName"], subscriberId: Subscriber["subscriberId"]): string {
-		const channelId: string = `${subscriberId}.${topicName}`;
+	private static _makeChannelId(topicName: Topic["topicName"], egressId: EgressApiIdentifier): string {
+		const channelId: string = `${egressId.uuid}.${topicName}`;
 		return channelId;
 	}
 }

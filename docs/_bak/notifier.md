@@ -14,22 +14,22 @@ sequenceDiagram
 	participant Subscriber1
 	participant Subscriber2
 	participant `EdgeBus`
-	participant Publisher
+	participant Ingress
 	opt Event A happend
-		Publisher->>`EdgeBus`: Message A for "my" topic
+		Ingress->>`EdgeBus`: Message A for "my" topic
 		`EdgeBus`->>`EdgeBus`: Skip, just audit
 	end
 	Subscriber2->>+`EdgeBus`: Subscribe "my" topic
 	`EdgeBus`-->>-Subscriber2: OK
 	opt Event B happend
-		Publisher->>`EdgeBus`: Message B for "my" topic
+		Ingress->>`EdgeBus`: Message B for "my" topic
 		`EdgeBus`->>+Subscriber2: Message B for "my" topic
 		Subscriber2-->>-`EdgeBus`: OK
 	end
 	Subscriber1->>+`EdgeBus`: Subscribe "my" topic
 	`EdgeBus`-->>-Subscriber1: OK
 	opt Event C happend
-		Publisher->>`EdgeBus`: Message C for "my" topic
+		Ingress->>`EdgeBus`: Message C for "my" topic
 		`EdgeBus`->>+Subscriber2: Message C for "my" topic
 		Subscriber2-->>-`EdgeBus`: OK
 		`EdgeBus`->>+Subscriber1: Message C for "my" topic
@@ -38,7 +38,7 @@ sequenceDiagram
 	Subscriber1->>+`EdgeBus`: UNsubscribe "my" topic
 	`EdgeBus`-->>-Subscriber1: OK
 	opt Event D happend
-		Publisher->>`EdgeBus`: Message D for "my" topic
+		Ingress->>`EdgeBus`: Message D for "my" topic
 		`EdgeBus`->>+Subscriber2: Message D for "my" topic
 		Subscriber2-->>-`EdgeBus`: OK
 	end
@@ -72,7 +72,7 @@ Using Protocol Buffers for message serialization. See definition .proto file for
 `EdgeBus` provides Signing and Encrypt methods to verify that the request is legitimate.
 
 #### Signing message
-Message signature provides by a `Publisher` service. `EdgeBus` does not modify provided signature, just deliver it along with message. See for details in events documentation.
+Message signature provides by a `Ingress` service. `EdgeBus` does not modify provided signature, just deliver it along with message. See for details in events documentation.
 
 #### Encrypt message (Optional)
 Optionally (along with signing), you may setup(via Management API) an `encrypt password`, messages will be encrypted.

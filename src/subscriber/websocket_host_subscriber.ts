@@ -4,8 +4,9 @@ import { FWebServer } from "@freemework/hosting";
 import { WebSocketHostSubscriberEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
 import { MessageBus } from "../messaging/message_bus";
 import { Message } from "../model/message";
-import { Subscriber } from "../model/subscriber";
+import { Egress } from "../model/egress";
 import { Topic } from "../model/topic";
+import { EgressApiIdentifier } from "../misc/api-identifier";
 
 export class WebSocketHostSubscriber extends FInitableBase {
 
@@ -21,19 +22,7 @@ export class WebSocketHostSubscriber extends FInitableBase {
 		while (baseBindPath.length > 0 && baseBindPath.endsWith("/")) {
 			baseBindPath = baseBindPath.slice(0, -1);
 		}
-
-		const [prefix, kind, id] = opts.subscriberId.split(".");
-
-		if (prefix !== "subscriber") {
-			throw new FExceptionArgument(`Wrong subscriberId prefix: '${prefix}'. Expected: 'subscriber'`, "opts.subscriberId");
-		}
-		if (kind !== "websocket_host") {
-			throw new FExceptionArgument(`Wrong subscriberId kind: '${kind}'. Expected: 'websocket_host'`, "opts.subscriberId");
-		}
-
-		// TODO validate "id" for UUID
-
-		const bindPath = `${baseBindPath}/websocket_host/${id}`;
+		const bindPath = `${baseBindPath}/websocket_host/${opts.egressId.value}`;
 
 		this._log.debug(FExecutionContext.Empty, `Construct ${WebSocketHostSubscriber.name} with bind path '${bindPath}'.`);
 
@@ -58,7 +47,7 @@ export class WebSocketHostSubscriber extends FInitableBase {
 
 export namespace WebSocketHostSubscriber {
 	export interface Opts {
-		readonly subscriberId: Subscriber["subscriberId"];
+		readonly egressId: EgressApiIdentifier;
 		readonly bindServers: ReadonlyArray<FWebServer>;
 		readonly baseBindPath: string;
 		readonly channelFactories: ReadonlyArray<MessageBus.ChannelFactory>;

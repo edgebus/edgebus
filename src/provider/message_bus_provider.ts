@@ -10,6 +10,10 @@ import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 
 import { SettingsProvider } from "./settings_provider";
+import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { DatabaseFactory } from "../data/database_factory";
+import { StorageProvider } from "./storage_provider";
+import { ProviderLocator } from "../provider_locator";
 
 export abstract class MessageBusProvider extends FInitableBase implements MessageBus {
 	protected readonly log: FLogger;
@@ -23,13 +27,19 @@ export abstract class MessageBusProvider extends FInitableBase implements Messag
 	}
 
 	public publish(
-		executionContext: FExecutionContext, topicName: Topic["topicName"], message: Message
+		executionContext: FExecutionContext,
+		ingressId: IngressApiIdentifier,
+		message: Message
 	): Promise<void> {
-		return this.messageBus.publish(executionContext, topicName, message);
+		return this.messageBus.publish(executionContext, ingressId, message);
 	}
 
-	public retainChannel(executionContext: FExecutionContext, topicName: string, subscriberId: string): Promise<MessageBus.Channel> {
-		return this.messageBus.retainChannel(executionContext, topicName, subscriberId);
+	public retainChannel(
+		executionContext: FExecutionContext,
+		topicId: TopicApiIdentifier,
+		egressId: EgressApiIdentifier
+	): Promise<MessageBus.Channel> {
+		return this.messageBus.retainChannel(executionContext, topicId, egressId);
 	}
 
 	protected abstract get messageBus(): MessageBus;
@@ -37,27 +47,29 @@ export abstract class MessageBusProvider extends FInitableBase implements Messag
 
 @Provides(MessageBusProvider)
 class MessageBusProviderImpl extends MessageBusProvider {
-	// Do not use Inject inside providers to prevents circular dependency
-	private readonly _configProvider: SettingsProvider;
-
 	private readonly _messageBus: MessageBusLocal;
 
 	public constructor() {
 		super();
 
-		this._configProvider = Container.get(SettingsProvider);
+		const configProvider: SettingsProvider = ProviderLocator.default.get(SettingsProvider);
+		const storageProvider: StorageProvider = ProviderLocator.default.get(StorageProvider);
+
+		const storage: DatabaseFactory = storageProvider.databaseFactory;
 
 		//const rabbitUrl: URL = this.configProvider.rabbit.url;
 		//const rabbitSsl: Settings.SSL = this.configProvider.rabbit.ssl;
 
-		this._messageBus = new MessageBusLocal({
-			// url: rabbitUrl,
-			// ssl: rabbitSsl,
-			deliveryPolicy: {
-				type: MessageBus.DeliveryPolicy.Type.SEQUENCE,
-				retryOpts: "TBD"
-			}
-		});
+		this._messageBus = new MessageBusLocal(
+			storage,
+			{
+				// url: rabbitUrl,
+				// ssl: rabbitSsl,
+				deliveryPolicy: {
+					type: MessageBus.DeliveryPolicy.Type.SEQUENCE,
+					retryOpts: "TBD"
+				}
+			});
 	}
 
 	protected get messageBus() { return this._messageBus; }

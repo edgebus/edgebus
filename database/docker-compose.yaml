@@ -1,21 +1,20 @@
+#
+# docker-compose --file database/docker-compose.yaml up
+#
+
 version: '3.9'
 networks:
   default:
     name: "edgebus-local-tier"
 
-volumes:
-  postgres-data:
-
 services:
   postgres:
     container_name: postgres
     hostname: postgres
-    image: zxteamorg/devel.postgres-13:20210703
+    image: theanurin/devel.postgres-13:13.11.1
     restart: always
     networks:
       - default
-    volumes:
-      - postgres-data:/var/lib/posgresql/data
     ports:
       - "127.0.0.1:5432:5432"
 
@@ -26,7 +25,7 @@ services:
     networks:
       - default
     hostname: pgadmin4
-    image: dpage/pgadmin4:6.20
+    image: dpage/pgadmin4:7.3
     restart: always
     environment:
       - PGADMIN_DEFAULT_EMAIL=dev@edgebus.io

@@ -74,7 +74,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 			const topicDescription = ensure.string(req.body.description, "Create topic, 'description' should be a string");
 			const topicMediaType = ensure.string(req.body.mediaType, "Create topic, 'mediaType' should be a string");
 
-			const topicData: Topic.Id & Topic.Data = {
+			const topicData: Topic.Name & Topic.Data = {
 				topicDomain,
 				topicName,
 				topicDescription,
@@ -90,8 +90,8 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 					name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,
 					mediaType: topic.topicMediaType,
 					description: topic.topicDescription,
-					createAt: topic.createAt.toISOString(),
-					deleteAt: topic.deleteAt !== null ? topic.deleteAt.toISOString() : null
+					createAt: topic.topicCreatedAt.toISOString(),
+					deleteAt: topic.topicDeletedAt !== null ? topic.topicDeletedAt.toISOString() : null
 				}), "utf-8"));
 			return;
 		} catch (error) {
@@ -111,8 +111,8 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 				name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,
 				mediaType: topic.topicMediaType,
 				description: topic.topicDescription,
-				createAt: topic.createAt.toISOString(),
-				deleteAt: topic.deleteAt !== null ? topic.deleteAt.toISOString() : null
+				createAt: topic.topicCreatedAt.toISOString(),
+				deleteAt: topic.topicDeletedAt !== null ? topic.topicDeletedAt.toISOString() : null
 			}));
 
 			res.status(200).end(JSON.stringify(responseData), "utf-8");

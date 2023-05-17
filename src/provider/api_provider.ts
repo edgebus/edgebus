@@ -1,6 +1,6 @@
 import { FDisposable, FInitable, FInitableBase, FLogger } from "@freemework/common";
 
-import { Container, Provides, Singleton } from "typescript-ioc";
+import { Provides, Singleton } from "typescript-ioc";
 
 // APIs
 import { ManagementApi } from "../api/management_api";
@@ -9,6 +9,7 @@ import { SubscriberApi } from "../api/subscriber_api";
 
 import { MessageBusProvider } from "./message_bus_provider";
 import { StorageProvider } from "./storage_provider";
+import { ProviderLocator } from "../provider_locator";
 
 @Singleton
 export abstract class ApiProvider extends FInitableBase {
@@ -30,17 +31,15 @@ class ApiProviderImpl extends ApiProvider {
 	public constructor() {
 		super();
 
-		this._storageProvider = Container.get(StorageProvider);
-		this._messageBusProvider = Container.get(MessageBusProvider);
-
-		const logger = FLogger.create(this.constructor.name);
+		this._storageProvider = ProviderLocator.default.get(StorageProvider);
+		this._messageBusProvider = ProviderLocator.default.get(MessageBusProvider);
 
 		this._managementApi
-			= new ManagementApi(this._storageProvider.persistentStorage, FLogger.create("ManagementApi"));
+			= new ManagementApi(this._storageProvider.databaseFactory);
 		this._publisherApi
-			= new PublisherApi(this._storageProvider.persistentStorage, this._messageBusProvider, FLogger.create("PublisherApi"));
+			= new PublisherApi(this._storageProvider.databaseFactory, this._messageBusProvider, FLogger.create("PublisherApi"));
 		this._subscriberApi
-			= new SubscriberApi(this._storageProvider.persistentStorage, FLogger.create("SubscriberApi"));
+			= new SubscriberApi(this._storageProvider.databaseFactory, FLogger.create("SubscriberApi"));
 	}
 
 	public get managementApi() { return this._managementApi; }

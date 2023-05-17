@@ -1,23 +1,23 @@
 import {  FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
 // Models
-import { Publisher } from "../model/publisher";
+import { Ingress } from "../model/ingress";
 import { Security } from "../model/security";
 import { Topic } from "../model/topic";
 
 import { MessageBusProvider } from "../provider/message_bus_provider";
 
-import { PersistentStorage } from "../data/persistent_storage";
+import { DatabaseFactory } from "../data/database_factory";
 
 /**
- * Publisher API allows to send messages to the topics
+ * Ingress API allows to send messages to the topics
  */
 export class PublisherApi extends FInitableBase {
-	private readonly _storage: PersistentStorage;
+	private readonly _storage: DatabaseFactory;
 	private readonly _messageBusProvider: MessageBusProvider;
 	private readonly _log: FLogger;
 
-	public constructor(storage: PersistentStorage, messageBusProvider: MessageBusProvider, log: FLogger) {
+	public constructor(storage: DatabaseFactory, messageBusProvider: MessageBusProvider, log: FLogger) {
 		super();
 		this._storage = storage;
 		this._messageBusProvider = messageBusProvider;
@@ -26,20 +26,20 @@ export class PublisherApi extends FInitableBase {
 
 	public async createHttpPublisher(
 		executionContext: FExecutionContext, topic: Topic.Id & { readonly publisherSecurity: Security }
-	): Promise<Publisher.Id> {
+	): Promise<Ingress.Id> {
 
 		// try {
-		// 	const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, publisher.topicName);
+		// 	const topicRecord: Topic = await this._storage.getTopicByName(cancellationToken, ingress.topicName);
 
 		// 	const publisherSecurityKind = topicRecord.publisherSecurity.kind;
 		// 	const publisherSecurityToken = topicRecord.publisherSecurity.token;
 
-		// 	if (publisher.publisherSecurity.kind !== publisherSecurityKind
-		// 		|| publisher.publisherSecurity.token !== publisherSecurityToken) {
-		// 		throw new UnknownApiError(`Wrong Publisher Security Kind or Publisher Security Token`);
+		// 	if (ingress.publisherSecurity.kind !== publisherSecurityKind
+		// 		|| ingress.publisherSecurity.token !== publisherSecurityToken) {
+		// 		throw new UnknownApiError(`Wrong Ingress Security Kind or Ingress Security Token`);
 		// 	}
 
-		// 	const publisherModel: Publisher = await this._storage.addPublisherHttp(cancellationToken, publisher);
+		// 	const publisherModel: Ingress = await this._storage.addPublisherHttp(cancellationToken, ingress);
 
 		// 	return publisherModel;
 		// } catch (e) {
@@ -51,7 +51,7 @@ export class PublisherApi extends FInitableBase {
 	}
 
 	public async destroyPublisher(
-		executionContext: FExecutionContext, publisher: Publisher.Id & { readonly publisherSecurity: Security }
+		executionContext: FExecutionContext, ingress: Ingress.Id & { readonly publisherSecurity: Security }
 	): Promise<void> {
 
 		// >>>>
@@ -60,7 +60,7 @@ export class PublisherApi extends FInitableBase {
 		// 		"kind": "TOKEN",
 		// 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 		// 	},
-		// 	"publisherId": "publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5"
+		// 	"ingressId": "ingress.http.641f97ec-31d0-418b-a594-0e9aa3a356a5"
 		// }
 
 		// <<<<

@@ -2,21 +2,21 @@ import { FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger }
 
 // Models
 import { Topic } from "../model/topic";
-import { Subscriber } from "../model/subscriber";
+import { Egress } from "../model/egress";
 import { Security } from "../model/security";
 
-import { PersistentStorage } from "../data/persistent_storage";
+import { DatabaseFactory } from "../data/database_factory";
 
 import { UnknownApiError, apiHandledException } from "./errors";
 
 /**
- * Subscriber API allows subscribe/unsubscribe for events via webhooks and other subscriber's type
+ * Egress API allows subscribe/unsubscribe for events via webhooks and other subscriber's type
  */
 export class SubscriberApi extends FInitableBase {
 	private readonly _log: FLogger;
-	private readonly _storage: PersistentStorage;
+	private readonly _storage: DatabaseFactory;
 
-	constructor(_storage: PersistentStorage, log: FLogger) {
+	constructor(_storage: DatabaseFactory, log: FLogger) {
 		super();
 		this._storage = _storage;
 		this._log = log;
@@ -25,11 +25,11 @@ export class SubscriberApi extends FInitableBase {
 	public async list(
 		executionContext: FExecutionContext,
 		subscriberSecurity: Security
-	): Promise<Array<Subscriber>> {
+	): Promise<Array<Egress>> {
 		this._log.debug(executionContext, `Run subscriberWebhook with subscriberSecurity: ${subscriberSecurity}`);
 
 		// try {
-		// 	const webhooks: Array<Subscriber> = await this._storage
+		// 	const webhooks: Array<Egress> = await this._storage
 		// 		.getAvailableWebhooks(cancellationToken, subscriberSecurity);
 
 		// 	return webhooks;
@@ -50,8 +50,8 @@ export class SubscriberApi extends FInitableBase {
 	 */
 	public async subscribeWebhook(
 		executionContext: FExecutionContext, topicId: Topic.Id,
-		topicSubscriberSecurity: Security, webhookData: Subscriber.Webhook
-	): Promise<Subscriber<Subscriber.Webhook>> {
+		topicSubscriberSecurity: Security, webhookData: Egress.Webhook
+	): Promise<Egress> {
 
 		this._log.debug(executionContext, `Run subscriberWebhook with topic: ${topicId} and webhookData ${webhookData}`);
 		throw new FExceptionInvalidOperation("Not implemented yet");
@@ -64,10 +64,10 @@ export class SubscriberApi extends FInitableBase {
 
 		// 	if (topicSubscriberSecurity.kind !== subscriberSecurityKind
 		// 		|| topicSubscriberSecurity.token !== subscriberSecurityToken) {
-		// 		throw new UnknownApiError(`Wrong Subscriber Security Kind or Subscriber Security Token`);
+		// 		throw new UnknownApiError(`Wrong Egress Security Kind or Egress Security Token`);
 		// 	}
 
-		// 	const webhookId: Subscriber<Subscriber.Webhook> = await this._storage
+		// 	const webhookId: Egress<Egress.Webhook> = await this._storage
 		// 		.addSubscriberWebhook(cancellationToken, topicId.topicName, webhookData);
 
 		// 	return webhookId;
@@ -84,13 +84,13 @@ export class SubscriberApi extends FInitableBase {
 	 * @returns Deleted date
 	 */
 	public async unsubscribe(
-		executionContext: FExecutionContext, subscriber: Subscriber.Id
+		executionContext: FExecutionContext, subscriber: Egress.Id
 	): Promise<Date> {
 		throw new FExceptionInvalidOperation("Not implemented yet");
 		//this._log.debug(`Run subscriberWebhook with webhook: ${webhook}`);
 
 		// try {
-		// 	//const topic: Topic = await this._storage.getTopicByWebhookId(cancellationToken, webhook.subscriberId);
+		// 	//const topic: Topic = await this._storage.getTopicByWebhookId(cancellationToken, webhook.egressId);
 
 		// } catch (e) {
 		// 	this._log.error(`unsubscribeWebhook Error: ${e.message}`);

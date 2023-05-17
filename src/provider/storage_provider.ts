@@ -4,8 +4,10 @@ import { Container, Provides, Singleton } from "typescript-ioc";
 import * as _ from "lodash";
 
 import { SettingsProvider } from "./settings_provider";
-import { PersistentStorage } from "../data/persistent_storage";
-import { PostgresPersistentStorage } from "../data/postgres_persistent_storage";
+import { Database } from "../data/database";
+import { DatabaseFactory } from "../data/database_factory";
+import { PostgresDatabaseFactory } from "../data/postgres/postgres_database_factory";
+import { ProviderLocator } from "../provider_locator";
 
 @Singleton
 export abstract class StorageProvider extends FInitableBase {
@@ -20,7 +22,7 @@ export abstract class StorageProvider extends FInitableBase {
 	}
 
 	// public abstract get cacheStorage(): any;
-	public abstract get persistentStorage(): PersistentStorage;
+	public abstract get databaseFactory(): DatabaseFactory;
 }
 
 @Provides(StorageProvider)
@@ -29,27 +31,27 @@ class StorageProviderImpl extends StorageProvider {
 	private readonly _configProvider: SettingsProvider;
 
 	// private readonly _cacheStorage: StorageProvider["cacheStorage"];
-	private readonly _persistentStorage: PersistentStorage;
+	private readonly _databaseFactory: PostgresDatabaseFactory;
 
 	public constructor() {
 		super();
 
-		this._configProvider = Container.get(SettingsProvider);
+		this._configProvider = ProviderLocator.default.get(SettingsProvider);
 
 		// this._cacheStorage = null; //RedisCacheStorage(this.configProvider.cacheStorageURL, this.log);
-		this._persistentStorage = new PostgresPersistentStorage(this._configProvider.persistentStorageURL, this.log);
+		this._databaseFactory = new PostgresDatabaseFactory(this._configProvider.persistentStorageURL);
 	}
 
 	// public get cacheStorage() { return this._cacheStorage; }
-	public get persistentStorage() { return this._persistentStorage; }
+	public get databaseFactory(): DatabaseFactory { return this._databaseFactory; }
 
 	protected async onInit() {
 		// await this._cacheStorage.init(cancellationToken);
-		await this._persistentStorage.init(this.initExecutionContext);
+		await this._databaseFactory.init(this.initExecutionContext);
 	}
 
 	protected async onDispose() {
 		// await this._cacheStorage.dispose();
-		await this._persistentStorage.dispose();
+		await this._databaseFactory.dispose();
 	}
 }

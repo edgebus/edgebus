@@ -11,14 +11,14 @@
 	},
 	"tasks": [
 		{
+			"label": "build",
+			"group": "build",
 			"type": "npm",
 			"script": "build",
-			"group": "build",
 			"problemMatcher": {
 				"base": "$tsc",
 				"fileLocation": "relative"
 			},
-			"label": "build",
 			"detail": "tsc"
 		},
 		{

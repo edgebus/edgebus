@@ -19,7 +19,7 @@
 		"typescript": "^4.9.5"
 	},
 	"dependencies": {
-		"@freemework/common": "^0.9.5",
+		"@freemework/common": "^0.9.7",
 		"@freemework/hosting": "^0.9.0",
 		"@freemework/sql.postgres": "^0.9.1",
 		"lodash": "^4.17.21",

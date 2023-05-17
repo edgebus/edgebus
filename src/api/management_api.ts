@@ -1,72 +1,117 @@
 import { FException, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
-import * as crypto from "crypto";
-
 // Models
 import { Topic } from "../model/topic";
-// import { Security } from "../model/security";
-// import { Publisher } from "../model/publisher";
-// import { Subscriber } from "../model/subscriber";
 
-import { TOKEN_BYTES_LEN } from "../constants";
-import { PersistentStorage } from "../data/persistent_storage";
-import { apiHandledException, WrongArgumentApiError } from "./errors";
-import { Security } from "../model/security";
+import { DatabaseFactory } from "../data/database_factory";
+import { apiHandledException } from "./errors";
+import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { Database } from "../data/database";
+import { Ingress } from "../model/ingress";
+import { Egress } from "../model/egress";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
  */
 export class ManagementApi extends FInitableBase {
-	private readonly _storage: PersistentStorage;
-	private readonly _log: FLogger;
-
-	constructor(storage: PersistentStorage, log: FLogger) {
+	public constructor(dbFactory: DatabaseFactory) {
 		super();
-		this._storage = storage;
-		this._log = log;
+		this._dbFactory = dbFactory;
+		this._log = FLogger.create(ManagementApi.name);
+		this.__db = null;
+	}
+
+	public async createEgress(
+		executionContext: FExecutionContext, ingressData: Partial<Egress.Id> & Egress.Data
+	): Promise<Egress> {
+		this.verifyInitializedAndNotDisposed();
+
+		const fullEgressData: Egress.Id & Egress.Data = {
+			...ingressData,
+			egressId: ingressData.egressId ?? new EgressApiIdentifier(),
+		};
+
+		const egress: Egress = await this._db.createEgress(
+			executionContext,
+			fullEgressData
+		);
+
+		this._log.trace(executionContext, () => `Exit createEgress with data: ${JSON.stringify(egress)}`);
+		return egress;
+	}
+
+
+	public async createIngress(
+		executionContext: FExecutionContext, ingressData: Partial<Ingress.Id> & Ingress.Data
+	): Promise<Ingress> {
+		this.verifyInitializedAndNotDisposed();
+
+		const fullIngressData: Ingress.Id & Ingress.Data = {
+			...ingressData,
+			ingressId: ingressData.ingressId ?? new IngressApiIdentifier(),
+		};
+
+		const ingress: Ingress = await this._db.createIngress(
+			executionContext,
+			fullIngressData
+		);
+
+		this._log.trace(executionContext, () => `Exit createIngress with data: ${JSON.stringify(ingress)}`);
+		return ingress;
 	}
 
 	public async createTopic(
-		executionContext: FExecutionContext, topicData: Topic.Id & Topic.Data
+		executionContext: FExecutionContext, topicData: Partial<Topic.Id> & Topic.Data
 	): Promise<Topic> {
-		if (this._log.isDebugEnabled) { this._log.debug(executionContext, `Enter createTopic with topicData: ${JSON.stringify(topicData)}`); }
+		this.verifyInitializedAndNotDisposed();
 
-		try {
-			const fullTopicData: Topic.Id & Topic.Data = {
-				topicName: topicData.topicName,
-				topicDomain: topicData.topicDomain,
-				topicDescription: topicData.topicDescription,
-				topicMediaType: topicData.topicMediaType
-			};
+		const fullTopicData: Topic.Id & Topic.Data = {
+			topicId: topicData.topicId ?? new TopicApiIdentifier(),
+			topicName: topicData.topicName,
+			topicDomain: topicData.topicDomain,
+			topicDescription: topicData.topicDescription,
+			topicMediaType: topicData.topicMediaType
+		};
 
-			const topic: Topic = await this._storage.createTopic(
-				executionContext,
-				{
-					kind: "TOKEN",
-					token: crypto.randomBytes(TOKEN_BYTES_LEN).toString("hex")
-				},
-				fullTopicData
-			);
+		const topic: Topic = await this._db.createTopic(
+			executionContext,
+			fullTopicData
+		);
 
-			if (this._log.isDebugEnabled) { this._log.debug(executionContext, `Exit createTopic with topic: ${JSON.stringify(topic)}`); }
-			return topic;
-		} catch (e) {
-			if (this._log.isErrorEnabled || this._log.isTraceEnabled) {
-				const err: FException = FException.wrapIfNeeded(e);
-				if (this._log.isErrorEnabled) { this._log.error(executionContext, `Failure createTopic: ${err.message}`); }
-				this._log.trace(executionContext, "Failure createTopic", err);
-			}
-			throw apiHandledException(e);
-		}
+		this._log.debug(executionContext, () => `Exit createTopic with data: ${JSON.stringify(topic)}`);
+		return topic;
+	}
+
+	public async findEgress(executionContext: FExecutionContext, egressId: EgressApiIdentifier): Promise<Egress | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const egress = await this._db.findEgress(executionContext, { egressId });
+
+		return egress;
+	}
+
+	public async findIngress(executionContext: FExecutionContext, ingressId: IngressApiIdentifier): Promise<Ingress | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const ingress = await this._db.findIngress(executionContext, { ingressId });
+
+		return ingress;
+	}
+
+	public async findTopic(executionContext: FExecutionContext, topicId: TopicApiIdentifier): Promise<Topic | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const topic = await this._db.findTopic(executionContext, { topicId });
+
+		return topic;
 	}
 
 	public async listTopics(
 		executionContext: FExecutionContext, domain: string | null
 	): Promise<Array<Topic>> {
-		const topics: Array<Topic> = await this._storage.listTopics(
-			executionContext, domain
-		);
+		this.verifyInitializedAndNotDisposed();
 
+		const topics: Array<Topic> = await this._db.listTopics(executionContext, domain);
 		return topics;
 	}
 
@@ -96,10 +141,26 @@ export class ManagementApi extends FInitableBase {
 	// 	}
 	// }
 
+	public async persist(executionContext: FExecutionContext): Promise<void> {
+		this.verifyInitializedAndNotDisposed();
+
+		await this.__db!.transactionCommit(executionContext);
+	}
+
 	protected async onInit() {
-		// nop
+		this.__db = await this._dbFactory.create(this.initExecutionContext);
 	}
 	protected async onDispose() {
-		// nop
+		this.__db!.transactionRollback(this.initExecutionContext);
+		this.__db!.dispose();
 	}
+
+	private get _db(): Database {
+		this.verifyInitializedAndNotDisposed();
+		return this.__db!;
+	}
+
+	private readonly _dbFactory: DatabaseFactory;
+	private __db: Database | null;
+	private readonly _log: FLogger;
 }

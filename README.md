@@ -37,22 +37,22 @@ sequenceDiagram
 	participant Subscriber1
 	participant Subscriber2
 	participant `EdgeBus`
-	participant Publisher
+	participant Ingress
 	opt Event A happend
-		Publisher->>`EdgeBus`: Message A for "my" topic
+		Ingress->>`EdgeBus`: Message A for "my" topic
 		`EdgeBus`->>`EdgeBus`: Skip, just audit
 	end
 	Subscriber2->>+`EdgeBus`: Subscribe "my" topic
 	`EdgeBus`-->>-Subscriber2: OK
 	opt Event B happend
-		Publisher->>`EdgeBus`: Message B for "my" topic
+		Ingress->>`EdgeBus`: Message B for "my" topic
 		`EdgeBus`->>+Subscriber2: Message B for "my" topic
 		Subscriber2-->>-`EdgeBus`: OK
 	end
 	Subscriber1->>+`EdgeBus`: Subscribe "my" topic
 	`EdgeBus`-->>-Subscriber1: OK
 	opt Event C happend
-		Publisher->>`EdgeBus`: Message C for "my" topic
+		Ingress->>`EdgeBus`: Message C for "my" topic
 		`EdgeBus`->>+Subscriber2: Message C for "my" topic
 		Subscriber2-->>-`EdgeBus`: OK
 		`EdgeBus`->>+Subscriber1: Message C for "my" topic
@@ -61,7 +61,7 @@ sequenceDiagram
 	Subscriber1->>+`EdgeBus`: UNsubscribe "my" topic
 	`EdgeBus`-->>-Subscriber1: OK
 	opt Event D happend
-		Publisher->>`EdgeBus`: Message D for "my" topic
+		Ingress->>`EdgeBus`: Message D for "my" topic
 		`EdgeBus`->>+Subscriber2: Message D for "my" topic
 		Subscriber2-->>-`EdgeBus`: OK
 	end
@@ -92,7 +92,7 @@ Using JSON-RPC in notification manner
 Using Protocol Buffers for message serialization. See definition .proto file for details.
 
 ### Message security
-`EdgeBus` does tranfer messages as-is. There is `Publisher`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
+`EdgeBus` does tranfer messages as-is. There is `Ingress`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
 
 However implementation of **subscribers** may provide additional security. For example Webhook provides a token header and SSL validation. See a subscriber documentation for details.
 
@@ -100,32 +100,32 @@ However implementation of **subscribers** may provide additional security. For e
 ```mermaid
 sequenceDiagram
 	participant Admin
-	participant Publisher
+	participant Ingress
 	participant EdgeBus
-	participant Subscriber
+	participant Egress
 	opt Setup topic
 		Admin->>EdgeBus: Create topic "my-topic"
 		EdgeBus-->>Admin: Create topic "my-topic"
 	end
 	opt Security
-		Admin->>Subscriber: Subscribe Token: XXXX
-		Subscriber-->>Admin: Thanks
+		Admin->>Egress: Subscribe Token: XXXX
+		Egress-->>Admin: Thanks
 	end
 	opt Security
-		Admin->>Publisher: Publish Token: XXXX
-		Publisher-->>Admin: Thanks
+		Admin->>Ingress: Publish Token: XXXX
+		Ingress-->>Admin: Thanks
 	end
 	opt Setup
-	Subscriber->>EdgeBus: Setup subscriber
-	EdgeBus-->>Subscriber: Subscription details
+	Egress->>EdgeBus: Setup subscriber
+	EdgeBus-->>Egress: Subscription details
 	end
 	opt Setup
-	Publisher->>EdgeBus: Setup publisher
-	EdgeBus-->>Publisher: Publication details
+	Ingress->>EdgeBus: Setup ingress
+	EdgeBus-->>Ingress: Publication details
 	end
 	opt General use
-		Publisher->>EdgeBus: Publish a message
-		EdgeBus->>Subscriber: Deliver the message
+		Ingress->>EdgeBus: Publish a message
+		EdgeBus->>Egress: Deliver the message
 	end
 ```
 
@@ -249,9 +249,9 @@ $ curl --verbose --request DELETE --header 'Content-Type: application/json' http
 
 
 ## Publishers
-Any publisher may be deleted by following request
+Any ingress may be deleted by following request
 ```bash
-$ cat docs/publisher/delete-publisher.json
+$ cat docs/ingress/delete-ingress.json
 ```
 ```json
 {
@@ -265,7 +265,7 @@ $ cat docs/publisher/delete-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/ingress/ingress.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/ingress/delete-ingress.json
 ```
 ```json
 {
@@ -274,11 +274,11 @@ $ curl --verbose --request DELETE --header 'Content-Type: application/json' http
 ```
 
 ### HTTP Endpoint
-HTTP Publisher allows to publish messages via HTTP protocol.
+HTTP Ingress allows to publish messages via HTTP protocol.
 
-#### Create publisher endpoint
+#### Create ingress endpoint
 ```bash
-$ cat docs/publisher/create-http-publisher.json
+$ cat docs/ingress/create-http-ingress.json
 ```
 ```json
 {
@@ -293,17 +293,17 @@ $ cat docs/publisher/create-http-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/management/publisher/http --data @docs/publisher/create-http-publisher.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/management/ingress/http --data @docs/ingress/create-http-ingress.json
 ```
 ```json
 {
-	"publisherId": "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "https://notifier.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"ingressId": "ingress.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"url": "https://notifier.zxteam.org/ingress/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
 #### Push message
 ```bash
-curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6 --data '{"hello":"world"}'
+curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam.org/ingress/http/18af3285-749a-4fe8-abc0-52a42cd82cb6 --data '{"hello":"world"}'
 ```
 
 
@@ -316,17 +316,17 @@ $ curl --verbose --request GET 'https://notifier.zxteam.org/management/subscribe
 [
 	{
 		"kind": "webhook",
-		"subscriberId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+		"egressId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
 		...
 	},
 	{
 		"kind": "webhook",
-		"subscriberId": "subscriber.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
+		"egressId": "subscriber.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
 		...
 	},
 	{
 		"kind": "websockethost",
-		"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+		"egressId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
 		...
 	},
 	...
@@ -399,7 +399,7 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 ```json
 {
 	"kind": "webhook",
-	"subscriberId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+	"egressId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
 	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
 	"url": "https://callback.yourdomain.ltd/my-github-commits",
 	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----", // ...optional
@@ -435,7 +435,7 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 ```json
 {
 	"kind": "websockethost",
-	"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"egressId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
 	"url": "wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```

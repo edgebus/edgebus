@@ -38,10 +38,10 @@ export default async function (
 
 			// await FDisposable.disposeAll(
 			// 	// Endpoints should dispose first (reply 503, while finishing all active requests)
-			// 	Container.get(EndpointsProvider),
-			// 	Container.get(HostingProvider),
-			// 	Container.get(MessageBusProvider),
-			// 	Container.get(StorageProvider)
+			// 	ProviderLocator.default.get(EndpointsProvider),
+			// 	ProviderLocator.default.get(HostingProvider),
+			// 	ProviderLocator.default.get(MessageBusProvider),
+			// 	ProviderLocator.default.get(StorageProvider)
 			// );
 		}
 	};

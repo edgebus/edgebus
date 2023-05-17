@@ -2,6 +2,8 @@ import { FConfiguration, FException, FExceptionInvalidOperation } from "@freemew
 import { FHostingConfiguration } from "@freemework/hosting";
 
 import { Router } from "express-serve-static-core";
+import { Ingress as IngressModel } from "./model/ingress";
+import { Egress as EgressModel } from "./model/egress";
 
 export class Settings {
 	private constructor(
@@ -79,7 +81,7 @@ export namespace Settings {
 		readonly type: "rest-management";
 	}
 	export interface RestPublisherEndpoint extends BaseRestEndpoint {
-		readonly type: "rest-publisher";
+		readonly type: "rest-ingress";
 	}
 	export interface RestSubscriberEndpoint extends BaseRestEndpoint {
 		readonly type: "rest-subscriber";
@@ -89,7 +91,7 @@ export namespace Settings {
 		readonly router: Router;
 	}
 	export interface ExpressRouterPublisherEndpoint extends FHostingConfiguration.BindEndpoint {
-		readonly type: "express-router-publisher";
+		readonly type: "express-router-ingress";
 		readonly router: Router;
 	}
 
@@ -108,75 +110,80 @@ export namespace Settings {
 	}
 
 	export interface Setup {
-		readonly publishers: ReadonlyArray<Setup.Publisher>;
-		readonly subscribers: ReadonlyArray<Setup.Subscriber>;
+		readonly ingresses: ReadonlyArray<Setup.Ingress>;
+		readonly egresses: ReadonlyArray<Setup.Egress>;
 		readonly topics: ReadonlyArray<Setup.Topic>;
 	}
 
 	export namespace Setup {
-		export type Publisher =
-			| Publisher.HttpHost;
-		export namespace Publisher {
-			export const enum Type {
-				HTTP_HOST = "http_host",
-			}
 
+		export type Ingress =
+			| Ingress.HttpHost
+			| Ingress.WebSocketClient
+			| Ingress.WebSocketHost;
+		export namespace Ingress {
 			export interface Base {
 				/**
-				 * Publisher API Identifier
+				 * Ingress API Identifier
 				 */
-				readonly publisherId: string;
+				readonly ingressId: string;
 
-				readonly type: Type;
+				readonly kind: IngressModel.Kind;
 
 				/**
-				 * API ID of target topic
+				 * API Identifier of target topic
 				 */
-				readonly targetTopicId: string;
+				readonly topicId: string;
 			}
 
 			export interface HttpHost extends Base {
-				readonly type: Type.HTTP_HOST;
+				readonly kind: IngressModel.Kind.HttpHost;
 				readonly path: string;
+				readonly responseStatusCode: number;
+				readonly responseStatusMessage: string | null;
+				readonly responseHeaders: Readonly<Record<string, string | null>> | null;
+				readonly responseBody: Uint8Array | null;
+			}
+
+			export interface WebSocketClient extends Base {
+				readonly kind: IngressModel.Kind.WebSocketClient;
+				// TBD
+			}
+
+			export interface WebSocketHost extends Base {
+				readonly kind: IngressModel.Kind.WebSocketHost;
+				// TBD
 			}
 		}
 
-		export type Subscriber =
-			| Subscriber.HttpClient
-			| Subscriber.WebsocketHost;
+		export type Egress =
+			| Egress.Webhook
+			| Egress.WebsocketHost;
 
-		export namespace Subscriber {
-			export const enum Type {
-				WEBSOCKET_HOST = "websocket_host",
-				HTTP_CLIENT = "http_client",
-			}
-
+		export namespace Egress {
 			export interface Base {
 				/**
-				 * Subscriber API Identifier
+				 * Egress API Identifier
 				 */
-				readonly subscriberId: string;
+				readonly egressId: string;
 
-				readonly type: Type;
+				readonly kind: EgressModel.Kind;
 
 				/**
-				 * API IDs of source topics
+				 * API Identifiers of source topics
 				 */
 				readonly sourceTopicIds: ReadonlyArray<string>;
-
-
 			}
 
-			export interface HttpClient extends Base {
-				readonly type: Type.HTTP_CLIENT;
-				readonly httpMethod: string;
+			export interface Webhook extends Base {
+				readonly kind: EgressModel.Kind.Webhook;
+				readonly httpMethod: string | null;
 				readonly httpUrl: URL;
 			}
 
 			export interface WebsocketHost extends Base {
-				readonly type: Type.WEBSOCKET_HOST;
+				readonly kind: EgressModel.Kind.WebSocketHost;
 			}
-
 		}
 
 		export interface Topic {
@@ -186,6 +193,7 @@ export namespace Settings {
 			readonly topicId: string;
 			readonly name: string;
 			readonly description: string;
+			readonly mediaType: string;
 		}
 	}
 }
@@ -227,7 +235,7 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Settings.Endpoint
 			});
 			return httpEndpoint;
 		}
-		case "rest-publisher": {
+		case "rest-ingress": {
 			const cors = endpointConfiguration.hasNamespace("cors")
 				? parseCors(endpointConfiguration.getNamespace("cors")) : null;
 
@@ -252,7 +260,7 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Settings.Endpoint
 			return httpEndpoint;
 		}
 		case "express-router-management":
-		case "express-router-publisher":
+		case "express-router-ingress":
 			throw new FExceptionInvalidOperation(`Endpoint type '${endpointType}' may not be parsed as config item.`);
 		default:
 			throw new UnreachableNotSupportedEndpointError(endpointType);
@@ -268,61 +276,92 @@ function parseCors(corsConfiguration: FConfiguration): Settings.Cors {
 
 function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 
-	const publishers: Array<Settings.Setup.Publisher> = [];
-	const subscribers: Array<Settings.Setup.Subscriber> = [];
+	const ingresses: Array<Settings.Setup.Ingress> = [];
+	const egresses: Array<Settings.Setup.Egress> = [];
 	const topics: Array<Settings.Setup.Topic> = [];
 
-	const publisherKey: string = "publisher";
+	const publisherKey: string = "ingress";
 	if (setupConfiguration.hasNamespace(publisherKey)) {
-		const publishersConfiguration = setupConfiguration.getArray(publisherKey);
+		const publishersConfiguration: Array<FConfiguration> = setupConfiguration.getArray(publisherKey);
 		for (const publisherConfiguration of publishersConfiguration) {
-			const publisherId: string = publisherConfiguration.get("index").asString;
-			const type: string = publisherConfiguration.get("type").asString;
-			const targetTopicId: string = publisherConfiguration.get("target_topic_id").asString;
-			const basePublisherSettings = { publisherId, targetTopicId };
-			let publisherSettings: Settings.Setup.Publisher;
+			const ingressId: string = publisherConfiguration.get("index").asString;
+			const type: string = publisherConfiguration.get("kind").asString;
+			const topicId: string = publisherConfiguration.get("target_topic_id").asString;
+			const basePublisherSettings = { ingressId, topicId };
+			let ingressSettings: Settings.Setup.Ingress;
 			switch (type) {
-				case Settings.Setup.Publisher.Type.HTTP_HOST:
-					publisherSettings = {
-						...basePublisherSettings,
-						type,
-						path: publisherConfiguration.get("path").asString
-					};
+				case IngressModel.Kind.HttpHost:
+					{
+						const responseConfiguration: FConfiguration | null = publisherConfiguration.findNamespace("response");
+						const responseHeadersConfiguration: FConfiguration | null = responseConfiguration === null
+							? null
+							: responseConfiguration.findNamespace("header");
+
+						const responseStatusCode: number = responseConfiguration === null
+							? 200
+							: responseConfiguration.get("status_code", "200").asIntegerPositive;
+						const responseStatusMessage: string | null = responseConfiguration === null
+							? null
+							: responseConfiguration.get("status_message").asStringNullable;
+						const responseBodyStr: string | null = responseConfiguration === null
+							? null
+							: responseConfiguration.get("body", null).asStringNullable;
+						const responseBody: Uint8Array | null = responseBodyStr === null
+							? null
+							: Buffer.from(responseBodyStr, "utf-8");
+
+						const responseHeaders: Record<string, string | null> | null = responseHeadersConfiguration === null ?
+							null
+							: responseHeadersConfiguration.keys.reduce((acc, key) => {
+								acc[key] = responseHeadersConfiguration.get(key).asString;
+								return acc;
+							}, {} as Record<string, string | null>);
+
+						ingressSettings = {
+							...basePublisherSettings,
+							kind: type,
+							path: publisherConfiguration.get("path").asString,
+							responseStatusCode,
+							responseStatusMessage,
+							responseHeaders: Object.freeze(responseHeaders),
+							responseBody
+						};
+					}
 					break;
 				default:
 					throw new FExceptionInvalidOperation(`Unsupported ${publisherConfiguration.configurationNamespace}.type '${type}'.`);
 			}
-			publishers.push(Object.freeze(publisherSettings));
+			ingresses.push(Object.freeze(ingressSettings));
 		}
 
-		const subscriberKey: string = "subscriber";
-		if (setupConfiguration.hasNamespace(subscriberKey)) {
-			const subscribersConfiguration = setupConfiguration.getArray(subscriberKey);
+		const egressKey: string = "egress";
+		if (setupConfiguration.hasNamespace(egressKey)) {
+			const subscribersConfiguration = setupConfiguration.getArray(egressKey);
 			for (const subscriberConfiguration of subscribersConfiguration) {
-				const subscriberId: string = subscriberConfiguration.get("index").asString;
-				const type: string = subscriberConfiguration.get("type").asString;
+				const egressId: string = subscriberConfiguration.get("index").asString;
+				const type: string = subscriberConfiguration.get("kind").asString;
 				const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
-				const baseSubscriberSettings = { subscriberId, sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== "") };
-				let subscriberSettings: Settings.Setup.Subscriber;
+				const baseSubscriberSettings = { egressId, sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== "") };
+				let subscriberSettings: Settings.Setup.Egress;
 				switch (type) {
-					case Settings.Setup.Subscriber.Type.HTTP_CLIENT:
+					case EgressModel.Kind.Webhook:
 						subscriberSettings = {
 							...baseSubscriberSettings,
-							type,
-							httpMethod: subscriberConfiguration.get("http_method").asString,
+							kind: type,
+							httpMethod: subscriberConfiguration.get("http_method").asStringNullable,
 							httpUrl: subscriberConfiguration.get("http_url").asUrl,
 						};
 						break;
-					case Settings.Setup.Subscriber.Type.WEBSOCKET_HOST:
+					case EgressModel.Kind.WebSocketHost:
 						subscriberSettings = {
 							...baseSubscriberSettings,
-							type,
+							kind: type,
 						};
 						break;
 					default:
 						throw new FExceptionInvalidOperation(`Unsupported ${subscriberConfiguration.configurationNamespace}.type '${type}'.`);
 				}
-				subscribers.push(Object.freeze(subscriberSettings));
+				egresses.push(Object.freeze(subscriberSettings));
 			}
 		}
 
@@ -333,14 +372,15 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				const topicId: string = topicConfiguration.get("index").asString;
 				const name: string = topicConfiguration.get("name").asString;
 				const description: string = topicConfiguration.get("description").asString;
-				const topicSettings: Settings.Setup.Topic = { topicId, name, description };
+				const mediaType: string = topicConfiguration.get("mediaType").asString;
+				const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType };
 				topics.push(Object.freeze(topicSettings));
 			}
 		}
 
 		return Object.freeze({
-			publishers: Object.freeze(publishers),
-			subscribers: Object.freeze(subscribers),
+			ingresses: Object.freeze(ingresses),
+			egresses: Object.freeze(egresses),
 			topics: Object.freeze(topics),
 		});
 	}

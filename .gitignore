@@ -25,9 +25,5 @@ test/**/*.js
 test/**/*.map
 
 # Dev files
-.http-dump/
-tmp/
+*.local.*
 .env
-config-dev.json
-*.log
-res/

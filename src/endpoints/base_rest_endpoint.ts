@@ -5,17 +5,11 @@ import { FAbstractWebServer, FHostingConfiguration, FServersBindEndpoint, FWebSe
 import * as express from "express";
 import { PathParams } from "express-serve-static-core";
 import * as _ from "lodash";
-import { v4 as uuid } from "uuid";
 
 import { Settings } from "../settings";
 import { Bind } from "../utils/bind";
 import { MIME_APPLICATION_JSON } from "../utils/mime";
-
-declare module "express-serve-static-core" {
-	interface Request {
-		executionContext: FExecutionContext;
-	}
-}
+import { createExecutionContextMiddleware } from "../misc/express";
 
 export class BaseRestEndpoint extends FServersBindEndpoint {
 	protected readonly _router: express.Router;
@@ -39,12 +33,6 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 				next();
 			}
 		});
-		// this.setupMonitoring();
-		// this._router.use(this._middlewareWriteHeadAdapter);
-		// this.setupCors();
-		// this.setupBodyRawParser();
-		// this.setupBodyObjectParser();
-		this.setupExecutionContext();
 	}
 
 	// public constructor(servers: ReadonlyArray<FWebServer>, opts: FHostingConfiguration.BindEndpoint, log: FLogger) {
@@ -62,6 +50,13 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 	// }
 
 	protected onInit(): void {
+		// this.setupMonitoring();
+		// this._router.use(this._middlewareWriteHeadAdapter);
+		// this.setupCors();
+		// this.setupBodyRawParser();
+		// this.setupBodyObjectParser();
+		this.setupExecutionContextMiddleware();
+
 		const classHttpMeta: ClassHttpMeta = __getClassHttpMeta(this.constructor);
 		for (const [jsMethod, httpMeta] of classHttpMeta) {
 			const handler: Function = (this as any)[jsMethod];
@@ -164,39 +159,6 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 	}
 
 	@Bind
-	private _middlewareExecutionContext(req: express.Request, res: express.Response, next: express.NextFunction) {
-		const cancellationToken: FCancellationToken = FAbstractWebServer.createFCancellationToken(req);
-
-		const method: string = req.method.toUpperCase();
-
-		req.executionContext = this.initExecutionContext;
-		req.executionContext = new FCancellationExecutionContext(req.executionContext, cancellationToken, true);
-		req.executionContext = new FLoggerLabelsExecutionContext(req.executionContext, {
-			"requestId": `req_${uuid().split('-').join('')}`,
-			"httpMethod": method,
-			"httpPath": req.originalUrl
-		});
-
-		this._logger.debug(req.executionContext, "Begin HTTP request");
-
-		const originalEnd: (chunk: any, encoding: BufferEncoding, cb?: (() => void) | undefined) => express.Response = res.end;
-		res.end = (chunk?: any, encodingOrCb?: BufferEncoding | Function, cb?: () => void) => {
-			const statusCode: number = res.statusCode;
-
-			req.executionContext = new FLoggerLabelsExecutionContext(req.executionContext, {
-				"httpStatus": statusCode.toString()
-			});
-
-			this._logger.info(req.executionContext, () => `${statusCode} ${method} ${req.originalUrl} HTTP/${req.httpVersion}`);
-			this._logger.debug(req.executionContext, "End HTTP request");
-
-			return originalEnd.call(res, chunk, encodingOrCb as BufferEncoding, cb as () => void);
-		};
-
-		next();
-	}
-
-	@Bind
 	private _middlewareRequireBodyObject(req: express.Request, res: express.Response, next: express.NextFunction) {
 		if ("bodyObject" in req && req.bodyObject !== undefined) {
 			return next();
@@ -225,8 +187,8 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 		return handler;
 	}
 
-	protected setupExecutionContext(): void {
-		this._router.use(this._middlewareExecutionContext);
+	protected setupExecutionContextMiddleware(): void {
+		this._router.use(createExecutionContextMiddleware(this._logger, this.initExecutionContext));
 	}
 }
 

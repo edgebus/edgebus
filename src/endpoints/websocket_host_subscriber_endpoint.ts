@@ -133,22 +133,19 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		message: Message.Id & Message.Data
 	): Promise<void> {
 		const mediaType: string = message.mediaType;
-		const messageBody: Buffer = message.messageBody;
-		let data: any;
+		const messageBody: Buffer = Buffer.from(message.transformedBody);
+		let data: any = { rawBase64: messageBody.toString("base64") };
 		switch (mediaType) {
 			case "application/json":
-				data = JSON.parse(messageBody.toString("utf8"));
-				break;
-			default:
-				data = messageBody.toString("base64");
+				data.json = JSON.parse(messageBody.toString("utf8"));
 				break;
 		}
 
-		const messageStr = JSON.stringify({
+		const messageStr: string = JSON.stringify({
 			jsonrpc: "2.0",
 			method: topicName,
 			id: message.messageId,
-			params: { mediaType, data }
+			params: { mediaType, headers: message.headers, data }
 		});
 
 		await this.notify(executionContext, { data: messageStr });

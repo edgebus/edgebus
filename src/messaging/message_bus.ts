@@ -1,20 +1,21 @@
-import { FDisposable, FExecutionContext, FChannelSubscriber, FChannelEvent } from "@freemework/common";
+import { FDisposable, FExecutionContext, FChannelEvent } from "@freemework/common";
 
+import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { Topic } from "../model/topic";
 import { Message } from "../model/message";
-import { Subscriber } from "../model/subscriber";
 
 export interface MessageBus {
+	// TODO Validate final message by Topic's json schema
 	publish(
 		executionContext: FExecutionContext,
-		topicName: Topic["topicName"],
+		ingressId: IngressApiIdentifier,
 		message: Message.Id & Message.Data
 	): Promise<void>;
 
 	retainChannel(
 		executionContext: FExecutionContext,
-		topicName: Topic["topicName"],
-		subscriberId: Subscriber["subscriberId"]
+		topicId: TopicApiIdentifier,
+		egressId: EgressApiIdentifier
 	): Promise<MessageBus.Channel>;
 }
 

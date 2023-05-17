@@ -3,24 +3,22 @@
 - [x] Make prefixed identifier classes (copy/refactor from processing)
 	- DLVR319ef1447b054a5292acecf40345b89b - sample of Delivery ID
 	- MSSG319ef1447b054a5292acecf40345b89b - sample of Message ID
-	- PUBR319ef1447b054a5292acecf40345b89b - sample of Publisher ID
-	- SUBR319ef1447b054a5292acecf40345b89b - sample of Subscriber ID
+	- PUBR319ef1447b054a5292acecf40345b89b - sample of Ingress ID
+	- SUBR319ef1447b054a5292acecf40345b89b - sample of Egress ID
 	- TOPC319ef1447b054a5292acecf40345b89b - sample of Topic ID
 - [ ] Review/update DB structure for the MVP
-- [ ] Implement DBFacade with necessary set of methods to save:
-  - [ ] Add tb_message record
-  - [ ] Add tb_delivery/tb_delivery_failure/tb_delivery_success record
+- [ ] Implement Database(PostgresDatabase) with necessary set of methods
 - [x] Implement HttpSubscriber.ts
 - [x] Allow to retainChannel 2+ times + round-robin
 - [ ] Implement retry policy for MessageBusLocal (see `MessageBusLocal.Opts.deliveryPolicy`)
 	- Sequence delivery policy
 	- Parallel delivery policy
 	- Fibonacci retry scale
-- [ ] Inject DBFacade calls into HttpHostPublisher/MessageBusLocal/HttpClientSubscriber
+- [ ] Inject Database calls into HttpHostPublisher/MessageBusLocal/HttpClientSubscriber
 	- For example: HttpHostPublisher should create MessageEntry in database
 	- For example: MessageBusLocal should create DeliveryEntry in database
 - [x] Refactor Dockerfile
-- [x] Setup Manager for Publisher/Subscriber to be able to launch from scratch
+- [x] Setup Manager for Ingress/Egress to be able to launch from scratch
 - [x] Migrate to .toml configuration file
 - [ ] Minimal API to read data in Console (Web) App.
 	- Need to see list of topics

@@ -7,19 +7,21 @@ import * as bodyParser from "body-parser";
 import { BaseRestEndpoint } from "./base_rest_endpoint";
 
 import { PublisherApi } from "../api/publisher_api";
-import { Publisher } from "../model/publisher";
-import { HttpHostPublisher } from "../publisher/http_host_publisher";
+import { Ingress } from "../model/ingress";
+import { HttpHostIngress } from "../ingress/http_host.ingress";
 import { Security } from "../model/security";
 import { Topic } from "../model/topic";
 import { endpointHandledException } from "./errors";
 import { Settings } from "../settings";
+import { createExecutionContextMiddleware } from "../misc/express";
+import { IngressApiIdentifier } from "../misc/api-identifier";
 
 const ensure: FEnsure = FEnsure.create();
 
 export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 	private readonly _api: PublisherApi;
-	private readonly _httpPublishersMap: Map<HttpHostPublisher["publisherId"], HttpHostPublisher>;
-	protected readonly _rootRouter: express.Router;
+	private readonly _httpPublishersMap: Map<HttpHostIngress["ingressId"], HttpHostIngress>;
+	protected readonly _publisherRootRouter: express.Router;
 
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
@@ -30,34 +32,28 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 
 		this._api = api;
 		this._httpPublishersMap = new Map();
-		this._rootRouter = express.Router({ strict: true });
-
-		this._router.use(bodyParser.json());
-		this._router.use(bodyParser.urlencoded({ extended: false }));
-
-		this._router.use("/http/:httpPublisherUUID", this.pushMessage.bind(this));
-		this._router.get("/:publisherId", this.safeBinder(this.getPublisher.bind(this)));
-		this._router.post("/http", this.safeBinder(this.createPublisherHttp.bind(this)));
-		this._router.delete("/:publisherId", this.safeBinder(this.deletePublisher.bind(this)));
+		this._publisherRootRouter = express.Router({ strict: true });
 	}
 
-	public addHttpPublisher(executionContext: FExecutionContext, publisher: HttpHostPublisher): void {
-		const publisherId: string = publisher.publisherId;
+	public addHttpPublisher(executionContext: FExecutionContext, ingress: HttpHostIngress): void {
+		const ingressId: IngressApiIdentifier = ingress.ingressId;
 
-		this._logger.info(executionContext, `Register publisher: ${publisherId} for path: ${publisher.bindPath}`);
+		this._logger.info(executionContext, `Register ingress: ${ingressId} for path: ${ingress.bindPath}`);
 
-		if (this._httpPublishersMap.has(publisherId)) {
-			throw new FExceptionInvalidOperation("Twice add same publisher is not allowed.");
+		if (this._httpPublishersMap.has(ingressId)) {
+			throw new FExceptionInvalidOperation("Twice add same ingress is not allowed.");
 		}
-		this._httpPublishersMap.set(publisherId, publisher);
+		this._httpPublishersMap.set(ingressId, ingress);
 
-		if (publisher.bindPath !== null) {
+		if (ingress.bindPath !== null) {
 			// Temporary hard-code
-			this._rootRouter.use(publisher.bindPath, (req, res, next) => {
+			this._publisherRootRouter.use(ingress.bindPath, (req, res, next) => {
 				try {
-					const publisher = this._httpPublishersMap.get(publisherId);
-					if (publisher !== undefined) {
-						publisher.router(req, res, next);
+					const ingress = this._httpPublishersMap.get(ingressId);
+					if (ingress !== undefined) {
+						ingress.router(req, res, next);
+					} else {
+						next();
 					}
 				} catch (e) {
 					const err: FException = FException.wrapIfNeeded(e);
@@ -73,16 +69,26 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 
 		}
 	}
-	public removeHttpPublisher(executionContext: FExecutionContext, publisherId: HttpHostPublisher["publisherId"]): boolean {
-		return this._httpPublishersMap.delete(publisherId);
+	public removeHttpPublisher(executionContext: FExecutionContext, ingressId: HttpHostIngress["ingressId"]): boolean {
+		return this._httpPublishersMap.delete(ingressId);
 	}
 
 	protected onInit(): void {
 		super.onInit();
 
+		this._publisherRootRouter.use(createExecutionContextMiddleware(this._logger, this.initExecutionContext));
+
+		this._router.use(bodyParser.json());
+		this._router.use(bodyParser.urlencoded({ extended: false }));
+
+		this._router.use("/http/:ingressId", this.pushMessage.bind(this));
+		this._router.get("/:ingressId", this.safeBinder(this.getPublisher.bind(this)));
+		this._router.post("/http", this.safeBinder(this.createPublisherHttp.bind(this)));
+		this._router.delete("/:ingressId", this.safeBinder(this.deletePublisher.bind(this)));
+
 		for (const server of this._servers) {
 			const rootExpressApplication = server.rootExpressApplication;
-			rootExpressApplication.use(this._rootRouter);
+			rootExpressApplication.use(this._publisherRootRouter);
 		}
 	}
 
@@ -98,19 +104,19 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 	}
 	private async createPublisherHttp(req: express.Request, res: express.Response): Promise<void> {
 		try {
-			const topicName = ensure.string(req.body.topic, "Create publisher http, req.body.topic field is not a string");
-			const kind: string = ensure.string(req.body.publisherSecurityKind, "Create publisher http, req.query.publisherSecurityKind field is not a string");
-			const token: string = ensure.string(req.body.publisherSecurityToken, "Create publisher http, req.query.publisherSecurityToken field is not a string");
-			const clientTrustedCA: string = ensure.string(req.body.ssl.clientTrustedCA, "Create publisher http, req.body.ssl.clientTrustedCA field is not a string");
-			const clientCommonName: string = ensure.string(req.body.ssl.clientCommonName, "Create publisher http, req.body.ssl.clientCommonName field is not a string");
+			const topicName = ensure.string(req.body.topic, "Create ingress http, req.body.topic field is not a string");
+			const kind: string = ensure.string(req.body.publisherSecurityKind, "Create ingress http, req.query.publisherSecurityKind field is not a string");
+			const token: string = ensure.string(req.body.publisherSecurityToken, "Create ingress http, req.query.publisherSecurityToken field is not a string");
+			const clientTrustedCA: string = ensure.string(req.body.ssl.clientTrustedCA, "Create ingress http, req.body.ssl.clientTrustedCA field is not a string");
+			const clientCommonName: string = ensure.string(req.body.ssl.clientCommonName, "Create ingress http, req.body.ssl.clientCommonName field is not a string");
 
 			if (kind !== "TOKEN") {
-				throw new FEnsureException("Create publisher http, publisherSecurityKind field is not a TOKEN", kind);
+				throw new FEnsureException("Create ingress http, publisherSecurityKind field is not a TOKEN", kind);
 			}
 
 			// const publisherSecurity: Security = { kind, token };
 
-			// const topicData: Topic.Name & Publisher.Security & { sslOption: Publisher.Data["sslOption"] } = {
+			// const topicData: Topic.Name & Ingress.Security & { sslOption: Ingress.Data["sslOption"] } = {
 			// 	topicName,
 			// 	publisherSecurity,
 			// 	sslOption: {
@@ -119,15 +125,15 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 			// 	}
 			// };
 
-			// const publisher: Publisher = await this._api.createHttpPublisher(DUMMY_CANCELLATION_TOKEN, topicData);
+			// const ingress: Ingress = await this._api.createHttpPublisher(DUMMY_CANCELLATION_TOKEN, topicData);
 
-			// const publisherUrl = new URL(req.protocol + "://" + req.host + req.originalUrl + "/" + publisher.publisherId);
+			// const publisherUrl = new URL(req.protocol + "://" + req.host + req.originalUrl + "/" + ingress.ingressId);
 
 			// return res
 			// 	.status(201)
 			// 	.header("Content-Type", "application/json")
 			// 	.end(Buffer.from(JSON.stringify({
-			// 		publisherId: publisher.publisherId,
+			// 		ingressId: ingress.ingressId,
 			// 		url: publisherUrl
 			// 	}), "utf-8"));
 
@@ -143,19 +149,19 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 		req: express.Request, res: express.Response, next: express.NextFunction
 	): Promise<void> {
 		try {
-			const id = ensure.string(req.params.httpPublisherUUID);
+			const ingressIdStr = ensure.string(req.params.ingressId);
 
 			// TODO validate "id" for UUID
 
-			const publisherId = `publisher.http.${id}`;
+			const ingressId: IngressApiIdentifier = IngressApiIdentifier.parse(ingressIdStr);
 
-			const httpPublisher: HttpHostPublisher | undefined = this._httpPublishersMap.get(publisherId);
+			const httpPublisher: HttpHostIngress | undefined = this._httpPublishersMap.get(ingressId);
 			if (httpPublisher === undefined) {
-				this._logger.info(req.executionContext, () => `Wrong push publisherId: ${publisherId}`);
+				this._logger.info(req.executionContext, () => `Wrong push ingressId: ${ingressId}`);
 				res.writeHead(404, "Not Found").end();
 				return;
 			}
-			const result = httpPublisher.router(req, res, next);
+			httpPublisher.router(req, res, next);
 			return;
 		} catch (e) {
 			const err: FException = FException.wrapIfNeeded(e);

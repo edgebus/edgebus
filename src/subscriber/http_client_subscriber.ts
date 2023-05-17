@@ -4,7 +4,8 @@ import { OutgoingHttpHeaders } from "http";
 
 import { MessageBus } from "../messaging/message_bus";
 import { Message } from "../model/message";
-import { Subscriber } from "../model/subscriber";
+import { Egress } from "../model/egress";
+import { EgressApiIdentifier } from "../misc/api-identifier";
 
 export class HttpClientSubscriber extends FInitableBase {
 
@@ -97,7 +98,7 @@ export class HttpClientSubscriber extends FInitableBase {
 	}
 
 	private static _extractHttpMethod(message: Message.Data): string | null {
-		const messageBody: Buffer = message.messageBody;
+		const messageBody: Buffer = Buffer.from(message.transformedBody);
 		const parsedMessageBody: any = JSON.parse(messageBody.toString("utf8"));
 		const originalHttpMethod: any = parsedMessageBody.method;
 		if (typeof originalHttpMethod === "string") {
@@ -114,7 +115,7 @@ export class HttpClientSubscriber extends FInitableBase {
 	}
 
 	private static _extractHttpBody(message: Message.Data): Buffer {
-		const messageBody: Buffer = message.messageBody;
+		const messageBody: Buffer = Buffer.from(message.transformedBody);
 
 		const parsedMessageBody: any = JSON.parse(messageBody.toString("utf8"));
 		const bodyData: Buffer = Buffer.from(JSON.stringify(parsedMessageBody.body), "utf-8");
@@ -125,7 +126,7 @@ export class HttpClientSubscriber extends FInitableBase {
 
 export namespace HttpClientSubscriber {
 	export interface Opts {
-		readonly subscriberId: Subscriber["subscriberId"];
+		readonly egressId: EgressApiIdentifier;
 		readonly deliveryUrl: URL;
 		readonly deliveryHttpMethod?: "GET" | "POST" | "PUT" | "DELETE" | string;
 		readonly channelFactories: ReadonlyArray<MessageBus.ChannelFactory>;

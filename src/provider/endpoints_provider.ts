@@ -18,6 +18,7 @@ import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endp
 import { PublisherApiRestEndpoint } from "../endpoints/publisher_api_rest_endpoint";
 import { SubscriberApiRestEndpoint } from "../endpoints/subscriber_api_rest_endpoint";
 import { WebSocketHostSubscriberEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
+import { ProviderLocator } from "../provider_locator";
 
 @Singleton
 export abstract class EndpointsProvider extends FInitableBase {
@@ -52,9 +53,9 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this.log.info(FExecutionContext.Empty, "Constructing endpoints...");
 
-		this._hostingProvider = Container.get(HostingProvider);
-		this._configProvider = Container.get(SettingsProvider);
-		this._apiProvider = Container.get(ApiProvider);
+		this._hostingProvider = ProviderLocator.default.get(HostingProvider);
+		this._configProvider = ProviderLocator.default.get(SettingsProvider);
+		this._apiProvider = ProviderLocator.default.get(ApiProvider);
 
 		this._endpointInstances = [];
 
@@ -63,7 +64,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		for (const endpoint of this._configProvider.endpoints) {
 
-			if (endpoint.type === "express-router-management" || endpoint.type === "express-router-publisher") {
+			if (endpoint.type === "express-router-management" || endpoint.type === "express-router-ingress") {
 				throw new Error("Not supported yet");
 			}
 
@@ -98,10 +99,10 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					this._endpointInstances.push(endpointInstance);
 					break;
 				}
-				case "rest-publisher": {
+				case "rest-ingress": {
 					const friendlyEndpoint: Settings.RestPublisherEndpoint = endpoint;
 					const endpointInstance = new PublisherApiRestEndpoint(
-						endpointServers, this._apiProvider.publisherApi, endpoint,
+						endpointServers, this._apiProvider.publisherApi, friendlyEndpoint,
 						//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
