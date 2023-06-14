@@ -94,7 +94,7 @@ Using Protocol Buffers for message serialization. See definition .proto file for
 ### Message security
 `EdgeBus` does tranfer messages as-is. There is `Ingress`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
 
-However implementation of **subscribers** may provide additional security. For example Webhook provides a token header and SSL validation. See a subscriber documentation for details.
+However implementation of **egresses** may provide additional security. For example Webhook provides a token header and SSL validation. See a egress documentation for details.
 
 ## Administration flow
 ```mermaid
@@ -116,7 +116,7 @@ sequenceDiagram
 		Ingress-->>Admin: Thanks
 	end
 	opt Setup
-	Egress->>EdgeBus: Setup subscriber
+	Egress->>EdgeBus: Setup egress
 	EdgeBus-->>Egress: Subscription details
 	end
 	opt Setup
@@ -308,34 +308,34 @@ curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam
 
 
 ## Subscribers
-### List subscribers (GET)
+### List egresss (GET)
 ```bash
-$ curl --verbose --request GET 'https://notifier.zxteam.org/management/subscriber?security.kind=TOKEN&security.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+$ curl --verbose --request GET 'https://notifier.zxteam.org/management/egress?security.kind=TOKEN&security.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 ```json
 [
 	{
 		"kind": "webhook",
-		"egressId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+		"egressId": "egress.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
 		...
 	},
 	{
 		"kind": "webhook",
-		"egressId": "subscriber.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
+		"egressId": "egress.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
 		...
 	},
 	{
 		"kind": "websockethost",
-		"egressId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+		"egressId": "egress.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
 		...
 	},
 	...
 ]
 ```
 
-### Delete subscriber (DELETE)
+### Delete egress (DELETE)
 ```bash
-$ cat docs/subscriber/delete-subscriber.json
+$ cat docs/egress/delete-egress.json
 ```
 ```json
 {
@@ -346,7 +346,7 @@ $ cat docs/subscriber/delete-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/egress/egress.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/egress/delete-egress.json
 ```
 ```json
 {
@@ -368,21 +368,21 @@ When an event occurs, `EdgeBus` makes an HTTP request to the URI configured for 
 SSL Verification enables automatically for URL scheme `https:`. No additional configuration required.
 
 >>>
-**Optional:** If you specify a CA Certificates in a `trustedCA` field of create subscriber request, it will be used to verify the SSL certificate of the webhook endpoint.
+**Optional:** If you specify a CA Certificates in a `trustedCA` field of create egress request, it will be used to verify the SSL certificate of the webhook endpoint.
 If `trustedCA` is omited the SSL certificate of the webhook endpoint is verified based on an internal list of Certificate Authorities.
 >>>
 
 #### Secret token
-If you specify a secret token in a `headerToken` field of create subscriber request, it will be sent along with the hook request in the **NF-TOKEN** HTTP header.
+If you specify a secret token in a `headerToken` field of create egress request, it will be sent along with the hook request in the **NF-TOKEN** HTTP header.
 
-#### Create subscriber endpoint
+#### Create egress endpoint
 ```bash
-$ cat docs/subscriber/create-webhook-subscriber.json
+$ cat docs/egress/create-webhook-egress.json
 ```
 ```json
 {
 	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
-	"subscriberSecurity": {
+	"egressSecurity": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	},
@@ -394,12 +394,12 @@ $ cat docs/subscriber/create-webhook-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/webhook --data @docs/subscriber/create-webhook-subscriber.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/egress/webhook --data @docs/egress/create-webhook-egress.json
 ```
 ```json
 {
 	"kind": "webhook",
-	"egressId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+	"egressId": "egress.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
 	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
 	"url": "https://callback.yourdomain.ltd/my-github-commits",
 	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----", // ...optional
@@ -411,16 +411,16 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 
 
 ### WebSocket (Host Mode)
-This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `EdgeBus` as client.
+This kind of egress allows to receive messages through WebSocket channel. `Host Mode` means that message egress connects to `EdgeBus` as client.
 
-#### Create subscriber endpoint
+#### Create egress endpoint
 ```bash
-$ cat docs/subscriber/create-websocket-host-subscriber.json
+$ cat docs/egress/create-websocket-host-egress.json
 ```
 ```json
 {
 	"topic": "MyGitLabPushTopic.yourdomain.ltd",
-	"subscriberSecurity": {
+	"egressSecurity": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	},
@@ -430,18 +430,18 @@ $ cat docs/subscriber/create-websocket-host-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/websockethost --data @docs/subscriber/create-websocket-host-subscriber.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/egress/websockethost --data @docs/egress/create-websocket-host-egress.json
 ```
 ```json
 {
 	"kind": "websockethost",
-	"egressId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"egressId": "egress.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"url": "wss://notifier.zxteam.org/egress/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
-#### Listen subscriber endpoint
+#### Listen egress endpoint
 ```
-wscat --connect wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
+wscat --connect wss://notifier.zxteam.org/egress/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
 ```
 
 

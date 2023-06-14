@@ -10,9 +10,9 @@ import { DatabaseFactory } from "../data/database_factory";
 import { UnknownApiError, apiHandledException } from "./errors";
 
 /**
- * Egress API allows subscribe/unsubscribe for events via webhooks and other subscriber's type
+ * Egress API allows subscribe/unsubscribe for events via webhooks and other egress's type
  */
-export class SubscriberApi extends FInitableBase {
+export class EgressApi extends FInitableBase {
 	private readonly _log: FLogger;
 	private readonly _storage: DatabaseFactory;
 
@@ -24,13 +24,13 @@ export class SubscriberApi extends FInitableBase {
 
 	public async list(
 		executionContext: FExecutionContext,
-		subscriberSecurity: Security
+		egressSecurity: Security
 	): Promise<Array<Egress>> {
-		this._log.debug(executionContext, `Run subscriberWebhook with subscriberSecurity: ${subscriberSecurity}`);
+		this._log.debug(executionContext, `Run egressWebhook with egressSecurity: ${egressSecurity}`);
 
 		// try {
 		// 	const webhooks: Array<Egress> = await this._storage
-		// 		.getAvailableWebhooks(cancellationToken, subscriberSecurity);
+		// 		.getAvailableWebhooks(cancellationToken, egressSecurity);
 
 		// 	return webhooks;
 
@@ -53,17 +53,17 @@ export class SubscriberApi extends FInitableBase {
 		topicSubscriberSecurity: Security, webhookData: Egress.Webhook
 	): Promise<Egress> {
 
-		this._log.debug(executionContext, `Run subscriberWebhook with topic: ${topicId} and webhookData ${webhookData}`);
+		this._log.debug(executionContext, `Run egressWebhook with topic: ${topicId} and webhookData ${webhookData}`);
 		throw new FExceptionInvalidOperation("Not implemented yet");
 		// try {
 		// 	const topicSubscriberSecurityRecord: Topic = await this._storage
 		// 		.getTopicSubscriberSecurity(cancellationToken, topicSubscriberSecurity);
 
-		// 	const subscriberSecurityKind = topicRecord.security.kind;
-		// 	const subscriberSecurityToken = topicRecord.security.token;
+		// 	const egressSecurityKind = topicRecord.security.kind;
+		// 	const egressSecurityToken = topicRecord.security.token;
 
-		// 	if (topicSubscriberSecurity.kind !== subscriberSecurityKind
-		// 		|| topicSubscriberSecurity.token !== subscriberSecurityToken) {
+		// 	if (topicSubscriberSecurity.kind !== egressSecurityKind
+		// 		|| topicSubscriberSecurity.token !== egressSecurityToken) {
 		// 		throw new UnknownApiError(`Wrong Egress Security Kind or Egress Security Token`);
 		// 	}
 
@@ -72,7 +72,7 @@ export class SubscriberApi extends FInitableBase {
 
 		// 	return webhookId;
 		// } catch (e) {
-		// 	this._log.error(`subscriberWebhook Error: ${e.message}`);
+		// 	this._log.error(`egressWebhook Error: ${e.message}`);
 		// 	throw apiHandledException(e);
 		// }
 	}
@@ -84,10 +84,10 @@ export class SubscriberApi extends FInitableBase {
 	 * @returns Deleted date
 	 */
 	public async unsubscribe(
-		executionContext: FExecutionContext, subscriber: Egress.Id
+		executionContext: FExecutionContext, egress: Egress.Id
 	): Promise<Date> {
 		throw new FExceptionInvalidOperation("Not implemented yet");
-		//this._log.debug(`Run subscriberWebhook with webhook: ${webhook}`);
+		//this._log.debug(`Run egressWebhook with webhook: ${webhook}`);
 
 		// try {
 		// 	//const topic: Topic = await this._storage.getTopicByWebhookId(cancellationToken, webhook.egressId);
@@ -107,6 +107,6 @@ export class SubscriberApi extends FInitableBase {
 	}
 }
 
-export namespace SubscriberApi {
+export namespace EgressApi {
 	export type TopicMap = Map<Topic["topicName"], Topic>;
 }

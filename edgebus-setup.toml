@@ -4,8 +4,8 @@
 # Enable (turn on) specific ingresses ONLY
 #"edgebus.setup.ingress.indexes" = "..."
 
-# Enable (turn on) specific subscribers ONLY
-#"edgebus.setup.subscriber.indexes" = "..."
+# Enable (turn on) specific egresses ONLY
+#"edgebus.setup.egress.indexes" = "..."
 
 
 # Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
@@ -63,14 +63,14 @@
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 # /Setup Web Socket Host egress "SUBR319ef1447b054a5292acecf40345b89b"
 
-# Setup Web Socket Host subscriber "SUBR707ef6997dc64f79b7449d599a36c5fd"
+# Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
 [[edgebus.setup.egress]]
 	index = "SUBR707ef6997dc64f79b7449d599a36c5fd"
 	kind = "WEB_SOCKET_HOST"
 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 # /Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
 
-# Setup Web Socket Host subscriber "SUBR707ef6997dc64f79b7449d599a36c5fd"
+# Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
 [[edgebus.setup.egress]]
 	index = "SUBRa8037358602e4b918c581464ed9aa58a"
 	kind = "WEB_SOCKET_HOST"

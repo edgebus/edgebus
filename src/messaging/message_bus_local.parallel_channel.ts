@@ -15,7 +15,7 @@ export class MessageBusLocalParallelChannel extends EventChannelBase<Message.Id 
 	private readonly _queue: Array<Message>;
 	private readonly _pendingQueue: Array<Message> = [];
 	private readonly _topicName: Topic["topicName"];
-	private readonly _subscriberId: EgressApiIdentifier;
+	private readonly _egressId: EgressApiIdentifier;
 	private _tickInterval: NodeJS.Timeout | null;
 	private _insideTick: boolean;
 
@@ -28,7 +28,7 @@ export class MessageBusLocalParallelChannel extends EventChannelBase<Message.Id 
 		super();
 		this._disposer = disposer;
 		this._topicName = topicName;
-		this._subscriberId = egressId;
+		this._egressId = egressId;
 		this._insideTick = false;
 		this._queue = queue;
 		if (this._queue.length > 0) {
@@ -102,7 +102,7 @@ export class MessageBusLocalParallelChannel extends EventChannelBase<Message.Id 
 			}
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);
-			console.error(`Cannot deliver message '${msg.messageId}' to subscriber '${this._subscriberId}'. ${ex.message}`);
+			console.error(`Cannot deliver message '${msg.messageId}' to egress '${this._egressId}'. ${ex.message}`);
 			this._pendingQueue.splice(this._pendingQueue.indexOf(msg), 1);
 		}
 	}

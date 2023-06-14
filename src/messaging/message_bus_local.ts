@@ -39,7 +39,7 @@ export class MessageBusLocal extends MessageBusBase {
 		}
 
 		for (const [egressId, queue] of topicQueuesMap) {
-			console.log(`Forward message '${messageId}' to subscriber ${egressId}`);
+			console.log(`Forward message '${messageId}' to egress ${egressId}`);
 			queue.push(message);
 			const channelId: string = MessageBusLocal._makeChannelId(topic.topicName, egressId);
 			const channels: Set<MessageBusLocalChannel> | undefined = this._channels.get(channelId);
@@ -48,7 +48,7 @@ export class MessageBusLocal extends MessageBusBase {
 					const [channel] = channels;
 					channel.wakeUp();
 				} else if (channels.size > 1) {
-					// When several active subscribers used same channel,
+					// When several active egresses used same channel,
 					// do some round-robin (wake up random channel)
 					const friendlyChannels = [...channels];
 					const randomValue = Math.random();

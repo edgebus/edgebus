@@ -5,7 +5,7 @@ import * as crypto from "crypto";
 import * as express from "express";
 import * as bodyParser from "body-parser";
 
-import { SubscriberApi } from "../api/subscriber_api";
+import { EgressApi } from "../api/egress_api";
 
 import { endpointHandledException } from "./errors";
 
@@ -15,12 +15,12 @@ import { Security } from "../model/security";
 
 const ensure: FEnsure = FEnsure.create();
 
-export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
-	private readonly _api: SubscriberApi;
+export class EgressApiRestEndpoint extends FServersBindEndpoint {
+	private readonly _api: EgressApi;
 
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
-		api: SubscriberApi,
+		api: EgressApi,
 		opts: FHostingConfiguration.BindEndpoint,
 		log: FLogger
 	) {

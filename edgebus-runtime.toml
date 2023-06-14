@@ -1,8 +1,8 @@
 # Enable (turn on) specific servers ONLY
-#"edgebus.runtime.server.indexes" = "management ingress subscriber"
+#"edgebus.runtime.server.indexes" = "management ingress egress"
 
 # Enable (turn on) specific endpoints ONLY
-#"edgebus.runtime.endpoint.indexes" = "info management ingress subscriber"
+#"edgebus.runtime.endpoint.indexes" = "info management ingress egress"
 
 
 # Configure web server "management"
@@ -21,20 +21,20 @@
 	type = "https"
 # /Configure web server "ingress"
 
-# Configure web server "subscriber"
+# Configure web server "egress"
 [[edgebus.runtime.server]]
-	index = "subscriber"
+	index = "egress"
 	listenHost = "0.0.0.0"
 	listenPort = "8445"
 	type = "https"
-# /Configure web server "subscriber"
+# /Configure web server "egress"
 
 
 # Configure endpoint "info"
 [[edgebus.runtime.endpoint]]
 	index = "info"
 	type = "rest-info"
-	servers = "management ingress subscriber"
+	servers = "management ingress egress"
 	bindPath = "/info"
 	[edgebus.runtime.endpoint.info.cors]
 		methods = "GET"
@@ -58,13 +58,13 @@
 	bindPath = "/ingress"
 # /Configure endpoint "ingress"
 
-# Configure endpoint "subscriber"
+# Configure endpoint "egress"
 [[edgebus.runtime.endpoint]]
-	index = "subscriber"
-	type = "rest-subscriber"
-	servers = "subscriber"
-	bindPath = "/subscriber"
-# /Configure endpoint "subscriber"
+	index = "egress"
+	type = "rest-egress"
+	servers = "egress"
+	bindPath = "/egress"
+# /Configure endpoint "egress"
 
 
 # Message Bus implementation

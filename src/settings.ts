@@ -109,7 +109,7 @@ export namespace Settings {
 		readonly type: "rest-ingress";
 	}
 	export interface RestSubscriberEndpoint extends BaseRestEndpoint {
-		readonly type: "rest-subscriber";
+		readonly type: "rest-egress";
 	}
 	export interface ExpressRouterManagementEndpoint extends FHostingConfiguration.BindEndpoint {
 		readonly type: "express-router-management";
@@ -296,7 +296,7 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Settings.Endpoint
 			});
 			return httpEndpoint;
 		}
-		case "rest-subscriber": {
+		case "rest-egress": {
 			const cors = endpointConfiguration.hasNamespace("cors")
 				? parseCors(endpointConfiguration.getNamespace("cors")) : null;
 

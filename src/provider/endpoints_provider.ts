@@ -16,7 +16,7 @@ import { HostingProvider } from "./hosting_provider";
 import { InfoRestEndpoint } from "../endpoints/info_rest_endpoint";
 import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endpoint";
 import { PublisherApiRestEndpoint } from "../endpoints/publisher_api_rest_endpoint";
-import { SubscriberApiRestEndpoint } from "../endpoints/subscriber_api_rest_endpoint";
+import { EgressApiRestEndpoint } from "../endpoints/egress_api_rest_endpoint";
 import { WebSocketHostEgressEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
 import { ProviderLocator } from "../provider_locator";
 import { ManagementApiProvider } from "./management_api_provider";
@@ -33,8 +33,8 @@ export abstract class EndpointsProvider extends FInitableBase {
 		}
 	}
 
-	public abstract get publisherApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint>;
-	public abstract get subscriberApiRestEndpoints(): ReadonlyArray<SubscriberApiRestEndpoint>;
+	public abstract get ingressApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint>;
+	public abstract get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint>;
 }
 
 @Provides(EndpointsProvider)
@@ -47,8 +47,8 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 	private readonly _endpointInstances: Array<FInitable>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
-	private readonly _publisherApiRestEndpoints: ReadonlyArray<PublisherApiRestEndpoint>;
-	private readonly _subscriberApiRestEndpoints: ReadonlyArray<SubscriberApiRestEndpoint>;
+	private readonly _ingressApiRestEndpoints: ReadonlyArray<PublisherApiRestEndpoint>;
+	private readonly _egressApiRestEndpoints: ReadonlyArray<EgressApiRestEndpoint>;
 
 	public constructor() {
 		super();
@@ -62,8 +62,8 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._endpointInstances = [];
 
-		const publisherApiRestEndpoints: Array<PublisherApiRestEndpoint> = [];
-		const subscriberApiRestEndpoints: Array<SubscriberApiRestEndpoint> = [];
+		const ingressApiRestEndpoints: Array<PublisherApiRestEndpoint> = [];
+		const egressApiRestEndpoints: Array<EgressApiRestEndpoint> = [];
 
 		for (const endpoint of this._configProvider.endpoints) {
 
@@ -109,17 +109,17 @@ class EndpointsProviderImpl extends EndpointsProvider {
 						//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
-					publisherApiRestEndpoints.push(endpointInstance);
+					ingressApiRestEndpoints.push(endpointInstance);
 					break;
 				}
-				case "rest-subscriber": {
+				case "rest-egress": {
 					const friendlyEndpoint: Settings.RestSubscriberEndpoint = endpoint;
-					const endpointInstance = new SubscriberApiRestEndpoint(
-						endpointServers, this._apiProvider.subscriberApi, endpoint,
+					const endpointInstance = new EgressApiRestEndpoint(
+						endpointServers, this._apiProvider.egressApi, endpoint,
 						FLogger.create(this.log.name + friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
 					this._endpointInstances.push(endpointInstance);
-					subscriberApiRestEndpoints.push(endpointInstance);
+					egressApiRestEndpoints.push(endpointInstance);
 					break;
 				}
 				default:
@@ -129,16 +129,16 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._destroyHandlers = [];
 
-		this._publisherApiRestEndpoints = Object.freeze(publisherApiRestEndpoints);
-		this._subscriberApiRestEndpoints = Object.freeze(subscriberApiRestEndpoints);
+		this._ingressApiRestEndpoints = Object.freeze(ingressApiRestEndpoints);
+		this._egressApiRestEndpoints = Object.freeze(egressApiRestEndpoints);
 	}
 
-	public get publisherApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint> {
-		return this._publisherApiRestEndpoints;
+	public get ingressApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint> {
+		return this._ingressApiRestEndpoints;
 	}
 
-	public get subscriberApiRestEndpoints(): ReadonlyArray<SubscriberApiRestEndpoint> {
-		return this._subscriberApiRestEndpoints;
+	public get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint> {
+		return this._egressApiRestEndpoints;
 	}
 
 	protected async onInit(): Promise<void> {

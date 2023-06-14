@@ -193,7 +193,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					}
 				);
 				//harcodedItemsToDispose.push(httpPublisherInstance);
-				for (const publisherApiRestEndpoint of endpointsProvider.publisherApiRestEndpoints) {
+				for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
 					publisherApiRestEndpoint.addHttpPublisher(executionContext, httpPublisherInstance);
 				}
 				await httpPublisherInstance.init(executionContext);
@@ -213,7 +213,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					channelFactories.push(channelFactory);
 				}
 
-				for (const subscriberApiRestEndpoint of endpointsProvider.subscriberApiRestEndpoints) {
+				for (const subscriberApiRestEndpoint of endpointsProvider.egressApiRestEndpoints) {
 					switch (hardcodedSubscriberConfiguration.egress.kind) {
 						case Egress.Kind.WebSocketHost:
 							const webSocketHostSubscriber = new WebSocketHostEgress(
@@ -241,7 +241,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							itemsToDispose.push(httpClientSubscriber);
 							break;
 						default:
-							throw new FExceptionArgument(`Unsupported subscriber type ${(hardcodedSubscriberConfiguration.egress as any).kind}`);
+							throw new FExceptionArgument(`Unsupported egress type ${(hardcodedSubscriberConfiguration.egress as any).kind}`);
 					}
 				}
 			}

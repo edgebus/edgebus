@@ -9,7 +9,7 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 
 ### Sender >--HTTP--> EdgeBus >--WebSocket connection established by Consumer--> Consumer
 
-1. Configure subscriber as WebSocketHost
+1. Configure egress as WebSocketHost
 1. Run service itself
 	```shell
 	npm start
@@ -21,12 +21,12 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 1. Run WebSocket consumer to obtain messages
 	```shell
 	npm install --global wscat
-	wscat --connect ws://127.0.0.1:8083/subscriber/websocket_host/SUBR319ef1447b054a5292acecf40345b89b
+	wscat --connect ws://127.0.0.1:8083/egress/websocket_host/SUBR319ef1447b054a5292acecf40345b89b
 	```
 
 ### Sender >--HTTP--> EdgeBus >--WebSocket connection established by Consumer--> Consumer
 
-1. Configure subscriber as HTTP Sender
+1. Configure egress as HTTP Sender
 1. Run service itself
 	```shell
 	npm start
