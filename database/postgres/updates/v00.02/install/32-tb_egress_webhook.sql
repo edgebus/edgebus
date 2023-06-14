@@ -14,7 +14,7 @@ CREATE TABLE "{{database.schema.runtime.name}}"."tb_egress_webhook" (
 	FOREIGN KEY ("id")
 	REFERENCES "{{database.schema.runtime.name}}"."tb_egress" ("id"),
 
-	CONSTRAINT "fk__tb_ingress_http_host__tb_ingress__integrity"
+	CONSTRAINT "fk__tb_ingress_httphost__tb_ingress__integrity"
 	FOREIGN KEY ("id", "kind")
 	REFERENCES "{{database.schema.runtime.name}}"."tb_egress" ("id", "kind")
 );

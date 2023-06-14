@@ -5,45 +5,100 @@ import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from ".
 import { Message } from "../model/message";
 import { MessageBus } from "./message_bus";
 import { Topic } from "../model/topic";
+import { Ingress } from "../model/ingress";
+import { Egress } from "../model/egress";
 
-export abstract class MessageBusBase extends FInitableBase implements MessageBus {
+export abstract class MessageBusBase extends MessageBus {
 	public constructor(
-		private readonly _storage: DatabaseFactory
+		protected readonly storage: DatabaseFactory
 	) {
 		super();
 	}
 
-	public async publish(executionContext: FExecutionContext, ingressId: IngressApiIdentifier, message: Message.Id & Message.Data): Promise<void> {
-		await this._storage.using(
+	public async publish(
+		executionContext: FExecutionContext,
+		ingressId: IngressApiIdentifier, message: Message.Id & Message.Data
+	): Promise<void> {
+		await this.storage.using(
 			executionContext,
 			async (db) => {
 				const topic: Topic = await db.getTopic(executionContext, { ingressId });
-				await db.createMessage(executionContext, ingressId, message.messageId, message.headers, message.mediaType, message.ingressBody);
-				await this.onPublish(executionContext, ingressId, topic.topicName, message);
+				const ingress: Ingress = await db.getIngress(executionContext, { ingressId });
+				await db.createMessage(
+					executionContext, ingressId,
+					message.messageId, message.headers,
+					message.mediaType, message.ingressBody,
+					message.body
+				);
+				await this.onPublish(
+					executionContext, ingress,
+					topic, message
+				);
 			}
 		);
 	}
-	public async retainChannel(executionContext: FExecutionContext, topicId: TopicApiIdentifier, egressId: EgressApiIdentifier): Promise<MessageBus.Channel> {
-		return await this._storage.using(
+
+	public async registerEgress(
+		executionContext: FExecutionContext,
+		egressId: EgressApiIdentifier
+	): Promise<void> {
+		await this.storage.using(
+			executionContext,
+			async (db) => {
+				const egress: Egress = await db.getEgress(executionContext, { egressId });
+				await this.onRegisterEgress(executionContext, egress);
+			}
+		);
+	}
+
+	public async registerTopic(
+		executionContext: FExecutionContext,
+		topicId: TopicApiIdentifier
+	): Promise<void> {
+		await this.storage.using(
 			executionContext,
 			async (db) => {
 				const topic: Topic = await db.getTopic(executionContext, { topicId });
-				return await this.onRetainChannel(executionContext, topicId, topic.topicName, egressId);
+				await this.onRegisterTopic(executionContext, topic);
+			}
+		);
+	}
+
+	public async retainChannel(
+		executionContext: FExecutionContext,
+		topicId: TopicApiIdentifier,
+		egressId: EgressApiIdentifier
+	): Promise<MessageBus.Channel> {
+		return await this.storage.using(
+			executionContext,
+			async (db) => {
+				const topic: Topic = await db.getTopic(executionContext, { topicId });
+				const egress: Egress = await db.getEgress(executionContext, { egressId });
+				return await this.onRetainChannel(executionContext, topic, egress);
 			}
 		);
 	}
 
 	protected abstract onPublish(
 		executionContext: FExecutionContext,
-		ingressId: IngressApiIdentifier,
-		topicName: Topic["topicName"],
+		ingress: Ingress,
+		topic: Topic,
 		message: Message.Id & Message.Data
+	): Promise<void>;
+
+	protected abstract onRegisterEgress(
+		executionContext: FExecutionContext,
+		egress: Egress
+	): Promise<void>;
+
+	protected abstract onRegisterTopic(
+		executionContext: FExecutionContext,
+		topic: Topic
 	): Promise<void>;
 
 	protected abstract onRetainChannel(
 		executionContext: FExecutionContext,
-		topicId: TopicApiIdentifier,
-		topicName: Topic["topicName"],
-		egressId: EgressApiIdentifier
+		topic: Topic,
+		egress: Egress
 	): Promise<MessageBus.Channel>;
 }

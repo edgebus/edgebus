@@ -1,9 +1,10 @@
-import { FConfiguration, FException, FExceptionInvalidOperation } from "@freemework/common";
+import { FConfiguration, FException, FExceptionInvalidOperation, FUtilUnreadonly } from "@freemework/common";
 import { FHostingConfiguration } from "@freemework/hosting";
 
 import { Router } from "express-serve-static-core";
 import { Ingress as IngressModel } from "./model/ingress";
 import { Egress as EgressModel } from "./model/egress";
+import { existsSync, readFileSync } from "fs";
 
 export class Settings {
 	private constructor(
@@ -23,9 +24,9 @@ export class Settings {
 		public readonly persistentStorageURL: URL,
 
 		/**
-		 * Connection URL to cache storage (for example Redis)
+		 * Message Bus instance settings
 		 */
-		public readonly cacheStorageURL: URL,
+		public readonly messageBus: Settings.MessageBus,
 
 		/**
 		 * Predefined configuration
@@ -44,7 +45,31 @@ export class Settings {
 			edgebusRuntimeConfiguration.getArray("endpoint").map(parseEndpoint)
 		);
 
-		const cacheStorageURL: URL = edgebusRuntimeConfiguration.get("cache.url").asUrl;
+		const messageBus: Settings.MessageBus = (function () {
+			const messageBusConfiguration: FConfiguration = edgebusRuntimeConfiguration.getNamespace("messagebus");
+			const messageBusKind: string = messageBusConfiguration.get("kind").asString;
+			switch (messageBusKind) {
+				case "bull":
+					{
+						const messageBusBullConfiguration = messageBusConfiguration.getNamespace(messageBusKind);
+						const redisUrl: URL = messageBusBullConfiguration.get("redisUrl").asUrl;
+						return Object.freeze<Settings.MessageBus>({
+							kind: "bull",
+							redisUrl
+						});
+					}
+				case "local":
+					{
+						const messageBusLocalConfiguration = messageBusConfiguration.getNamespace(messageBusKind);
+						return Object.freeze<Settings.MessageBus>({
+							kind: "local",
+						});
+					}
+				default:
+					throw new FExceptionInvalidOperation(`Not supported message bus kind '${messageBusKind}'.`);
+			}
+		})();
+
 		const persistentStorageURL: URL = edgebusRuntimeConfiguration.get("persistent.url").asUrl;
 
 		const setupConfiguration: FConfiguration | null = edgebusConfiguration.findNamespace("setup");
@@ -54,7 +79,7 @@ export class Settings {
 			servers,
 			endpoints,
 			persistentStorageURL,
-			cacheStorageURL,
+			messageBus,
 			setup
 		);
 
@@ -95,6 +120,22 @@ export namespace Settings {
 		readonly router: Router;
 	}
 
+	export type MessageBus =
+		| MessageBus.Bull
+		| MessageBus.Local;
+	export namespace MessageBus {
+		export interface Base {
+			readonly kind: string;
+		}
+		export interface Bull extends Base {
+			readonly kind: "bull";
+			readonly redisUrl: URL;
+		}
+		export interface Local extends Base {
+			readonly kind: "local";
+		}
+	}
+
 	export interface Cors {
 		readonly methods: ReadonlyArray<string>;
 		readonly whiteList: ReadonlyArray<string>;
@@ -102,11 +143,11 @@ export namespace Settings {
 	}
 
 	export interface SSL {
-		readonly caCert?: Buffer;
-		readonly clientCert?: {
-			readonly cert: Buffer;
+		readonly trustedCertificateAuthorities: ReadonlyArray<Buffer> | null;
+		readonly client: {
+			readonly certificate: Buffer;
 			readonly key: Buffer;
-		};
+		} | null;
 	}
 
 	export interface Setup {
@@ -177,8 +218,16 @@ export namespace Settings {
 
 			export interface Webhook extends Base {
 				readonly kind: EgressModel.Kind.Webhook;
-				readonly httpMethod: string | null;
-				readonly httpUrl: URL;
+				/**
+				 * Delivery HTTP Method
+				 */
+				readonly method: string | null;
+				/**
+				 * Delivery HTTP URL
+				 */
+				readonly url: URL;
+
+				readonly ssl: SSL | null;
 			}
 
 			export interface WebsocketHost extends Base {
@@ -274,6 +323,36 @@ function parseCors(corsConfiguration: FConfiguration): Settings.Cors {
 	return Object.freeze({ methods, whiteList, allowedHeaders });
 }
 
+function parseSsl(sslConfiguration: FConfiguration): Settings.SSL {
+	let trustedCertificateAuthorities: Settings.SSL["trustedCertificateAuthorities"] = null;
+	if (sslConfiguration.hasNamespace("trustedCertificateAuthorities")) {
+		const certificates: Array<Buffer> = [];
+		const trustedCertificateAuthoritiesConfiguration: FConfiguration
+			= sslConfiguration.getNamespace("trustedCertificateAuthorities");
+		const indexes = trustedCertificateAuthoritiesConfiguration.get("indexes").asString.split(" ");
+		for (const index of indexes) {
+			const trustedCertificateAuthority: string
+				= trustedCertificateAuthoritiesConfiguration.get(index).asString;
+			if (existsSync(trustedCertificateAuthority)) {
+				const certificateData = readFileSync(trustedCertificateAuthority);
+				certificates.push(certificateData);
+			} else {
+				const certificateData: Buffer = Buffer.from(trustedCertificateAuthority, "base64");
+				certificates.push(certificateData);
+			}
+		}
+		trustedCertificateAuthorities = Object.freeze(certificates);
+	}
+
+	let client: Settings.SSL["client"] = null;
+	// TBD Parse client cert
+
+	return Object.freeze<Settings.SSL>({
+		trustedCertificateAuthorities,
+		client
+	});
+}
+
 function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 
 	const ingresses: Array<Settings.Setup.Ingress> = [];
@@ -348,8 +427,9 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 						subscriberSettings = {
 							...baseSubscriberSettings,
 							kind: type,
-							httpMethod: subscriberConfiguration.get("http_method").asStringNullable,
-							httpUrl: subscriberConfiguration.get("http_url").asUrl,
+							method: subscriberConfiguration.get("method").asStringNullable,
+							url: subscriberConfiguration.get("url").asUrl,
+							ssl: subscriberConfiguration.hasNamespace("ssl") ? parseSsl(subscriberConfiguration.getNamespace("ssl")) : null
 						};
 						break;
 					case EgressModel.Kind.WebSocketHost:

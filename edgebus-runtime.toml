@@ -67,10 +67,16 @@
 # /Configure endpoint "subscriber"
 
 
-# Cache URL (Redis only at the moment)
-[edgebus.runtime.cache]
-	url = "redis://your.redis.server:6379/0"
-# /Cache URL (Redis only at the moment)
+# Message Bus implementation
+[edgebus.runtime.messagebus]
+	# kind = "bull"
+	kind = "local"
+	[edgebus.runtime.messagebus.bull]
+		redisUrl = "redis://your.redis.server:6379/0"
+	[edgebus.runtime.messagebus.local]
+		[edgebus.runtime.messagebus.local.delivery]
+			policy = "SEQUENCE"
+# /Message Bus implementation
 
 
 # Persistent storage URL (Postgres only at the moment)

@@ -10,7 +10,7 @@ import { Settings } from "../settings";
 export abstract class SettingsProvider implements Settings {
 	abstract get servers(): ReadonlyArray<FHostingConfiguration.WebServer>;
 	abstract get endpoints(): ReadonlyArray<Settings.Endpoint>;
-	abstract get cacheStorageURL(): URL;
+	abstract get messageBus(): Settings.MessageBus;
 	abstract get persistentStorageURL(): URL;
 	abstract get setup(): Settings.Setup | null;
 }
@@ -29,7 +29,7 @@ export class SettingsProviderImpl extends SettingsProvider {
 
 	public get servers() { return this._configuration.servers; }
 	public get endpoints() { return this._configuration.endpoints; }
-	public get cacheStorageURL() { return this._configuration.cacheStorageURL; }
+	public get messageBus() { return this._configuration.messageBus; }
 	public get persistentStorageURL() { return this._configuration.persistentStorageURL; }
 	public get setup() { return this._configuration.setup; }
 }

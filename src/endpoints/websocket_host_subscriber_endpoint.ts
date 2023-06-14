@@ -8,8 +8,9 @@ import { MessageBus } from "../messaging/message_bus";
 import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 import { EventChannelBase } from "../utils/event_channel_base";
+import { Bind } from "../utils/bind";
 
-export class WebSocketHostSubscriberEndpoint extends FWebSocketChannelFactoryEndpoint {
+export class WebSocketHostEgressEndpoint extends FWebSocketChannelFactoryEndpoint {
 	private readonly _emitter: EventEmitter;
 	private readonly _textChannels: Array<TextChannel> = [];
 	private readonly _channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
@@ -79,7 +80,7 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		this._channelsFactories = channelsFactories;
 		this._channels = null;
 		this._disposer = disposer;
-		this._onMessageBound = this._onMessage.bind(this);
+		this._onMessageBound = this._onMessage;
 	}
 
 	public async send(executionContext: FExecutionContext, data: string): Promise<void> {
@@ -114,17 +115,18 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		return this._disposer();
 	}
 
+	@Bind
 	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
-		try {
-			const topicName: Topic["topicName"] = event.source.topicName;
-			const message: Message.Id & Message.Data = event.data;
+		// try {
+		const topicName: Topic["topicName"] = event.source.topicName;
+		const message: Message.Id & Message.Data = event.data;
 
-			await this._delivery(this.initExecutionContext, topicName, message);
-			event.delivered = true;
-		} catch (e) {
-			event.delivered = false;
-			console.error(e);
-		}
+		await this._delivery(this.initExecutionContext, topicName, message);
+		// 	event.delivered = true;
+		// } catch (e) {
+		// 	event.delivered = false;
+		// 	console.error(e);
+		// }
 	}
 
 	private async _delivery(
@@ -133,7 +135,7 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		message: Message.Id & Message.Data
 	): Promise<void> {
 		const mediaType: string = message.mediaType;
-		const messageBody: Buffer = Buffer.from(message.transformedBody);
+		const messageBody: Buffer = Buffer.from(message.body);
 		let data: any = { rawBase64: messageBody.toString("base64") };
 		switch (mediaType) {
 			case "application/json":

@@ -15,6 +15,7 @@ import { endpointHandledException } from "./errors";
 import { Settings } from "../settings";
 import { createExecutionContextMiddleware } from "../misc/express";
 import { IngressApiIdentifier } from "../misc/api-identifier";
+import { Bind } from "../utils/bind";
 
 const ensure: FEnsure = FEnsure.create();
 
@@ -81,10 +82,10 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 		this._router.use(bodyParser.json());
 		this._router.use(bodyParser.urlencoded({ extended: false }));
 
-		this._router.use("/http/:ingressId", this.pushMessage.bind(this));
-		this._router.get("/:ingressId", this.safeBinder(this.getPublisher.bind(this)));
-		this._router.post("/http", this.safeBinder(this.createPublisherHttp.bind(this)));
-		this._router.delete("/:ingressId", this.safeBinder(this.deletePublisher.bind(this)));
+		this._router.use("/http/:ingressId", this.pushMessage);
+		this._router.get("/:ingressId", this.safeBinder(this.getPublisher));
+		this._router.post("/http", this.safeBinder(this.createPublisherHttp));
+		this._router.delete("/:ingressId", this.safeBinder(this.deletePublisher));
 
 		for (const server of this._servers) {
 			const rootExpressApplication = server.rootExpressApplication;
@@ -92,16 +93,21 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 		}
 	}
 
+	@Bind
 	private async deletePublisher(req: express.Request, res: express.Response): Promise<void> {
 		//this._api.cancelMessage(....);
 
 		res.writeHead(500, "Not implemented yet").end();
 	}
+
+	@Bind
 	private async getPublisher(req: express.Request, res: express.Response): Promise<void> {
 		//this._api.getMessage(....);
 
 		res.writeHead(500, "Not implemented yet").end();
 	}
+
+	@Bind
 	private async createPublisherHttp(req: express.Request, res: express.Response): Promise<void> {
 		try {
 			const topicName = ensure.string(req.body.topic, "Create ingress http, req.body.topic field is not a string");
@@ -145,6 +151,8 @@ export class PublisherApiRestEndpoint extends BaseRestEndpoint {
 			return;
 		}
 	}
+
+	@Bind
 	private async pushMessage(
 		req: express.Request, res: express.Response, next: express.NextFunction
 	): Promise<void> {

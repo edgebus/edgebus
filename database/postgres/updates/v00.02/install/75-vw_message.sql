@@ -5,11 +5,11 @@ SELECT
 	"topic_id",
 	"ingress_id",
 	"media_type",
-	"transformed_body",
+	"body",
 	CASE
-		WHEN "media_type" = 'application/json' THEN CONVERT_FROM("transformed_body", 'UTF8')::JSON
+		WHEN "media_type" = 'application/json' THEN CONVERT_FROM("body", 'UTF8')::JSON
 		ELSE NULL
-	END AS "transformed_body_json",
+	END AS "body_json",
 	"original_body",
 	CASE
 		WHEN "media_type" = 'application/json' THEN CONVERT_FROM("original_body", 'UTF8')::JSON

@@ -3,19 +3,74 @@ import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 import * as _ from "lodash";
 
+import { DeliveryApiIdentifier, EgressApiIdentifier, IngressApiIdentifier, MessageApiIdentifier, TopicApiIdentifier } from "../../misc/api-identifier";
+import { Delivery, Egress, Ingress, Message, Topic, ensureEgressKind, ensureIngressKind } from "../../model";
 import { SqlDatabase } from "../sql_database";
-
-// Model
-import { Egress, ensureEgressKind } from "../../model/egress";
-import { Ingress, ensureIngressKind } from "../../model/ingress";
-import { Security } from "../../model/security";
-import { Topic } from "../../model/topic";
-import { Message } from "../../model/message";
-import { EgressApiIdentifier, IngressApiIdentifier, MessageApiIdentifier, TopicApiIdentifier } from "../../misc/api-identifier";
+import { Database } from "../database";
 
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
 		super(sqlConnectionFactory);
+	}
+
+	public async createDelivery(
+		executionContext: FExecutionContext,
+		deliveryData: Partial<Delivery.Id> & Delivery.Data
+	): Promise<Delivery> {
+		this.verifyInitializedAndNotDisposed();
+
+		const deliveryId: DeliveryApiIdentifier = deliveryData.deliveryId ?? new DeliveryApiIdentifier();
+
+		const sqlCreatedSate = await this.sqlConnection
+			.statement(`
+					INSERT INTO "edgebus_runtime"."tb_egress_delivery"(
+						"api_uuid",
+						"egress_id",
+						"topic_id",
+						"message_id", 
+						"egress_topic_id",
+						"status",
+						"success_evidence",
+						"failure_evidence"
+					)
+					VALUES (
+						$1,
+						(SELECT "id" FROM "edgebus_runtime"."tb_egress" WHERE "api_uuid" = $2),
+						(SELECT "id" FROM "edgebus_runtime"."tb_topic" WHERE "api_uuid" = $3),
+						(SELECT "id" FROM "edgebus_runtime"."tb_message" WHERE "api_uuid" = $4),
+						(
+							SELECT "id" FROM "edgebus_runtime"."tb_egress_topic" 
+							WHERE "topic_id" = (
+									SELECT "id" FROM "edgebus_runtime"."tb_topic" WHERE "api_uuid" = $3
+								)
+								AND "utc_deleted_date" IS NULL
+								AND "egress_id" = (
+									SELECT "id" FROM "edgebus_runtime"."tb_egress" WHERE "api_uuid" = $2
+								)
+						),
+						$5,
+						$6,
+						$7
+					)
+					RETURNING "utc_created_date"
+				`)
+			.executeScalar(
+				executionContext,
+				/* 1 */deliveryId.uuid,
+				/* 2 */deliveryData.egressId.uuid,
+				/* 3 */deliveryData.topicId.uuid,
+				/* 4 */deliveryData.messageId.uuid,
+				/* 5 */deliveryData.status,
+				/* 6 */JSON.stringify(deliveryData.status === Delivery.Status.Success ? deliveryData.successEvidence : null),
+				/* 7 */JSON.stringify(deliveryData.status === Delivery.Status.Failure ? deliveryData.failure_evidence : null),
+			);
+
+		const deliveryModel: Delivery = {
+			...deliveryData,
+			deliveryId,
+			deliverCreatedAt: sqlCreatedSate.asDate,
+		};
+		return deliveryModel;
 	}
 
 	public async createEgress(
@@ -44,7 +99,7 @@ export class PostgresDatabase extends SqlDatabase {
 			case Egress.Kind.WebSocketHost:
 				egressExtRecord = await this.sqlConnection
 					.statement(`
-						INSERT INTO "edgebus_runtime"."tb_egress_websocket_host"(
+						INSERT INTO "edgebus_runtime"."tb_egress_websockethost"(
 							"id", "kind"
 						)
 						VALUES (
@@ -67,7 +122,7 @@ export class PostgresDatabase extends SqlDatabase {
 						VALUES (
 							$1, $2, $3, $4
 						)
-						RETURNING "id", "kind", "http_url", "http_method"
+						RETURNING "id", "kind", "http_url" AS "webhook_http_url", "http_method" AS "webhook_http_method"
 					`)
 					.executeSingle(
 						executionContext,
@@ -81,7 +136,7 @@ export class PostgresDatabase extends SqlDatabase {
 				throw new FExceptionInvalidOperation(`Not supported ingress kind: ${egressData.egressKind}`);
 		}
 
-		const egressTopicRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+		await this.sqlConnection
 			.statement(`
 				INSERT INTO "edgebus_runtime"."tb_egress_topic"("egress_id", "topic_id")
 				SELECT $1::INT, T."id"
@@ -89,7 +144,7 @@ export class PostgresDatabase extends SqlDatabase {
 				LEFT JOIN "edgebus_runtime"."tb_topic" AS T ON T."api_uuid" = INPUT."topic_uuid"
 				RETURNING "topic_id"
 			`)
-			.executeQuery(
+			.execute(
 				executionContext,
 				/* 1 */egressDbId,
 				/* 2 */egressData.egressTopicIds.map(s => s.uuid)
@@ -134,7 +189,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
-						INSERT INTO "edgebus_runtime"."tb_ingress_http_host"(
+						INSERT INTO "edgebus_runtime"."tb_ingress_httphost"(
 							"id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
 						)
 						VALUES (
@@ -166,41 +221,41 @@ export class PostgresDatabase extends SqlDatabase {
 		ingressApiId: IngressApiIdentifier,
 		messageApiId: MessageApiIdentifier,
 		headers: Message.Headers,
-		mimeType?: string,
-		originalBody?: Buffer,
-		transformedBody?: Buffer,
+		mimeType: string | null,
+		originalBody: Uint8Array | null,
+		body: Uint8Array | null,
 	): Promise<void> {
 		this.verifyInitializedAndNotDisposed();
 
 		const messageResultRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-					INSERT INTO "edgebus_runtime"."tb_message" ("api_uuid", "headers", "media_type", "transformed_body", "original_body", "ingress_id", "topic_id")
-					SELECT 
-						INPUT."api_uuid",
-						INPUT."headers",
-						INPUT."media_type",
-						INPUT."transformed_body",
-						INPUT."original_body",
-						SUB."id" AS "ingress_id",
-						SUB."topic_id"
-					FROM (SELECT
-						$1::UUID as "api_uuid",
-						$2::JSONB AS "headers",
-						$3::TEXT AS "media_type",
-						$4::BYTEA AS "transformed_body",
-						$5::BYTEA AS "original_body",
-						$6::UUID AS "ingress_uuid"
-					) AS INPUT
-					LEFT JOIN "edgebus_runtime"."tb_ingress" AS SUB ON SUB."api_uuid" = INPUT."ingress_uuid"
-					RETURNING "id", "api_uuid" "topic_id", "ingress_id", "media_type", "transformed_body", "original_body", "headers", "utc_created_at"
-					`)
+				INSERT INTO "edgebus_runtime"."tb_message" ("api_uuid", "headers", "media_type", "body", "original_body", "ingress_id", "topic_id")
+				SELECT 
+					INPUT."api_uuid",
+					INPUT."headers",
+					INPUT."media_type",
+					INPUT."body",
+					INPUT."original_body",
+					SUB."id" AS "ingress_id",
+					SUB."topic_id"
+				FROM (SELECT
+					$1::UUID as "api_uuid",
+					$2::JSONB AS "headers",
+					$3::TEXT AS "media_type",
+					$4::BYTEA AS "body",
+					$5::BYTEA AS "original_body",
+					$6::UUID AS "ingress_uuid"
+				) AS INPUT
+				LEFT JOIN "edgebus_runtime"."tb_ingress" AS SUB ON SUB."api_uuid" = INPUT."ingress_uuid"
+				RETURNING "id", "api_uuid" "topic_id", "ingress_id", "media_type", "body", "original_body", "headers", "utc_created_at"
+			`)
 			.executeSingle(
 				executionContext,
 					/* 1 */messageApiId.uuid,
 					/* 2 */JSON.stringify(headers),
-					/* 3 */mimeType !== undefined ? mimeType : null,
-					/* 4 */transformedBody !== undefined ? transformedBody : null,
-					/* 5 */originalBody !== undefined ? originalBody : null,
+					/* 3 */mimeType,
+					/* 4 */body,
+					/* 5 */_.isEqual(originalBody, body) ? null : originalBody,
 					/* 6 */ingressApiId.uuid,
 			);
 
@@ -250,26 +305,29 @@ export class PostgresDatabase extends SqlDatabase {
 		this.verifyInitializedAndNotDisposed();
 
 		const conditionStatements: Array<string> = [
-			`I."utc_deleted_date" IS NULL`
+			`E."utc_deleted_date" IS NULL`
 		];
 		const conditionParams: Array<FSqlStatementParam> = [];
 
 		// by "api_uuid"
 		conditionParams.push(opts.egressId.uuid)
-		conditionStatements.push(`I."api_uuid" = $${conditionParams.length}`);
+		conditionStatements.push(`E."api_uuid" = $${conditionParams.length}`);
 
 		const egressMainRecord: FSqlResultRecord | null = await this.sqlConnection
 			.statement(`
 				SELECT 
-					I."id",
-					I."kind",
-					I."api_uuid",
-					I."utc_created_date",
-					I."utc_deleted_date",
+					E."id",
+					E."kind",
+					E."api_uuid",
+					E."utc_created_date",
+					E."utc_deleted_date",
 					(
-						SELECT array_agg("id") FROM "edgebus_runtime"."tb_egress_topic"
-					) AS "topic_uuids"
-				FROM "edgebus_runtime"."tb_egress" AS I
+						SELECT json_agg("api_uuid")
+						FROM "edgebus_runtime"."tb_egress_topic" AS ET
+						INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
+						WHERE ET."egress_id" = E."id"
+					)::JSONB AS "topic_uuids"
+				FROM "edgebus_runtime"."tb_egress" AS E
 				WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 			`)
 			.executeSingleOrNull(
@@ -277,20 +335,30 @@ export class PostgresDatabase extends SqlDatabase {
 				...conditionParams,
 			);
 
+		// (
+		// SELECT array_agg("id") FROM "edgebus_runtime"."tb_egress_topic"
+		// ) AS "topic_uuids"
+
 		if (egressMainRecord === null) {
 			return null;
 		}
 
 		const egressDbId: number = egressMainRecord.get("id").asNumber; // INT
-		const ingressKind: string = egressMainRecord.get("kind").asString;
-		ensureEgressKind(ingressKind);
+		const egressKind: string = egressMainRecord.get("kind").asString;
+		ensureEgressKind(egressKind);
 
 		let egressExtRecord: FSqlResultRecord;
-		switch (ingressKind) {
+		switch (egressKind) {
+			case Egress.Kind.Telegram:
+				throw new FExceptionInvalidOperation(`Not supported egress kind: ${egressKind}`);
 			case Egress.Kind.Webhook:
 				egressExtRecord = await this.sqlConnection
 					.statement(`
-						SELECT "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
+						SELECT
+							"id",
+							"kind",
+							"http_url" AS "webhook_http_url",
+							"http_method" AS "webhook_http_method"
 						FROM "edgebus_runtime"."tb_egress_webhook"
 						WHERE "id" = $1
 					`)
@@ -299,24 +367,35 @@ export class PostgresDatabase extends SqlDatabase {
 						/* 1 */egressDbId,
 					);
 				break;
+			case Egress.Kind.WebSocketHost:
+				egressExtRecord = await this.sqlConnection
+					.statement(`
+						SELECT "id", "kind"
+						FROM "edgebus_runtime"."tb_egress_websockethost"
+						WHERE "id" = $1
+					`)
+					.executeSingle(
+						executionContext,
+						/* 1 */egressDbId,
+					);
+				break;
 			default:
-				throw new FExceptionInvalidOperation(`Not supported ingress kind: ${ingressKind}`);
+				throw new FExceptionInvalidOperation(`Not supported egress kind: ${egressKind}`);
 		}
 
-		const egressTopicRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
-			.statement(`
-				SELECT T."api_uuid"
-				FROM "edgebus_runtime"."tb_egress_topic" AS ET
-				INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
-				WHERE "egress_id" = $1
-			`)
-			.executeQuery(
-				executionContext,
-				/* 1 */egressDbId
-			);
+		// const egressTopicRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+		// 	.statement(`
+		// 		SELECT T."api_uuid"
+		// 		FROM "edgebus_runtime"."tb_egress_topic" AS ET
+		// 		INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
+		// 		WHERE "egress_id" = $1
+		// 	`)
+		// 	.executeQuery(
+		// 		executionContext,
+		// 		/* 1 */egressDbId
+		// 	);
 
-		const topicIds: Array<TopicApiIdentifier> = egressTopicRecords.map(s => TopicApiIdentifier.parse(s.get("api_uuid").asString));
-		const egressModel: Egress = PostgresDatabase._mapEgressDbRow(egressMainRecord, egressExtRecord, topicIds);
+		const egressModel: Egress = PostgresDatabase._mapEgressDbRow(egressMainRecord, egressExtRecord);
 		return egressModel;
 	}
 
@@ -359,7 +438,7 @@ export class PostgresDatabase extends SqlDatabase {
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
 						SELECT "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
-						FROM "edgebus_runtime"."tb_ingress_http_host"
+						FROM "edgebus_runtime"."tb_ingress_httphost"
 						WHERE "id" = $1
 					`)
 					.executeSingle(
@@ -434,6 +513,52 @@ export class PostgresDatabase extends SqlDatabase {
 		return egressModel;
 	}
 
+	public async lockEgressMessageQueue(
+		executionContext: FExecutionContext,
+		opts: Topic.Id & Egress.Id & Message.Id
+	): Promise<void> {
+		this.verifyInitializedAndNotDisposed();
+
+		await this.sqlConnection
+			.statement(`
+						SELECT 1
+						FROM "edgebus_runtime"."tb_egress_message_queue" AS EMQ
+						INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = EMQ."topic_id"
+						INNER JOIN "edgebus_runtime"."tb_egress" AS E ON E."id" = EMQ."egress_id"
+						INNER JOIN "edgebus_runtime"."tb_message" AS M ON M."id" = EMQ."message_id"
+						WHERE T."api_uuid" = $1 AND E."api_uuid" = $2 AND M."api_uuid" = $3
+						FOR UPDATE
+					`)
+			.executeSingle(
+				executionContext,
+				/* 1 */opts.topicId.uuid,
+				/* 1 */opts.egressId.uuid,
+				/* 1 */opts.messageId.uuid,
+			);
+	}
+
+	public async removeEgressMessageQueue(
+		executionContext: FExecutionContext,
+		opts: Topic.Id & Egress.Id & Message.Id
+	): Promise<void> {
+		this.verifyInitializedAndNotDisposed();
+
+		await this.sqlConnection
+			.statement(`
+						DELETE
+						FROM "edgebus_runtime"."tb_egress_message_queue"
+						WHERE "topic_id" = (SELECT "id" FROM "edgebus_runtime"."tb_topic" WHERE "api_uuid" = $1)
+							AND "egress_id" = (SELECT "id" FROM "edgebus_runtime"."tb_egress" WHERE "api_uuid" = $2)
+							AND "message_id" = (SELECT "id" FROM "edgebus_runtime"."tb_message" WHERE "api_uuid" = $3)
+					`)
+			.execute(
+				executionContext,
+				/* 1 */opts.topicId.uuid,
+				/* 1 */opts.egressId.uuid,
+				/* 1 */opts.messageId.uuid,
+			);
+	}
+
 	public async getIngress(executionContext: FExecutionContext, opts: Ingress.Id): Promise<Ingress> {
 		const ingressModel: Ingress | null = await this.findIngress(executionContext, opts);
 
@@ -454,13 +579,79 @@ export class PostgresDatabase extends SqlDatabase {
 		return topicModel;
 	}
 
+	public async listEgresses(
+		executionContext: FExecutionContext,
+	): Promise<Array<Egress>> {
+		this.verifyInitializedAndNotDisposed();
+
+		const conditionStatements: Array<string> = [
+			`E."utc_deleted_date" IS NULL`
+		];
+		const conditionParams: Array<FSqlStatementParam> = [];
+
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+				SELECT 
+					E."id",
+					E."kind",
+					E."api_uuid",
+					E."utc_created_date",
+					E."utc_deleted_date",
+					(
+						SELECT json_agg("api_uuid")
+						FROM "edgebus_runtime"."tb_egress_topic" AS ET
+						INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
+						WHERE ET."egress_id" = E."id"
+					)::JSONB AS "topic_uuids",
+					EW."http_url" AS "webhook_http_url",
+					EW."http_method" AS "webhook_http_method"
+				FROM "edgebus_runtime"."tb_egress" AS E
+				LEFT JOIN "edgebus_runtime"."tb_egress_webhook" AS EW ON EW."id" = E."id"
+				LEFT JOIN "edgebus_runtime"."tb_egress_websockethost" AS EWH ON EWH."id" = E."id"
+				WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
+			`)
+			.executeQuery(
+				executionContext,
+				...conditionParams,
+			);
+
+		const egressModels: Array<Egress> = sqlRecords.map((sqlRecord) => {
+			return PostgresDatabase._mapEgressDbRow(sqlRecord, sqlRecord);
+		});
+		return egressModels;
+	}
+
+	public async listEgressMessageQueue(
+		executionContext: FExecutionContext,
+		opts: Topic.Id | Egress.Id | Message.Id,
+	): Promise<Array<Database.EgressMessageQueue>> {
+		//
+		throw new FExceptionInvalidOperation("Not implemented yet");
+	}
+
 	public async listTopics(
 		executionContext: FExecutionContext,
-		domain: string | null
 	): Promise<Array<Topic>> {
 		this.verifyInitializedAndNotDisposed();
 
-		throw new FExceptionInvalidOperation("Not implemented yet")
+		const conditionStatements: Array<string> = [
+			`"utc_deleted_date" IS NULL`
+		];
+		const conditionParams: Array<FSqlStatementParam> = [];
+
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					FROM "edgebus_runtime"."tb_topic"
+					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
+				`)
+			.executeQuery(
+				executionContext,
+				...conditionParams,
+			);
+
+		const topicModels: Array<Topic> = sqlRecords.map(PostgresDatabase._mapTopicDbRow);
+		return topicModels;
 	}
 
 	// public async removeSubscriber(
@@ -600,7 +791,7 @@ export class PostgresDatabase extends SqlDatabase {
 	private static _mapEgressDbRow(
 		egressMainRecord: FSqlResultRecord,
 		egressExtRecord: FSqlResultRecord,
-		topicIds: ReadonlyArray<TopicApiIdentifier>
+		egressTopics?: ReadonlyArray<TopicApiIdentifier>
 	): Egress {
 		const egressUuid: string = egressMainRecord.get("api_uuid").asString;
 		const egressKind: string = egressMainRecord.get("kind").asString;
@@ -609,9 +800,20 @@ export class PostgresDatabase extends SqlDatabase {
 
 		ensureEgressKind(egressKind);
 
+		if (egressTopics === undefined) {
+			try {
+				const egressTopicUuids: Array<string> | null = egressMainRecord.get("topic_uuids").asObjectNullable;
+				egressTopics = egressTopicUuids !== null
+					? egressTopicUuids.map(TopicApiIdentifier.fromUuid)
+					: [];
+			} catch (e) {
+				throw e;
+			}
+		}
+
 		const egressBase: Egress.Id & Omit<Egress.DataBase, "egressKind"> & Egress.Instance = {
 			egressId: EgressApiIdentifier.fromUuid(egressUuid),
-			egressTopicIds: topicIds,
+			egressTopicIds: egressTopics,
 			egressCreatedAt: egressCreatedAt,
 			egressDeletedAt: egressDeletedAt,
 		};
@@ -621,8 +823,8 @@ export class PostgresDatabase extends SqlDatabase {
 				return Object.freeze({
 					...egressBase,
 					egressKind,
-					egressHttpUrl: new URL(egressExtRecord.get("http_url").asString),
-					egressHttpMethod: egressExtRecord.get("http_method").asStringNullable,
+					egressHttpUrl: new URL(egressExtRecord.get("webhook_http_url").asString),
+					egressHttpMethod: egressExtRecord.get("webhook_http_method").asStringNullable,
 				});
 			case Egress.Kind.WebSocketHost:
 				return Object.freeze({
@@ -678,8 +880,8 @@ export class PostgresDatabase extends SqlDatabase {
 		const topicName: string = sqlRow.get("name").asString;
 		const topicDescription: string = sqlRow.get("description").asString;
 		const topicMediaType: string = sqlRow.get("media_type").asString;
-		const dirtyCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
-		const dirtyDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
+		const topicCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
+		const topicDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
 
 		const topic: Topic = {
 			topicId: TopicApiIdentifier.fromUuid(topicUuid),
@@ -687,8 +889,8 @@ export class PostgresDatabase extends SqlDatabase {
 			topicDomain,
 			topicDescription,
 			topicMediaType,
-			topicCreatedAt: new Date(dirtyCreatedAt.getTime() - dirtyCreatedAt.getTimezoneOffset() * 60000), // convert from UTC
-			topicDeletedAt: dirtyDeletedAt ? new Date(dirtyDeletedAt.getTime() - dirtyDeletedAt.getTimezoneOffset() * 60000) : null
+			topicCreatedAt,
+			topicDeletedAt
 		};
 
 		return topic;

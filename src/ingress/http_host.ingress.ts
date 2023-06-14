@@ -13,6 +13,7 @@ import { BaseIngress } from "./base.ingress";
 import { DatabaseFactory } from "../data/database_factory";
 import { MIME_APPLICATION_JSON } from "../utils/mime";
 import { IngressApiIdentifier, MessageApiIdentifier } from "../misc/api-identifier";
+import { Bind } from "../utils/bind";
 
 
 const _supportedMediaTypes: Set<string> = new Set();
@@ -64,7 +65,7 @@ export class HttpHostIngress extends BaseIngress {
 
 		switch (topic.topicMediaType) {
 			case MIME_APPLICATION_JSON:
-				this.router.use(this._handleMessageApplicationJson.bind(this));
+				this.router.use(this._handleMessageApplicationJson);
 				break;
 			default:
 				throw new FExceptionArgument(`Not supported mediaType: ${topic.topicMediaType}`, "topic");
@@ -79,6 +80,7 @@ export class HttpHostIngress extends BaseIngress {
 		// NOP
 	}
 
+	@Bind
 	private async _handleMessageApplicationJson(req: Request, res: Response): Promise<void> {
 		try {
 			const ingressBody: unknown = req.body;
@@ -100,7 +102,7 @@ export class HttpHostIngress extends BaseIngress {
 					_.reduce(
 						req.headers,
 						function (acc, val, key) {
-							acc[`http.header.${key}`] = val;
+							acc[`${Message.HeaderPrefix.HTTP}${key}`] = val;
 							return acc;
 						},
 						{} as any
@@ -111,10 +113,10 @@ export class HttpHostIngress extends BaseIngress {
 			const ingressId: IngressApiIdentifier = this.ingressId;
 			const messageId: MessageApiIdentifier = new MessageApiIdentifier();
 
-			let transformedBody = ingressBody;
+			let body = ingressBody;
 			if (this._transformers !== null) {
 				for (const transformer of this._transformers) {
-					transformedBody = HttpHostIngress._applyTransformer(transformedBody, transformer);
+					body = HttpHostIngress._applyTransformer(body, transformer);
 				}
 			}
 
@@ -123,7 +125,7 @@ export class HttpHostIngress extends BaseIngress {
 				headers,
 				mediaType: MIME_APPLICATION_JSON,
 				ingressBody,
-				transformedBody
+				body
 			});
 
 			// await this._storage.using(

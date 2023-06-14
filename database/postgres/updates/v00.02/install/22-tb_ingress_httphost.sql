@@ -1,4 +1,4 @@
-CREATE TABLE "{{database.schema.runtime.name}}"."tb_ingress_http_host" (
+CREATE TABLE "{{database.schema.runtime.name}}"."tb_ingress_httphost" (
 	"id" INT NOT NULL PRIMARY KEY,
 	"kind" "{{database.schema.runtime.name}}"."INGRESS_KIND" NOT NULL,
 	"path" VARCHAR(2048) NOT NULL,
@@ -10,14 +10,14 @@ CREATE TABLE "{{database.schema.runtime.name}}"."tb_ingress_http_host" (
 	CONSTRAINT "ck__kind"
 	CHECK ("kind" = 'HTTP_HOST'),
 	
-	CONSTRAINT "fk__tb_ingress_http_host__tb_ingress"
+	CONSTRAINT "fk__tb_ingress_httphost__tb_ingress"
 	FOREIGN KEY ("id")
 	REFERENCES "{{database.schema.runtime.name}}"."tb_ingress" ("id"),
 
-	CONSTRAINT "fk__tb_ingress_http_host__tb_ingress__integrity"
+	CONSTRAINT "fk__tb_ingress_httphost__tb_ingress__integrity"
 	FOREIGN KEY ("id", "kind")
 	REFERENCES "{{database.schema.runtime.name}}"."tb_ingress" ("id", "kind")
 );
 
-GRANT INSERT ON TABLE "{{database.schema.runtime.name}}"."tb_ingress_http_host" TO "{{database.user.api}}";
-GRANT SELECT ON TABLE "{{database.schema.runtime.name}}"."tb_ingress_http_host" TO "{{database.user.api}}";
+GRANT INSERT ON TABLE "{{database.schema.runtime.name}}"."tb_ingress_httphost" TO "{{database.user.api}}";
+GRANT SELECT ON TABLE "{{database.schema.runtime.name}}"."tb_ingress_httphost" TO "{{database.user.api}}";

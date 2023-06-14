@@ -7,8 +7,9 @@ import { EventChannelBase } from "../utils/event_channel_base";
 
 import { MessageBus } from "./message_bus";
 import { EgressApiIdentifier } from "../misc/api-identifier";
+import { Bind } from "../utils/bind";
 
-export class MessageBusLocalChannelParallel extends EventChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
+export class MessageBusLocalParallelChannel extends EventChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
 	implements MessageBus.Channel {
 	private readonly _disposer: () => void | Promise<void>;
 	private readonly _queue: Array<Message>;
@@ -31,7 +32,7 @@ export class MessageBusLocalChannelParallel extends EventChannelBase<Message.Id 
 		this._insideTick = false;
 		this._queue = queue;
 		if (this._queue.length > 0) {
-			this._tickInterval = setInterval(this._tick.bind(this), 500);
+			this._tickInterval = setInterval(this._tick, 500);
 		} else {
 			this._tickInterval = null;
 		}
@@ -50,7 +51,7 @@ export class MessageBusLocalChannelParallel extends EventChannelBase<Message.Id 
 
 	public wakeUp(): void {
 		if (this._tickInterval === null && this._queue.length > 0) {
-			this._tickInterval = setInterval(this._tick.bind(this), 500);
+			this._tickInterval = setInterval(this._tick, 500);
 		}
 	}
 
@@ -62,6 +63,7 @@ export class MessageBusLocalChannelParallel extends EventChannelBase<Message.Id 
 		return this._disposer();
 	}
 
+	@Bind
 	private async _tick(): Promise<void> {
 		if (this._insideTick === true) { return; }
 		this._insideTick = true;
@@ -92,14 +94,12 @@ export class MessageBusLocalChannelParallel extends EventChannelBase<Message.Id 
 				source: this,
 				data: msg
 			};
-			await this.notify(this.initExecutionContext, event);
-			if (event.delivered === undefined) {
-				throw new FExceptionInvalidOperation("Contract violation. Event consumer MUST set field 'delivered' to true/false explicitly.");
-			}
-			if (event.delivered === true) {
+			try {
+				await this.notify(this.initExecutionContext, event);
 				this._queue.splice(this._queue.indexOf(msg), 1); // OK, remove message from queue
+			} finally {
+				this._pendingQueue.splice(this._pendingQueue.indexOf(msg), 1);
 			}
-			this._pendingQueue.splice(this._pendingQueue.indexOf(msg), 1);
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);
 			console.error(`Cannot deliver message '${msg.messageId}' to subscriber '${this._subscriberId}'. ${ex.message}`);

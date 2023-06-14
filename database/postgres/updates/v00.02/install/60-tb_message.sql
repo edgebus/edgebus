@@ -4,7 +4,7 @@ CREATE TABLE "{{database.schema.runtime.name}}"."tb_message" (
 	"topic_id" INT NOT NULL,
 	"ingress_id" INT NOT NULL,
 	"media_type" VARCHAR(64) NULL,
-	"transformed_body" BYTEA NULL,
+	"body" BYTEA NULL,
 	"original_body" BYTEA NULL,
 	"headers" JSONB NOT NULL,
 	"utc_created_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
@@ -34,8 +34,12 @@ CREATE TABLE "{{database.schema.runtime.name}}"."tb_message" (
 	REFERENCES "{{database.schema.runtime.name}}"."tb_ingress" ("id", "topic_id"),
 
 	CONSTRAINT "ck__tb_message__body"
-	CHECK (("transformed_body" IS NULL) OR ("transformed_body" IS NOT NULL AND "original_body" IS NOT NULL))
+	CHECK (("original_body" IS NULL) OR ("original_body" IS NOT NULL AND "body" IS NOT NULL))
 );
 
 GRANT INSERT ON TABLE "{{database.schema.runtime.name}}"."tb_message" TO "{{database.user.api}}";
 GRANT SELECT ON TABLE "{{database.schema.runtime.name}}"."tb_message" TO "{{database.user.api}}";
+
+COMMENT ON CONSTRAINT "ck__tb_message__body"
+ON "{{database.schema.runtime.name}}"."tb_message"
+IS 'Force to set "body" if "original_body" presented.';

@@ -7,6 +7,8 @@ import { MessageBus } from "./message_bus";
 import { MessageBusBase } from "./message_bus_base";
 import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { DatabaseFactory } from "../data/database_factory";
+import { Ingress } from "../model/ingress";
+import { Egress } from "../model/egress";
 
 export class MessageBusRabbitMQ extends MessageBusBase {
 	public constructor(storage: DatabaseFactory, opts: MessageBusRabbitMQ.Opts) {
@@ -17,18 +19,30 @@ export class MessageBusRabbitMQ extends MessageBusBase {
 
 	protected async onPublish(
 		executionContext: FExecutionContext,
-		ingressId: IngressApiIdentifier,
-		topicName: Topic["topicName"],
+		ingress: Ingress,
+		topic: Topic,
 		message: Message.Id & Message.Data
 	): Promise<void> {
 		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
+	protected async onRegisterEgress(
+		executionContext: FExecutionContext,
+		egress: Egress
+	): Promise<void> {
+		throw new FExceptionInvalidOperation("Not implemented yet");
+	}
+
+	protected async onRegisterTopic(
+		executionContext: FExecutionContext,
+		topic: Topic
+	): Promise<void> {
+		throw new FExceptionInvalidOperation("Not implemented yet");
+	}
 	protected async onRetainChannel(
 		executionContext: FExecutionContext,
-		topicId: TopicApiIdentifier,
-		topicName: Topic["topicName"],
-		egressId: EgressApiIdentifier
+		topic: Topic,
+		egress: Egress
 	): Promise<MessageBus.Channel> {
 		throw new FExceptionInvalidOperation("Not implemented yet");
 	}

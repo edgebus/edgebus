@@ -1,13 +1,14 @@
 import { FExecutionContext, FInitable, FInitableBase } from "@freemework/common";
 
-import { Egress } from "../model/egress";
-import { Ingress } from "../model/ingress";
-import { Topic } from "../model/topic";
-import { Security } from "../model/security";
-import { Message } from "../model/message";
-import { IngressApiIdentifier, MessageApiIdentifier } from "../misc/api-identifier";
+import { EgressApiIdentifier, IngressApiIdentifier, MessageApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { Delivery, Egress, Ingress, Message, Topic } from "../model";
 
 export abstract class Database extends FInitableBase {
+
+	public abstract createDelivery(
+		executionContext: FExecutionContext,
+		deliveryData: Partial<Delivery.Id> & Delivery.Data
+	): Promise<Delivery>
 
 	public abstract createEgress(
 		executionContext: FExecutionContext,
@@ -26,7 +27,7 @@ export abstract class Database extends FInitableBase {
 	 * @param messageApiId TBD
 	 * @param headers TBD
 	 * @param mimeType TBD
-	 * @param transformedBody TBD
+	 * @param body TBD
 	 * @param originalBody TBD
 	 */
 	public abstract createMessage(
@@ -34,9 +35,9 @@ export abstract class Database extends FInitableBase {
 		ingressApiId: IngressApiIdentifier,
 		messageApiId: MessageApiIdentifier,
 		headers: Message.Headers,
-		mimeType?: string,
-		originalBody?: Uint8Array,
-		transformedBody?: Uint8Array,
+		mimeType: string | null,
+		originalBody: Uint8Array | null,
+		body: Uint8Array | null,
 	): Promise<void>;
 
 
@@ -53,15 +54,27 @@ export abstract class Database extends FInitableBase {
 
 	public abstract getEgress(executionContext: FExecutionContext, opts: Egress.Id): Promise<Egress>;
 
+
 	public abstract getIngress(executionContext: FExecutionContext, opts: Ingress.Id): Promise<Ingress>;
 
 	public abstract getTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic>;
 
+	public abstract listEgresses(
+		executionContext: FExecutionContext,
+	): Promise<Array<Egress>>;
+
+	public abstract listEgressMessageQueue(
+		executionContext: FExecutionContext,
+		opts: Topic.Id | Egress.Id | Message.Id,
+	): Promise<Array<Database.EgressMessageQueue>>;
+
 	public abstract listTopics(
 		executionContext: FExecutionContext,
-		domain: string | null
 	): Promise<Array<Topic>>;
 
+	public abstract lockEgressMessageQueue(executionContext: FExecutionContext, opts: Topic.Id & Egress.Id & Message.Id): Promise<void>;
+
+	public abstract removeEgressMessageQueue(executionContext: FExecutionContext, opts: Topic.Id & Egress.Id & Message.Id): Promise<void>;
 
 	// getSubscriber(
 	// executionContext: FExecutionContext,
@@ -95,4 +108,8 @@ export abstract class Database extends FInitableBase {
 
 	public abstract transactionCommit(executionContext: FExecutionContext): Promise<void>;
 	public abstract transactionRollback(executionContext: FExecutionContext): Promise<void>;
+}
+
+export namespace Database {
+	export type EgressMessageQueue = [TopicApiIdentifier, EgressApiIdentifier, MessageApiIdentifier];
 }

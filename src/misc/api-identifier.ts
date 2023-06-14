@@ -3,6 +3,7 @@ import { FExceptionArgument } from "@freemework/common";
 import { v4 as uuidV4 } from "uuid";
 
 export const enum ApiIdentifierPrefix {
+	DELIVERY = "DLVR",
 	MESSAGE = "MSSG",
 	TOPIC = "TOPC",
 	INGRESS = "PUBR",
@@ -65,7 +66,36 @@ export abstract class ApiIdentifier {
 	private readonly _uuid: string;
 }
 
+
+
+export class DeliveryApiIdentifier extends ApiIdentifier {
+	public static parse(apiId: string): DeliveryApiIdentifier {
+		const [prefix, uuid] = ApiIdentifier.parseIdentifierParts(apiId);
+		if (prefix !== ApiIdentifierPrefix.DELIVERY) {
+			throw new FExceptionArgument(
+				`Bad Delivery API identifier '${apiId}'. Expected prefix '${ApiIdentifierPrefix.DELIVERY}', but got '${prefix}'.`,
+				"apiId"
+			);
+		}
+		return new DeliveryApiIdentifier(uuid);
+	}
+
+	public static fromUuid(uuid: string): DeliveryApiIdentifier { return new DeliveryApiIdentifier(uuid); }
+	public get prefix(): ApiIdentifierPrefix.DELIVERY { return ApiIdentifierPrefix.DELIVERY; }
+}
+
 export class MessageApiIdentifier extends ApiIdentifier {
+	public static parse(apiId: string): MessageApiIdentifier {
+		const [prefix, uuid] = ApiIdentifier.parseIdentifierParts(apiId);
+		if (prefix !== ApiIdentifierPrefix.MESSAGE) {
+			throw new FExceptionArgument(
+				`Bad Message API identifier '${apiId}'. Expected prefix '${ApiIdentifierPrefix.MESSAGE}', but got '${prefix}'.`,
+				"apiId"
+			);
+		}
+		return new MessageApiIdentifier(uuid);
+	}
+
 	public static fromUuid(uuid: string): MessageApiIdentifier { return new MessageApiIdentifier(uuid); }
 	public get prefix(): ApiIdentifierPrefix.MESSAGE { return ApiIdentifierPrefix.MESSAGE; }
 }

@@ -9,6 +9,9 @@ export namespace Message {
 	}
 
 	export type Headers = Readonly<Record<string, string>>;
+	export const enum HeaderPrefix {
+		HTTP = "http.header."
+	}
 
 	export interface Data {
 		readonly headers: Headers;
@@ -23,7 +26,7 @@ export namespace Message {
 		/**
 		 * Binary data of the transformed message
 		 */
-		readonly transformedBody: Uint8Array;
+		readonly body: Uint8Array;
 	}
 
 	export interface StatusBase {

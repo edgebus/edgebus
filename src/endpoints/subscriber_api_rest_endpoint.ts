@@ -63,9 +63,9 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 				return handler;
 			}
 
-			// router.get("/", safeBinder(this.listSubscribers.bind(this)));
-			// router.post("/webhook", safeBinder(this.subscribeWebhook.bind(this)));
-			// router.delete("/webhook", safeBinder(this.unsubscribeWebhook.bind(this)));
+			// router.get("/", safeBinder(this.listSubscribers));
+			// router.post("/webhook", safeBinder(this.subscribeWebhook));
+			// router.delete("/webhook", safeBinder(this.unsubscribeWebhook));
 		}
 	}
 
@@ -73,6 +73,7 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 		//
 	}
 
+	// @Bind
 	// private async listSubscribers(req: express.Request, res: express.Response): Promise<void> {
 	// 	try {
 	// 		const kind: string = ensure.string(req.query["subscriberSecurity.kind"],
@@ -95,6 +96,7 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 	}
 	// }
 
+	// @Bind
 	// private async subscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 	// 	try {
 	// 		// TODO: Read topicDomain from client's certificate
@@ -149,6 +151,7 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 	}
 	// }
 
+	// @Bind
 	// private async unsubscribeWebhook(req: express.Request, res: express.Response): Promise<void> {
 	// 	try {
 	// 		const reqTopic: string = ensure.string(req.body.topic, "subscribeWebhook, request.body.topic field is not a string");
@@ -196,16 +199,21 @@ export class SubscriberApiRestEndpoint extends FServersBindEndpoint {
 	// 	}
 	// }
 
+	// @Bind
 	// private async cancelMessage(req: express.Request, res: express.Response): Promise<void> {
 	// 	//this._api.cancelMessage(....);
 
 	// 	return res.writeHead(500, "Not implemented yet").end();
 	// }
+
+	// @Bind
 	// private async getMessage(req: express.Request, res: express.Response): Promise<void> {
 	// 	//this._api.getMessage(....);
 
 	// 	return res.writeHead(500, "Not implemented yet").end();
 	// }
+
+	// @Bind
 	// private async publishMessage(req: express.Request, res: express.Response): Promise<void> {
 	// 	//this._api.publishMessage(....);
 

@@ -4,13 +4,15 @@ import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 
 import { MessageBus } from "./message_bus";
-import { MessageBusLocalChannelParallel } from "./message_bus_local_parallel";
-import { MessageBusLocalChannelSequence } from "./message_bus_local_sequence";
+import { MessageBusLocalParallelChannel } from "./message_bus_local.parallel_channel";
+import { MessageBusLocalSequenceChannel } from "./message_bus_local.sequence_channel";
 import { MessageBusBase } from "./message_bus_base";
 import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { DatabaseFactory } from "../data/database_factory";
+import { Egress } from "../model/egress";
+import { Ingress } from "../model/ingress";
 
-export class MessageBusLocal extends MessageBusBase implements MessageBus {
+export class MessageBusLocal extends MessageBusBase {
 	private readonly _messageQueues: Map<Topic["topicName"], Map<EgressApiIdentifier, Array<Message>>>;
 	private readonly _channels: Map<string, Set<MessageBusLocalChannel>>;
 	private _opts: MessageBusLocal.Opts;
@@ -23,20 +25,23 @@ export class MessageBusLocal extends MessageBusBase implements MessageBus {
 	}
 
 	protected async onPublish(
-		executionContext: FExecutionContext, ingressId: IngressApiIdentifier, topicName: Topic["topicName"], message: Message
+		executionContext: FExecutionContext,
+		ingress: Ingress,
+		topic: Topic,
+		message: Message
 	): Promise<void> {
 		const messageId = message.messageId;
 
-		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topicName);
+		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topic.topicName);
 		if (topicQueuesMap === undefined) {
 			topicQueuesMap = new Map();
-			this._messageQueues.set(topicName, topicQueuesMap);
+			this._messageQueues.set(topic.topicName, topicQueuesMap);
 		}
 
 		for (const [egressId, queue] of topicQueuesMap) {
 			console.log(`Forward message '${messageId}' to subscriber ${egressId}`);
 			queue.push(message);
-			const channelId: string = MessageBusLocal._makeChannelId(topicName, egressId);
+			const channelId: string = MessageBusLocal._makeChannelId(topic.topicName, egressId);
 			const channels: Set<MessageBusLocalChannel> | undefined = this._channels.get(channelId);
 			if (channels !== undefined) {
 				if (channels.size === 1) {
@@ -55,28 +60,41 @@ export class MessageBusLocal extends MessageBusBase implements MessageBus {
 		}
 	}
 
+	protected async onRegisterEgress(
+		executionContext: FExecutionContext,
+		egress: Egress
+	): Promise<void> {
+		// NOP
+	}
+
+	protected async onRegisterTopic(
+		executionContext: FExecutionContext,
+		topic: Topic
+	): Promise<void> {
+		// NOP
+	}
+
 	protected async onRetainChannel(
 		executionContext: FExecutionContext,
-		topicId: TopicApiIdentifier,
-		topicName: Topic["topicName"],
-		egressId: EgressApiIdentifier
+		topic: Topic,
+		egress: Egress
 	): Promise<MessageBus.Channel> {
-		const channelId: string = MessageBusLocal._makeChannelId(topicName, egressId);
+		const channelId: string = MessageBusLocal._makeChannelId(topic.topicName, egress.egressId);
 
 		if (!this._channels.has(channelId)) {
 			this._channels.set(channelId, new Set());
 		}
 
-		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topicName);
+		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topic.topicName);
 		if (topicQueuesMap === undefined) {
 			topicQueuesMap = new Map();
-			this._messageQueues.set(topicName, topicQueuesMap);
+			this._messageQueues.set(topic.topicName, topicQueuesMap);
 		}
 
-		let queue = topicQueuesMap.get(egressId);
+		let queue = topicQueuesMap.get(egress.egressId);
 		if (queue === undefined) {
 			queue = [];
-			topicQueuesMap.set(egressId, queue);
+			topicQueuesMap.set(egress.egressId, queue);
 		}
 
 		let channel: MessageBusLocalChannel;
@@ -86,10 +104,10 @@ export class MessageBusLocal extends MessageBusBase implements MessageBus {
 
 		switch (this._opts.deliveryPolicy.type) {
 			case MessageBus.DeliveryPolicy.Type.SEQUENCE:
-				channel = new MessageBusLocalChannelSequence(topicName, egressId, queue, channelDisposer);
+				channel = new MessageBusLocalSequenceChannel(topic.topicName, egress.egressId, queue, channelDisposer);
 				break;
 			case MessageBus.DeliveryPolicy.Type.PARALLEL:
-				channel = new MessageBusLocalChannelParallel(topicName, egressId, queue, channelDisposer);
+				channel = new MessageBusLocalParallelChannel(topic.topicName, egress.egressId, queue, channelDisposer);
 				break;
 			default:
 				throw new FExceptionInvalidOperation("Unexpected channel type.");
@@ -122,5 +140,5 @@ export namespace MessageBusLocal {
 }
 
 
-type MessageBusLocalChannel = MessageBusLocalChannelSequence | MessageBusLocalChannelParallel;
+type MessageBusLocalChannel = MessageBusLocalSequenceChannel | MessageBusLocalParallelChannel;
 

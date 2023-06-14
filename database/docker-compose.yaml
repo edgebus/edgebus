@@ -1,5 +1,6 @@
 #
 # docker-compose --file database/docker-compose.yaml up
+# docker-compose --file database/docker-compose.yaml down
 #
 
 version: '3.9'
@@ -8,23 +9,28 @@ networks:
     name: "edgebus-local-tier"
 
 services:
+  http-dump:
+    image: theanurin/http-dump
+    restart: always
+    environment:
+      - DUMP_FILE=false
+      - DUMP_STDOUT=true
+    ports:
+      - 127.0.0.1:52003:8080
+
   postgres:
-    container_name: postgres
-    hostname: postgres
     image: theanurin/devel.postgres-13:13.11.1
     restart: always
     networks:
       - default
     ports:
-      - "127.0.0.1:5432:5432"
+      - 127.0.0.1:52000:5432
 
   pgadmin4:
-    container_name: pgadmin4
     depends_on:
       - postgres
     networks:
       - default
-    hostname: pgadmin4
     image: dpage/pgadmin4:7.3
     restart: always
     environment:
@@ -33,4 +39,22 @@ services:
     volumes:
       - ./servers.json:/pgadmin4/servers.json
     ports:
-    - "127.0.0.1:55080:80"
+    - 127.0.0.1:52010:80
+
+  redis:
+    image: redis:7.0.11-alpine
+    networks:
+      - default
+    ports:
+      - 127.0.0.1:52001:6379/tcp
+
+  redis-commander:
+    image: rediscommander/redis-commander@sha256:19cd0c49f418779fa2822a0496c5e6516d0c792effc39ed20089e6268477e40a
+    depends_on:
+      - redis
+    networks:
+      - default
+    ports:
+      - 127.0.0.1:52011:8081/tcp
+    environment:
+      - REDIS_HOSTS=EdgeBus:redis:6379:0

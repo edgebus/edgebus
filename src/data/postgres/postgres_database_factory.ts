@@ -8,13 +8,13 @@ import { Database } from "../database";
 import { DatabaseFactory } from "../database_factory";
 
 import { PostgresDatabase } from "./postgres_database";
+import { Bind } from "../../utils/bind";
 
 export class PostgresDatabaseFactory extends DatabaseFactory implements FInitable {
 	public constructor(sqlConnectionUrl: URL) {
 		super();
 		this._sqlConnectionUrl = sqlConnectionUrl;
 		this._log = FLogger.create(PostgresDatabaseFactory.name);
-		this._createBound = this.create.bind(this);
 
 		this._sqlConnectionFactory = new FSqlConnectionFactoryPostgres({
 			url: this._sqlConnectionUrl,
@@ -23,6 +23,7 @@ export class PostgresDatabaseFactory extends DatabaseFactory implements FInitabl
 		});
 	}
 
+	@Bind
 	public async create(executionContext: FExecutionContext): Promise<Database> {
 		const db: PostgresDatabase = new PostgresDatabase(this._sqlConnectionFactory);
 		await db.init(executionContext);
@@ -30,7 +31,7 @@ export class PostgresDatabaseFactory extends DatabaseFactory implements FInitabl
 	}
 
 	public using<TResult>(executionContext: FExecutionContext, worker: (db: Database) => Promise<TResult>): Promise<TResult> {
-		return Fusing(executionContext, this._createBound, async (db: Database) => {
+		return Fusing(executionContext, this.create, async (db: Database) => {
 			try {
 				const workerResult = await worker(db);
 				await db.transactionCommit(executionContext);
@@ -59,7 +60,6 @@ export class PostgresDatabaseFactory extends DatabaseFactory implements FInitabl
 	private readonly _sqlConnectionFactory: FSqlConnectionFactoryPostgres;
 	private readonly _log: FLogger;
 	private readonly _sqlConnectionUrl: URL;
-	private readonly _createBound: Fusing.ResourceInitializerWithExecutionContext<Database>;
 }
 export interface PostgresDatabaseFactory extends FInitableMixin { }
 FInitableMixin.applyMixin(PostgresDatabaseFactory);

@@ -8,20 +8,20 @@ import * as bodyParser from "body-parser";
 import { ManagementApi } from "../api/management_api";
 import { endpointHandledException } from "./errors";
 import { Topic } from "../model/topic";
+import { Bind } from "../utils/bind";
+import { ManagementApiProvider } from "../provider/management_api_provider";
 
 const ensure: FEnsure = FEnsure.create();
 
 export class ManagementApiRestEndpoint extends FServersBindEndpoint {
-	private readonly _api: ManagementApi;
 
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
-		api: ManagementApi,
+		private readonly _managementApiProvider: ManagementApiProvider,
 		opts: FHostingConfiguration.BindEndpoint,
 		log: FLogger
 	) {
 		super(servers, opts);
-		this._api = api;
 	}
 
 	protected onInit(): void {
@@ -56,9 +56,9 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 				return handler;
 			}
 
-			router.get("/topic", safeBinder(this.listTopics.bind(this)));
-			router.post("/topic", safeBinder(this.createTopic.bind(this)));
-			//router.delete("/topic/:name", safeBinder(this.destroyTopic.bind(this)));
+			router.get("/topic", safeBinder(this.listTopics));
+			router.post("/topic", safeBinder(this.createTopic));
+			//router.delete("/topic/:name", safeBinder(this.destroyTopic));
 		}
 	}
 
@@ -66,6 +66,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 		//
 	}
 
+	@Bind
 	private async createTopic(req: express.Request, res: express.Response): Promise<void> {
 		try {
 			const topicDomain: string | null = null; // TODO get from CN of the cert
@@ -81,7 +82,10 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 				topicMediaType
 			};
 
-			const topic = await this._api.createTopic(FExecutionContext.Empty, topicData);
+			const topic: Topic = await this._managementApiProvider.using(
+				FExecutionContext.Default,
+				(api) => api.createTopic(req.executionContext, topicData)
+			);
 
 			res
 				.status(201)
@@ -101,11 +105,15 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 
 	}
 
+	@Bind
 	private async listTopics(req: express.Request, res: express.Response): Promise<void> {
 		try {
 			const domain: string | null = null; // TODO get from CN of the cert
 
-			const topics: Array<Topic> = await this._api.listTopics(req.executionContext, domain);
+			const topics: Array<Topic> = await this._managementApiProvider.using(
+				FExecutionContext.Default,
+				(api) => api.listTopics(req.executionContext, domain)
+			);
 
 			const responseData = topics.map(topic => ({
 				name: topic.topicDomain !== null ? `${topic.topicName}.${topic.topicDomain}` : topic.topicName,
@@ -122,6 +130,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 		}
 	}
 
+	// @Bind
 	// private async destroyTopic(req: express.Request, res: express.Response): Promise<void> {
 
 	// 	const topicName = req.params.name;

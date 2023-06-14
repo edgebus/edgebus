@@ -1,9 +1,11 @@
-import { FLogger, FCancellationToken, FInitableBase, FExecutionContext } from "@freemework/common";
-import { Container, Provides } from "typescript-ioc";
+import { FLogger, FCancellationToken, FInitableBase, FExecutionContext, FExceptionInvalidOperation } from "@freemework/common";
+import { Container, Provides, Singleton } from "typescript-ioc";
 
+import { Queue } from "bull";
 import * as _ from "lodash";
 
 import { MessageBus } from "../messaging/message_bus";
+import { MessageBusBull } from "../messaging/message_bus_bull";
 import { MessageBusLocal } from "../messaging/message_bus_local";
 import { MessageBusRabbitMQ } from "../messaging/message_bus_rabbitmq";
 import { Message } from "../model/message";
@@ -14,9 +16,13 @@ import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from ".
 import { DatabaseFactory } from "../data/database_factory";
 import { StorageProvider } from "./storage_provider";
 import { ProviderLocator } from "../provider_locator";
+import { Settings } from "../settings";
 
-export abstract class MessageBusProvider extends FInitableBase implements MessageBus {
+@Singleton
+export abstract class MessageBusProvider extends FInitableBase {
 	protected readonly log: FLogger;
+
+	public abstract get wrap(): MessageBus;
 
 	public constructor() {
 		super();
@@ -25,54 +31,42 @@ export abstract class MessageBusProvider extends FInitableBase implements Messag
 			this.log.debug(FExecutionContext.Empty, `Implementation: ${this.constructor.name}`);
 		}
 	}
-
-	public publish(
-		executionContext: FExecutionContext,
-		ingressId: IngressApiIdentifier,
-		message: Message
-	): Promise<void> {
-		return this.messageBus.publish(executionContext, ingressId, message);
-	}
-
-	public retainChannel(
-		executionContext: FExecutionContext,
-		topicId: TopicApiIdentifier,
-		egressId: EgressApiIdentifier
-	): Promise<MessageBus.Channel> {
-		return this.messageBus.retainChannel(executionContext, topicId, egressId);
-	}
-
-	protected abstract get messageBus(): MessageBus;
 }
 
 @Provides(MessageBusProvider)
-class MessageBusProviderImpl extends MessageBusProvider {
-	private readonly _messageBus: MessageBusLocal;
+export class MessageBusProviderImpl extends MessageBusProvider {
+	public get wrap() { return this._messageBus; }
 
 	public constructor() {
 		super();
 
-		const configProvider: SettingsProvider = ProviderLocator.default.get(SettingsProvider);
+		const settingsProvider: SettingsProvider = ProviderLocator.default.get(SettingsProvider);
 		const storageProvider: StorageProvider = ProviderLocator.default.get(StorageProvider);
 
 		const storage: DatabaseFactory = storageProvider.databaseFactory;
 
-		//const rabbitUrl: URL = this.configProvider.rabbit.url;
-		//const rabbitSsl: Settings.SSL = this.configProvider.rabbit.ssl;
-
-		this._messageBus = new MessageBusLocal(
-			storage,
-			{
-				// url: rabbitUrl,
-				// ssl: rabbitSsl,
-				deliveryPolicy: {
-					type: MessageBus.DeliveryPolicy.Type.SEQUENCE,
-					retryOpts: "TBD"
-				}
-			});
+		const messageBusSettings: Settings.MessageBus = settingsProvider.messageBus;
+		switch (messageBusSettings.kind) {
+			case "bull":
+				this._messageBus = new MessageBusBull(
+					storage,
+					messageBusSettings.redisUrl,
+				);
+				break;
+			case "local":
+				this._messageBus = new MessageBusLocal(
+					storage,
+					{
+						deliveryPolicy: {
+							type: MessageBus.DeliveryPolicy.Type.SEQUENCE,
+							retryOpts: "TBD"
+						}
+					});
+				break;
+			default:
+				throw new FExceptionInvalidOperation(`Not supported message bus kind '${(messageBusSettings as any).kind}'.`);
+		}
 	}
-
-	protected get messageBus() { return this._messageBus; }
 
 	protected async onInit() {
 		await this._messageBus.init(this.initExecutionContext);
@@ -81,4 +75,6 @@ class MessageBusProviderImpl extends MessageBusProvider {
 	protected async onDispose() {
 		await this._messageBus.dispose();
 	}
+
+	private readonly _messageBus: MessageBus;
 }

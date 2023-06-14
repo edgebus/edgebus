@@ -31,6 +31,7 @@ export namespace Egress {
 		/**
 		 * Name of the attached topic
 		 */
+		// TODO: Change type to ReadonlyArray<Topic.Id & Topic.Name> 
 		readonly egressTopicIds: ReadonlyArray<TopicApiIdentifier>;
 
 		readonly egressKind: Kind;

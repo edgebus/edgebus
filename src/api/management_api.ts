@@ -4,19 +4,21 @@ import { FException, FExecutionContext, FInitableBase, FLogger } from "@freemewo
 import { Topic } from "../model/topic";
 
 import { DatabaseFactory } from "../data/database_factory";
-import { apiHandledException } from "./errors";
 import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { Database } from "../data/database";
 import { Ingress } from "../model/ingress";
 import { Egress } from "../model/egress";
+import { MessageBus } from "../messaging/message_bus";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
  */
 export class ManagementApi extends FInitableBase {
-	public constructor(dbFactory: DatabaseFactory) {
+	public constructor(
+		private readonly _dbFactory: DatabaseFactory,
+		private readonly _messageBus: MessageBus,
+	) {
 		super();
-		this._dbFactory = dbFactory;
 		this._log = FLogger.create(ManagementApi.name);
 		this.__db = null;
 	}
@@ -35,11 +37,13 @@ export class ManagementApi extends FInitableBase {
 			executionContext,
 			fullEgressData
 		);
+		await this._db.transactionCommit(executionContext);
+
+		await this._messageBus.registerEgress(executionContext, egress.egressId);
 
 		this._log.trace(executionContext, () => `Exit createEgress with data: ${JSON.stringify(egress)}`);
 		return egress;
 	}
-
 
 	public async createIngress(
 		executionContext: FExecutionContext, ingressData: Partial<Ingress.Id> & Ingress.Data
@@ -77,6 +81,9 @@ export class ManagementApi extends FInitableBase {
 			executionContext,
 			fullTopicData
 		);
+		await this._db.transactionCommit(executionContext);
+
+		await this._messageBus.registerTopic(executionContext, topic.topicId);
 
 		this._log.debug(executionContext, () => `Exit createTopic with data: ${JSON.stringify(topic)}`);
 		return topic;
@@ -111,7 +118,7 @@ export class ManagementApi extends FInitableBase {
 	): Promise<Array<Topic>> {
 		this.verifyInitializedAndNotDisposed();
 
-		const topics: Array<Topic> = await this._db.listTopics(executionContext, domain);
+		const topics: Array<Topic> = await this._db.listTopics(executionContext);
 		return topics;
 	}
 
@@ -160,7 +167,6 @@ export class ManagementApi extends FInitableBase {
 		return this.__db!;
 	}
 
-	private readonly _dbFactory: DatabaseFactory;
 	private __db: Database | null;
 	private readonly _log: FLogger;
 }

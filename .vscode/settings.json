@@ -44,6 +44,7 @@
 	"cSpell.words": [
 		"APPENDER",
 		"auditability",
+		"backoff",
 		"BYTEA",
 		"devel",
 		"DLVR",
@@ -56,7 +57,9 @@
 		"Encrypter",
 		"esac",
 		"freemework",
+		"httphost",
 		"Initable",
+		"messagebus",
 		"MSSG",
 		"PUBR",
 		"rabbitmq",
@@ -67,6 +70,7 @@
 		"theanurin",
 		"TOPC",
 		"unnest",
+		"unpromise",
 		"websockethost",
 		"Zghama",
 		"zxteam"

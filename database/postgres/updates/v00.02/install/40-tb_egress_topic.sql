@@ -14,8 +14,15 @@ CREATE TABLE "{{database.schema.runtime.name}}"."tb_egress_topic" (
 
 	CONSTRAINT "fk__tb_egress_topic__tb_topic"
 	FOREIGN KEY ("topic_id")
-	REFERENCES "{{database.schema.runtime.name}}"."tb_topic" ("id")
+	REFERENCES "{{database.schema.runtime.name}}"."tb_topic" ("id"),
+
+	CONSTRAINT "pk__tb_egress_topic__integrity"
+	UNIQUE ("id", "egress_id", "topic_id")
 );
+
+CREATE UNIQUE INDEX "uq__tb_egress_topic__success"
+ON "{{database.schema.runtime.name}}"."tb_egress_topic" ("topic_id", "egress_id")
+WHERE "utc_deleted_date" IS NULL;
 
 GRANT INSERT ON TABLE "{{database.schema.runtime.name}}"."tb_egress_topic" TO "{{database.user.api}}";
 GRANT SELECT ON TABLE "{{database.schema.runtime.name}}"."tb_egress_topic" TO "{{database.user.api}}";

@@ -1,18 +1,27 @@
-import { FDisposable, FExecutionContext, FChannelEvent } from "@freemework/common";
+import { FDisposable, FExecutionContext, FChannelEvent, FInitableBase } from "@freemework/common";
 
 import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { Topic } from "../model/topic";
 import { Message } from "../model/message";
 
-export interface MessageBus {
-	// TODO Validate final message by Topic's json schema
-	publish(
+export abstract class MessageBus extends FInitableBase {
+	public abstract publish(
 		executionContext: FExecutionContext,
 		ingressId: IngressApiIdentifier,
 		message: Message.Id & Message.Data
 	): Promise<void>;
 
-	retainChannel(
+	public abstract registerEgress(
+		executionContext: FExecutionContext,
+		egressId: EgressApiIdentifier
+	): Promise<void>;
+
+	public abstract registerTopic(
+		executionContext: FExecutionContext,
+		topicId: TopicApiIdentifier
+	): Promise<void>;
+
+	public abstract retainChannel(
 		executionContext: FExecutionContext,
 		topicId: TopicApiIdentifier,
 		egressId: EgressApiIdentifier
@@ -60,7 +69,7 @@ export namespace MessageBus {
 		export type Callback = FChannelEvent.Callback<Message.Id & Message.Data, Event>;
 		export interface Event extends FChannelEvent.Event<Message.Id & Message.Data> {
 			readonly source: Channel;
-			delivered?: boolean;
+			deliveryEvidence?: any;
 		}
 	}
 
