@@ -19,7 +19,7 @@ import { Bind } from "../utils/bind";
 
 const ensure: FEnsure = FEnsure.create();
 
-export class PublisherApiRestEndpoint extends BaseRestEndpoint {
+export class IngressApiRestEndpoint extends BaseRestEndpoint {
 	private readonly _api: PublisherApi;
 	private readonly _httpPublishersMap: Map<HttpHostIngress["ingressId"], HttpHostIngress>;
 	protected readonly _publisherRootRouter: express.Router;

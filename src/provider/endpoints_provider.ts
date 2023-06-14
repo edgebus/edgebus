@@ -15,7 +15,7 @@ import { HostingProvider } from "./hosting_provider";
 // Endpoints
 import { InfoRestEndpoint } from "../endpoints/info_rest_endpoint";
 import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endpoint";
-import { PublisherApiRestEndpoint } from "../endpoints/publisher_api_rest_endpoint";
+import { IngressApiRestEndpoint } from "../endpoints/ingress_api_rest_endpoint";
 import { EgressApiRestEndpoint } from "../endpoints/egress_api_rest_endpoint";
 import { WebSocketHostEgressEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
 import { ProviderLocator } from "../provider_locator";
@@ -33,7 +33,7 @@ export abstract class EndpointsProvider extends FInitableBase {
 		}
 	}
 
-	public abstract get ingressApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint>;
+	public abstract get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint>;
 	public abstract get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint>;
 }
 
@@ -47,7 +47,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 	private readonly _endpointInstances: Array<FInitable>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
-	private readonly _ingressApiRestEndpoints: ReadonlyArray<PublisherApiRestEndpoint>;
+	private readonly _ingressApiRestEndpoints: ReadonlyArray<IngressApiRestEndpoint>;
 	private readonly _egressApiRestEndpoints: ReadonlyArray<EgressApiRestEndpoint>;
 
 	public constructor() {
@@ -62,7 +62,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._endpointInstances = [];
 
-		const ingressApiRestEndpoints: Array<PublisherApiRestEndpoint> = [];
+		const ingressApiRestEndpoints: Array<IngressApiRestEndpoint> = [];
 		const egressApiRestEndpoints: Array<EgressApiRestEndpoint> = [];
 
 		for (const endpoint of this._configProvider.endpoints) {
@@ -104,7 +104,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 				}
 				case "rest-ingress": {
 					const friendlyEndpoint: Settings.RestPublisherEndpoint = endpoint;
-					const endpointInstance = new PublisherApiRestEndpoint(
+					const endpointInstance = new IngressApiRestEndpoint(
 						endpointServers, this._apiProvider.publisherApi, friendlyEndpoint,
 						//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
 					);
@@ -133,7 +133,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 		this._egressApiRestEndpoints = Object.freeze(egressApiRestEndpoints);
 	}
 
-	public get ingressApiRestEndpoints(): ReadonlyArray<PublisherApiRestEndpoint> {
+	public get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint> {
 		return this._ingressApiRestEndpoints;
 	}
 

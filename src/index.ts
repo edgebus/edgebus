@@ -33,7 +33,7 @@ import { MessageBusBull } from "./messaging/message_bus_bull";
 export * from "./api/errors";
 export { ManagementApi } from "./api/management_api";
 export { PublisherApi } from "./api/publisher_api";
-export { SubscriberApi } from "./api/subscriber_api";
+export { EgressApi } from "./api/egress_api";
 export { ApiProvider } from "./provider/api_provider";
 export { Settings } from "./settings";
 // export { ConfigurationProvider } from "./provider/ConfigurationProvider";
