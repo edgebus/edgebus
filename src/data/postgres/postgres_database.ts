@@ -23,11 +23,11 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlCreatedSate = await this.sqlConnection
 			.statement(`
-					INSERT INTO "edgebus_runtime"."tb_egress_delivery"(
+					INSERT INTO "tb_egress_delivery"(
 						"api_uuid",
 						"egress_id",
 						"topic_id",
-						"message_id", 
+						"message_id",
 						"egress_topic_id",
 						"status",
 						"success_evidence",
@@ -35,17 +35,17 @@ export class PostgresDatabase extends SqlDatabase {
 					)
 					VALUES (
 						$1,
-						(SELECT "id" FROM "edgebus_runtime"."tb_egress" WHERE "api_uuid" = $2),
-						(SELECT "id" FROM "edgebus_runtime"."tb_topic" WHERE "api_uuid" = $3),
-						(SELECT "id" FROM "edgebus_runtime"."tb_message" WHERE "api_uuid" = $4),
+						(SELECT "id" FROM "tb_egress" WHERE "api_uuid" = $2),
+						(SELECT "id" FROM "tb_topic" WHERE "api_uuid" = $3),
+						(SELECT "id" FROM "tb_message" WHERE "api_uuid" = $4),
 						(
-							SELECT "id" FROM "edgebus_runtime"."tb_egress_topic" 
+							SELECT "id" FROM "tb_egress_topic"
 							WHERE "topic_id" = (
-									SELECT "id" FROM "edgebus_runtime"."tb_topic" WHERE "api_uuid" = $3
+									SELECT "id" FROM "tb_topic" WHERE "api_uuid" = $3
 								)
 								AND "utc_deleted_date" IS NULL
 								AND "egress_id" = (
-									SELECT "id" FROM "edgebus_runtime"."tb_egress" WHERE "api_uuid" = $2
+									SELECT "id" FROM "tb_egress" WHERE "api_uuid" = $2
 								)
 						),
 						$5,
@@ -83,7 +83,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const egressMainRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-				INSERT INTO "edgebus_runtime"."tb_egress"("kind", "api_uuid")
+				INSERT INTO "tb_egress"("kind", "api_uuid")
 				VALUES ($1, $2)
 				RETURNING "id", "kind", "api_uuid", "utc_created_date", "utc_deleted_date"
 			`)
@@ -99,7 +99,7 @@ export class PostgresDatabase extends SqlDatabase {
 			case Egress.Kind.WebSocketHost:
 				egressExtRecord = await this.sqlConnection
 					.statement(`
-						INSERT INTO "edgebus_runtime"."tb_egress_websockethost"(
+						INSERT INTO "tb_egress_websockethost"(
 							"id", "kind"
 						)
 						VALUES (
@@ -116,7 +116,7 @@ export class PostgresDatabase extends SqlDatabase {
 			case Egress.Kind.Webhook:
 				egressExtRecord = await this.sqlConnection
 					.statement(`
-						INSERT INTO "edgebus_runtime"."tb_egress_webhook"(
+						INSERT INTO "tb_egress_webhook"(
 							"id", "kind", "http_url", "http_method"
 						)
 						VALUES (
@@ -138,10 +138,10 @@ export class PostgresDatabase extends SqlDatabase {
 
 		await this.sqlConnection
 			.statement(`
-				INSERT INTO "edgebus_runtime"."tb_egress_topic"("egress_id", "topic_id")
+				INSERT INTO "tb_egress_topic"("egress_id", "topic_id")
 				SELECT $1::INT, T."id"
 				FROM (SELECT unnest($2::UUID[]) AS "topic_uuid") AS INPUT
-				LEFT JOIN "edgebus_runtime"."tb_topic" AS T ON T."api_uuid" = INPUT."topic_uuid"
+				LEFT JOIN "tb_topic" AS T ON T."api_uuid" = INPUT."topic_uuid"
 				RETURNING "topic_id"
 			`)
 			.execute(
@@ -164,12 +164,12 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlMainRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-				INSERT INTO "edgebus_runtime"."tb_ingress"("kind", "api_uuid", "topic_id")
+				INSERT INTO "tb_ingress"("kind", "api_uuid", "topic_id")
 				VALUES (
 					$1, $2,
 					(
 						SELECT "id"
-						FROM "edgebus_runtime"."tb_topic"
+						FROM "tb_topic"
 						WHERE "api_uuid" = $3
 					)
 				)
@@ -189,7 +189,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
-						INSERT INTO "edgebus_runtime"."tb_ingress_httphost"(
+						INSERT INTO "tb_ingress_httphost"(
 							"id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
 						)
 						VALUES (
@@ -229,8 +229,8 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const messageResultRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-				INSERT INTO "edgebus_runtime"."tb_message" ("api_uuid", "headers", "media_type", "body", "original_body", "ingress_id", "topic_id")
-				SELECT 
+				INSERT INTO "tb_message" ("api_uuid", "headers", "media_type", "body", "original_body", "ingress_id", "topic_id")
+				SELECT
 					INPUT."api_uuid",
 					INPUT."headers",
 					INPUT."media_type",
@@ -246,7 +246,7 @@ export class PostgresDatabase extends SqlDatabase {
 					$5::BYTEA AS "original_body",
 					$6::UUID AS "ingress_uuid"
 				) AS INPUT
-				LEFT JOIN "edgebus_runtime"."tb_ingress" AS SUB ON SUB."api_uuid" = INPUT."ingress_uuid"
+				LEFT JOIN "tb_ingress" AS SUB ON SUB."api_uuid" = INPUT."ingress_uuid"
 				RETURNING "id", "api_uuid" "topic_id", "ingress_id", "media_type", "body", "original_body", "headers", "utc_created_at"
 			`)
 			.executeSingle(
@@ -263,10 +263,10 @@ export class PostgresDatabase extends SqlDatabase {
 
 		await this.sqlConnection
 			.statement(`
-				INSERT INTO "edgebus_runtime"."tb_egress_message_queue" ("message_id", "topic_id", "egress_id")
+				INSERT INTO "tb_egress_message_queue" ("message_id", "topic_id", "egress_id")
 				SELECT M."id", M."topic_id", ET."egress_id"
-				FROM "edgebus_runtime"."tb_message" AS M
-				INNER JOIN "edgebus_runtime"."tb_egress_topic" AS ET ON ET."topic_id" = M."topic_id"
+				FROM "tb_message" AS M
+				INNER JOIN "tb_egress_topic" AS ET ON ET."topic_id" = M."topic_id"
 				WHERE M."id" = $1
 			`)
 			.execute(executionContext, messageDbId);
@@ -284,7 +284,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-					INSERT INTO "edgebus_runtime"."tb_topic"("api_uuid", "domain", "name", "description", "media_type")
+					INSERT INTO "tb_topic"("api_uuid", "domain", "name", "description", "media_type")
 					VALUES ($1, $2, $3, $4, $5)
 					RETURNING "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
 				`)
@@ -315,7 +315,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const egressMainRecord: FSqlResultRecord | null = await this.sqlConnection
 			.statement(`
-				SELECT 
+				SELECT
 					E."id",
 					E."kind",
 					E."api_uuid",
@@ -323,11 +323,11 @@ export class PostgresDatabase extends SqlDatabase {
 					E."utc_deleted_date",
 					(
 						SELECT json_agg("api_uuid")
-						FROM "edgebus_runtime"."tb_egress_topic" AS ET
-						INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
+						FROM "tb_egress_topic" AS ET
+						INNER JOIN "tb_topic" AS T ON T."id" = ET."topic_id"
 						WHERE ET."egress_id" = E."id"
 					)::JSONB AS "topic_uuids"
-				FROM "edgebus_runtime"."tb_egress" AS E
+				FROM "tb_egress" AS E
 				WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 			`)
 			.executeSingleOrNull(
@@ -336,7 +336,7 @@ export class PostgresDatabase extends SqlDatabase {
 			);
 
 		// (
-		// SELECT array_agg("id") FROM "edgebus_runtime"."tb_egress_topic"
+		// SELECT array_agg("id") FROM "tb_egress_topic"
 		// ) AS "topic_uuids"
 
 		if (egressMainRecord === null) {
@@ -359,7 +359,7 @@ export class PostgresDatabase extends SqlDatabase {
 							"kind",
 							"http_url" AS "webhook_http_url",
 							"http_method" AS "webhook_http_method"
-						FROM "edgebus_runtime"."tb_egress_webhook"
+						FROM "tb_egress_webhook"
 						WHERE "id" = $1
 					`)
 					.executeSingle(
@@ -371,7 +371,7 @@ export class PostgresDatabase extends SqlDatabase {
 				egressExtRecord = await this.sqlConnection
 					.statement(`
 						SELECT "id", "kind"
-						FROM "edgebus_runtime"."tb_egress_websockethost"
+						FROM "tb_egress_websockethost"
 						WHERE "id" = $1
 					`)
 					.executeSingle(
@@ -386,8 +386,8 @@ export class PostgresDatabase extends SqlDatabase {
 		// const egressTopicRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
 		// 	.statement(`
 		// 		SELECT T."api_uuid"
-		// 		FROM "edgebus_runtime"."tb_egress_topic" AS ET
-		// 		INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
+		// 		FROM "tb_egress_topic" AS ET
+		// 		INNER JOIN "tb_topic" AS T ON T."id" = ET."topic_id"
 		// 		WHERE "egress_id" = $1
 		// 	`)
 		// 	.executeQuery(
@@ -414,8 +414,8 @@ export class PostgresDatabase extends SqlDatabase {
 		const sqlMainRecord: FSqlResultRecord | null = await this.sqlConnection
 			.statement(`
 				SELECT I."id", I."kind", I."api_uuid", T."api_uuid" AS "topic_uuid", I."utc_created_date", I."utc_deleted_date"
-				FROM "edgebus_runtime"."tb_ingress" AS I
-				INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = I."topic_id"
+				FROM "tb_ingress" AS I
+				INNER JOIN "tb_topic" AS T ON T."id" = I."topic_id"
 				WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 			`)
 			.executeSingleOrNull(
@@ -438,7 +438,7 @@ export class PostgresDatabase extends SqlDatabase {
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
 						SELECT "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
-						FROM "edgebus_runtime"."tb_ingress_httphost"
+						FROM "tb_ingress_httphost"
 						WHERE "id" = $1
 					`)
 					.executeSingle(
@@ -469,7 +469,7 @@ export class PostgresDatabase extends SqlDatabase {
 		} else if ("ingressId" in opts) {
 			// by "ingressId"
 			conditionParams.push(opts.ingressId.uuid)
-			conditionStatements.push(`"id" = (SELECT "topic_id" FROM "edgebus_runtime"."tb_ingress" WHERE "api_uuid" = $${conditionParams.length})`);
+			conditionStatements.push(`"id" = (SELECT "topic_id" FROM "tb_ingress" WHERE "api_uuid" = $${conditionParams.length})`);
 		} else {
 			// by "name"
 			conditionParams.push(opts.topicName)
@@ -487,7 +487,7 @@ export class PostgresDatabase extends SqlDatabase {
 		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
 			.statement(`
 					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
-					FROM "edgebus_runtime"."tb_topic"
+					FROM "tb_topic"
 					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 				`)
 			.executeSingleOrNull(
@@ -522,10 +522,10 @@ export class PostgresDatabase extends SqlDatabase {
 		await this.sqlConnection
 			.statement(`
 						SELECT 1
-						FROM "edgebus_runtime"."tb_egress_message_queue" AS EMQ
-						INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = EMQ."topic_id"
-						INNER JOIN "edgebus_runtime"."tb_egress" AS E ON E."id" = EMQ."egress_id"
-						INNER JOIN "edgebus_runtime"."tb_message" AS M ON M."id" = EMQ."message_id"
+						FROM "tb_egress_message_queue" AS EMQ
+						INNER JOIN "tb_topic" AS T ON T."id" = EMQ."topic_id"
+						INNER JOIN "tb_egress" AS E ON E."id" = EMQ."egress_id"
+						INNER JOIN "tb_message" AS M ON M."id" = EMQ."message_id"
 						WHERE T."api_uuid" = $1 AND E."api_uuid" = $2 AND M."api_uuid" = $3
 						FOR UPDATE
 					`)
@@ -546,10 +546,10 @@ export class PostgresDatabase extends SqlDatabase {
 		await this.sqlConnection
 			.statement(`
 						DELETE
-						FROM "edgebus_runtime"."tb_egress_message_queue"
-						WHERE "topic_id" = (SELECT "id" FROM "edgebus_runtime"."tb_topic" WHERE "api_uuid" = $1)
-							AND "egress_id" = (SELECT "id" FROM "edgebus_runtime"."tb_egress" WHERE "api_uuid" = $2)
-							AND "message_id" = (SELECT "id" FROM "edgebus_runtime"."tb_message" WHERE "api_uuid" = $3)
+						FROM "tb_egress_message_queue"
+						WHERE "topic_id" = (SELECT "id" FROM "tb_topic" WHERE "api_uuid" = $1)
+							AND "egress_id" = (SELECT "id" FROM "tb_egress" WHERE "api_uuid" = $2)
+							AND "message_id" = (SELECT "id" FROM "tb_message" WHERE "api_uuid" = $3)
 					`)
 			.execute(
 				executionContext,
@@ -591,7 +591,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
 			.statement(`
-				SELECT 
+				SELECT
 					E."id",
 					E."kind",
 					E."api_uuid",
@@ -599,15 +599,15 @@ export class PostgresDatabase extends SqlDatabase {
 					E."utc_deleted_date",
 					(
 						SELECT json_agg("api_uuid")
-						FROM "edgebus_runtime"."tb_egress_topic" AS ET
-						INNER JOIN "edgebus_runtime"."tb_topic" AS T ON T."id" = ET."topic_id"
+						FROM "tb_egress_topic" AS ET
+						INNER JOIN "tb_topic" AS T ON T."id" = ET."topic_id"
 						WHERE ET."egress_id" = E."id"
 					)::JSONB AS "topic_uuids",
 					EW."http_url" AS "webhook_http_url",
 					EW."http_method" AS "webhook_http_method"
-				FROM "edgebus_runtime"."tb_egress" AS E
-				LEFT JOIN "edgebus_runtime"."tb_egress_webhook" AS EW ON EW."id" = E."id"
-				LEFT JOIN "edgebus_runtime"."tb_egress_websockethost" AS EWH ON EWH."id" = E."id"
+				FROM "tb_egress" AS E
+				LEFT JOIN "tb_egress_webhook" AS EW ON EW."id" = E."id"
+				LEFT JOIN "tb_egress_websockethost" AS EWH ON EWH."id" = E."id"
 				WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 			`)
 			.executeQuery(
@@ -642,7 +642,7 @@ export class PostgresDatabase extends SqlDatabase {
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
 			.statement(`
 					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
-					FROM "edgebus_runtime"."tb_topic"
+					FROM "tb_topic"
 					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 				`)
 			.executeQuery(

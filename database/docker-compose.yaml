@@ -35,7 +35,7 @@ services:
     restart: always
     environment:
       - PGADMIN_DEFAULT_EMAIL=dev@edgebus.io
-      - PGADMIN_DEFAULT_PASSWORD=devel 
+      - PGADMIN_DEFAULT_PASSWORD=devel
     volumes:
       - ./servers.json:/pgadmin4/servers.json
     ports:

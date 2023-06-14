@@ -46,11 +46,14 @@
 		"auditability",
 		"backoff",
 		"BYTEA",
+		"cexiolabs",
+		"devdb",
 		"devel",
 		"DLVR",
 		"Dockerfiles",
 		"dockerhub",
 		"dorny",
+		"dpage",
 		"edgebus",
 		"elif",
 		"embeddable",
@@ -61,6 +64,7 @@
 		"Initable",
 		"messagebus",
 		"MSSG",
+		"PGADMIN",
 		"PUBR",
 		"rabbitmq",
 		"riscv",
@@ -73,6 +77,7 @@
 		"unpromise",
 		"websockethost",
 		"Zghama",
-		"zxteam"
+		"zxteam",
+		"zxteamorg"
 	],
 }
