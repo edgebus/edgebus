@@ -42,7 +42,12 @@ export class MessageBusBull extends MessageBusBase {
 		const db: number = Number.parseInt(redisUrl.pathname.substring(1) ?? '0');
 		const port: number = Number.parseInt(redisUrl.port ?? '6379');
 		const host: string = redisUrl.hostname;
-		this._redisOpts = Object.freeze({ host, port, db });
+
+		const redisOpts: RedisOptions = { host, port, db };
+		if (redisUrl.password.length > 0) {
+			redisOpts.password = redisUrl.password;
+		}
+		this._redisOpts = Object.freeze(redisOpts);
 
 		this._channels = new Map();
 		this._bullEgressQueues = new Map<EgressApiIdentifier["value"], Queue>();
