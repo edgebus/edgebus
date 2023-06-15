@@ -6,8 +6,8 @@ export const enum ApiIdentifierPrefix {
 	DELIVERY = "DLVR",
 	MESSAGE = "MSSG",
 	TOPIC = "TOPC",
-	INGRESS = "PUBR",
-	EGRESS = "SUBR"
+	INGRESS = "IGRS",
+	EGRESS = "EGRS"
 }
 
 export abstract class ApiIdentifier {

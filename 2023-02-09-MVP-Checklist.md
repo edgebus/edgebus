@@ -3,8 +3,8 @@
 - [x] Make prefixed identifier classes (copy/refactor from processing)
 	- DLVR319ef1447b054a5292acecf40345b89b - sample of Delivery ID
 	- MSSG319ef1447b054a5292acecf40345b89b - sample of Message ID
-	- PUBR319ef1447b054a5292acecf40345b89b - sample of Ingress ID
-	- SUBR319ef1447b054a5292acecf40345b89b - sample of Egress ID
+	- IGRS319ef1447b054a5292acecf40345b89b - sample of Ingress ID
+	- EGRS319ef1447b054a5292acecf40345b89b - sample of Egress ID
 	- TOPC319ef1447b054a5292acecf40345b89b - sample of Topic ID
 - [ ] Review/update DB structure for the MVP
 - [ ] Implement Database(PostgresDatabase) with necessary set of methods

@@ -25,9 +25,9 @@
 # /Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 
 
-# Setup HTTP-host ingress "PUBR9028c57498b641988fc71355e9ac622e"
+# Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
 [[edgebus.setup.ingress]]
-	index = "PUBR9028c57498b641988fc71355e9ac622e"
+	index = "IGRS9028c57498b641988fc71355e9ac622e"
 	kind = "HTTP_HOST"
 	path = "/v2/callback/sumsub"
 	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
@@ -38,11 +38,11 @@
 	[edgebus.setup.ingress.response.header]
 		"Content-Type" = "application/json"
 		"X-EdgeBus-Token" = "abc"
-# /Setup HTTP-host ingress "PUBR9028c57498b641988fc71355e9ac622e"
+# /Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
 
-# Setup HTTP-host ingress "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
+# Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
 [[edgebus.setup.ingress]]
-	index = "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
+	index = "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
 	kind = "HTTP_HOST"
 	path = "/v2/callback/fireblocks"
 	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
@@ -53,33 +53,33 @@
 	[edgebus.setup.ingress.response.header]
 		"Content-Type" = "application/json"
 		"X-EdgeBus-Token" = "abc"
-# /Setup HTTP-host ingress "PUBRafb0ff9b217d4a5c8b33d76291bb7d81"
+# /Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
 
 
-# Setup Web Socket Host egress "SUBR319ef1447b054a5292acecf40345b89b"
+# Setup Web Socket Host egress "EGRS319ef1447b054a5292acecf40345b89b"
 [[edgebus.setup.egress]]
-	index = "SUBR319ef1447b054a5292acecf40345b89b"
+	index = "EGRS319ef1447b054a5292acecf40345b89b"
 	kind = "WEB_SOCKET_HOST"
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-# /Setup Web Socket Host egress "SUBR319ef1447b054a5292acecf40345b89b"
+# /Setup Web Socket Host egress "EGRS319ef1447b054a5292acecf40345b89b"
 
-# Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
+# Setup Web Socket Host egress "EGRS707ef6997dc64f79b7449d599a36c5fd"
 [[edgebus.setup.egress]]
-	index = "SUBR707ef6997dc64f79b7449d599a36c5fd"
+	index = "EGRS707ef6997dc64f79b7449d599a36c5fd"
 	kind = "WEB_SOCKET_HOST"
 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-# /Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
+# /Setup Web Socket Host egress "EGRS707ef6997dc64f79b7449d599a36c5fd"
 
-# Setup Web Socket Host egress "SUBR707ef6997dc64f79b7449d599a36c5fd"
+# Setup Web Socket Host egress "EGRS707ef6997dc64f79b7449d599a36c5fd"
 [[edgebus.setup.egress]]
-	index = "SUBRa8037358602e4b918c581464ed9aa58a"
+	index = "EGRSa8037358602e4b918c581464ed9aa58a"
 	kind = "WEB_SOCKET_HOST"
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6 TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-# /Setup Web Socket Host egress "SUBRa8037358602e4b918c581464ed9aa58a"
+# /Setup Web Socket Host egress "EGRSRa8037358602e4b918c581464ed9aa58a"
 
-# Setup WebHook egress "SUBRec84237fe6674a15820407ab5a93e97b"
+# Setup WebHook egress "EGRSec84237fe6674a15820407ab5a93e97b"
 [[edgebus.setup.egress]]
-	index = "SUBRec84237fe6674a15820407ab5a93e97b"
+	index = "EGRSec84237fe6674a15820407ab5a93e97b"
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 	kind = "WEBHOOK"
 	method="POST"
@@ -94,4 +94,4 @@
 	#		certificate = "file or base64"
 	#		key = "file or base64"
 	#		key = "file or base64"
-# /Setup Web Socket Host egress "SUBRec84237fe6674a15820407ab5a93e97b"
+# /Setup Web Socket Host egress "EGRSec84237fe6674a15820407ab5a93e97b"
