@@ -381,7 +381,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 							: responseConfiguration.get("status_code", "200").asIntegerPositive;
 						const responseStatusMessage: string | null = responseConfiguration === null
 							? null
-							: responseConfiguration.get("status_message").asStringNullable;
+							: responseConfiguration.get("status_message", null).asStringNullable;
 						const responseBodyStr: string | null = responseConfiguration === null
 							? null
 							: responseConfiguration.get("body", null).asStringNullable;
@@ -427,7 +427,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 						subscriberSettings = {
 							...baseSubscriberSettings,
 							kind: type,
-							method: subscriberConfiguration.get("method").asStringNullable,
+							method: subscriberConfiguration.get("method", null).asStringNullable,
 							url: subscriberConfiguration.get("url").asUrl,
 							ssl: subscriberConfiguration.hasNamespace("ssl") ? parseSsl(subscriberConfiguration.getNamespace("ssl")) : null
 						};
