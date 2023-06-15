@@ -820,14 +820,14 @@ export class PostgresDatabase extends SqlDatabase {
 
 		switch (egressKind) {
 			case Egress.Kind.Webhook:
-				return Object.freeze({
+				return Object.freeze<Egress>({
 					...egressBase,
 					egressKind,
 					egressHttpUrl: new URL(egressExtRecord.get("webhook_http_url").asString),
 					egressHttpMethod: egressExtRecord.get("webhook_http_method").asStringNullable,
 				});
 			case Egress.Kind.WebSocketHost:
-				return Object.freeze({
+				return Object.freeze<Egress>({
 					...egressBase,
 					egressKind,
 				});
@@ -858,13 +858,13 @@ export class PostgresDatabase extends SqlDatabase {
 
 		switch (ingressKind) {
 			case Ingress.Kind.HttpHost:
-				return Object.freeze({
+				return Object.freeze<Ingress>({
 					...ingressBase,
 					ingressKind,
 					ingressHttpHostPath: sqlExtendedRecord.get("path").asString,
 					ingressHttpHostResponseStatusCode: sqlExtendedRecord.get("response_status_code").asNumber,
 					ingressHttpHostResponseStatusMessage: sqlExtendedRecord.get("response_status_message").asStringNullable,
-					ingressHttpHostResponseHeaders: sqlExtendedRecord.get("response_headers").asObject,
+					ingressHttpHostResponseHeaders: sqlExtendedRecord.get("response_headers").asObjectNullable,
 					ingressHttpHostResponseBody: sqlExtendedRecord.get("response_body").asBinaryNullable,
 				});
 			default:
@@ -893,6 +893,6 @@ export class PostgresDatabase extends SqlDatabase {
 			topicDeletedAt
 		};
 
-		return topic;
+		return Object.freeze<Topic>(topic);
 	}
 }
