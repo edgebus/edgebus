@@ -11,7 +11,8 @@ import { Ingress } from "../model/ingress";
 
 import { BaseIngress } from "./base.ingress";
 import { DatabaseFactory } from "../data/database_factory";
-import { MIME_APPLICATION_JSON } from "../utils/mime";
+import { HttpBadRequestException } from "../endpoints/exceptions";
+import { MIME_APPLICATION_JSON, MIME_APPLICATION_JSON_UTF8 } from "../utils/mime";
 import { IngressApiIdentifier, MessageApiIdentifier } from "../misc/api-identifier";
 import { Bind } from "../utils/bind";
 
@@ -65,6 +66,7 @@ export class HttpHostIngress extends BaseIngress {
 
 		switch (topic.topicMediaType) {
 			case MIME_APPLICATION_JSON:
+			case MIME_APPLICATION_JSON_UTF8:
 				this.router.use(this._handleMessageApplicationJson);
 				break;
 			default:
@@ -85,12 +87,12 @@ export class HttpHostIngress extends BaseIngress {
 		try {
 			const ingressBody: unknown = req.body;
 			if (!(ingressBody instanceof Uint8Array)) {
-				throw new FExceptionInvalidOperation("Non-supported body type. Expected type of Uint8Array.");
+				throw new HttpBadRequestException("Non-supported body type. Expected type of Uint8Array.");
 			}
 
 			const mediaType: string = req.headers['content-type'] ?? MIME_APPLICATION_JSON;
-			if (mediaType !== MIME_APPLICATION_JSON) {
-				throw new FExceptionInvalidOperation(`Non-supported content type. content type '${MIME_APPLICATION_JSON}'.`);
+			if (mediaType !== MIME_APPLICATION_JSON && mediaType !== MIME_APPLICATION_JSON_UTF8) {
+				throw new HttpBadRequestException(`Non-supported content type '${mediaType}'. Expected content type '${MIME_APPLICATION_JSON}' or '${MIME_APPLICATION_JSON_UTF8}'.`);
 			}
 
 			const headers: Message.Headers = Object.freeze({
@@ -158,7 +160,11 @@ export class HttpHostIngress extends BaseIngress {
 			const msg: string = `Failure to process published message. Error: ${ex.message}`;
 			this._log.warn(req.executionContext, msg);
 			this._log.debug(req.executionContext, msg, ex);
-			res.writeHead(500, "Internal error");
+			if (ex instanceof HttpBadRequestException) {
+				res.writeHead(400, "Bad Request");
+			} else {
+				res.writeHead(500, "Internal Error");
+			}
 			res.end();
 		}
 	}

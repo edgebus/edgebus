@@ -119,6 +119,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 				readonly topicId: TopicApiIdentifier,
 				readonly topicName: string;
 				readonly topicDescription: string;
+				readonly topicMediaType: string;
 				// readonly ingressId: string;
 				// readonly publisherPath: string;
 				readonly ingressConfiguration: Settings.Setup.Ingress;
@@ -145,6 +146,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 						topicId: TopicApiIdentifier.parse(topicsByIdMap.get(ingress.topicId)!.topicId),
 						topicName: topicsByIdMap.get(ingress.topicId)!.name,
 						topicDescription: topicsByIdMap.get(ingress.topicId)!.description,
+						topicMediaType: topicsByIdMap.get(ingress.topicId)!.mediaType,
 						ingressConfiguration: ingress
 					});
 				}
@@ -177,7 +179,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 						topicName: hardcodedPublisherConfiguration.topicName,
 						topicDomain: null,
 						topicDescription: hardcodedPublisherConfiguration.topicDescription,
-						topicMediaType: "application/json"
+						topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
 					},
 					IngressApiIdentifier.parse(ingressConfiguration.ingressId),
 					messageBusProvider.wrap,

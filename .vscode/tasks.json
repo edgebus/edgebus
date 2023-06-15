@@ -25,13 +25,12 @@
 			"label": "Build Postgres Database",
 			"group": "build",
 			"type": "shell",
-			"command": "docker run --interactive --tty --rm --volume \"${workspaceFolder}/database/postgres\":/data --env ENV=local --env \"database.name\" --env \"database.user.owner\" --env \"database.user.api\" --env \"database.user.audit\" --env \"database.user.readonly\" zxteamorg/devel.migration-builder:20210623 --config-file=database.config --config-file=database-local.config --config-env",
+			"command": "docker run --interactive --tty --rm --volume \"${workspaceFolder}/database/postgres\":/data --env ENV=local --env \"database.name\" --env \"database.user.owner\" --env \"database.user.api\" --env \"database.user.readonly\" zxteamorg/devel.migration-builder:20210623 --config-file=database.config --config-file=database-local.config --config-env",
 			"options": {
 				"env": {
 					"database.name": "devdb",
 					"database.user.owner": "edgebus-local-owner",
 					"database.user.api": "edgebus-local-api",
-					"database.user.audit": "edgebus-local-audit",
 					"database.user.readonly": "edgebus-local-readonly"
 				}
 			},
