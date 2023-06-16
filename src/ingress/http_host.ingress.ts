@@ -1,5 +1,6 @@
 import { FException, FExceptionArgument, FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
 
+import * as ContentType from "content-type";
 import { Request, Response, Router } from "express";
 import * as  _ from "lodash";
 
@@ -90,9 +91,21 @@ export class HttpHostIngress extends BaseIngress {
 				throw new HttpBadRequestException("Non-supported body type. Expected type of Uint8Array.");
 			}
 
-			const mediaType: string = req.headers['content-type'] ?? MIME_APPLICATION_JSON;
-			if (mediaType !== MIME_APPLICATION_JSON && mediaType !== MIME_APPLICATION_JSON_UTF8) {
-				throw new HttpBadRequestException(`Non-supported content type '${mediaType}'. Expected content type '${MIME_APPLICATION_JSON}' or '${MIME_APPLICATION_JSON_UTF8}'.`);
+			const contentTypeValue = req.headers['content-type'];
+			const contentType: ContentType.ParsedMediaType | null = contentTypeValue !== undefined
+				? ContentType.parse(contentTypeValue) : null;
+
+			if (
+				!(
+					contentType !== null
+					&& contentType.type === MIME_APPLICATION_JSON
+					&& (
+						contentType.parameters.charset === undefined
+						|| contentType.parameters.charset.toLocaleLowerCase() === "utf-8"
+					)
+				)
+			) {
+				throw new HttpBadRequestException(`Non-supported content type '${contentTypeValue}'. Expected content type '${MIME_APPLICATION_JSON}' or '${MIME_APPLICATION_JSON_UTF8}'.`);
 			}
 
 			const headers: Message.Headers = Object.freeze({
@@ -129,11 +142,6 @@ export class HttpHostIngress extends BaseIngress {
 				ingressBody,
 				body
 			});
-
-			// await this._storage.using(
-			// 	req.executionContext,
-			// 	(db) => db.createMessage(req.executionContext, ingressId.uuid, messageId.uuid, headers, mediaType, ingressBody)
-			// );
 
 			await this._messageBus.publish(req.executionContext, ingressId, message);
 

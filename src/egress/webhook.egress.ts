@@ -1,5 +1,6 @@
 import { FDisposableBase, FException, FExecutionContext, FHttpClient, FInitableBase, FLogger } from "@freemework/common";
 
+import * as ContentType from "content-type";
 import { OutgoingHttpHeaders } from "http";
 
 import { MessageBus } from "../messaging/message_bus";
@@ -8,6 +9,7 @@ import { Egress } from "../model/egress";
 import { EgressApiIdentifier } from "../misc/api-identifier";
 import { Bind } from "../utils/bind";
 import { Settings } from "../settings";
+import { MIME_APPLICATION_JSON } from "../utils/mime";
 
 export class WebhookEgress extends FInitableBase {
 
@@ -87,10 +89,23 @@ export class WebhookEgress extends FInitableBase {
 			});
 			if (response && response.statusCode >= 200 && response.statusCode < 300) {
 				this._log.info(executionContext, () => `Event from topic '${event.source.topicName}' was delivered successfully.`);
-				event.deliveryEvidence = {
+
+				const contentTypeValue = response.headers['content-type'];
+				const contentType: ContentType.ParsedMediaType | null = contentTypeValue !== undefined
+					? ContentType.parse(contentTypeValue) : null;
+
+					event.deliveryEvidence = {
 					kind: Egress.Kind.Webhook,
 					headers: response.headers,
 					body: response.body.toString("base64"),
+					bodyJson: contentType !== null
+						&& contentType.type === MIME_APPLICATION_JSON
+						&& (
+							contentType.parameters.charset === undefined
+							|| contentType.parameters.charset.toLocaleLowerCase() === "utf-8"
+						)
+						? JSON.parse(response.body.toString("utf-8"))
+						: null,
 					statusCode: response.statusCode,
 					statusDescription: response.statusDescription,
 				}
