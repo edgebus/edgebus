@@ -1,7 +1,6 @@
 import { FInitableBase, FLogger } from "@freemework/common";
 
-import { Ingress } from "../model/ingress";
-import { Topic } from "../model/topic";
+import { Topic } from "../model";
 import { IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 
 export abstract class BaseIngress extends FInitableBase {

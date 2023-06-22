@@ -1,12 +1,7 @@
-import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger, FExceptionArgument, FDecimal, FDecimalBackendNumber, FExceptionInvalidOperation } from "@freemework/common";
+import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger, FExceptionArgument, FDecimal, FDecimalBackendNumber, FExceptionInvalidOperation, FLoggerConsole } from "@freemework/common";
 import { FLauncherRuntime } from "@freemework/hosting";
 
 import * as _ from "lodash";
-
-import * as Queue from "bull";
-import { createBullBoard } from "@bull-board/api";
-import { BullAdapter } from "@bull-board/api/bullAdapter";
-import { ExpressAdapter } from "@bull-board/express";
 
 // Providers
 import { SettingsProvider, SettingsProviderImpl } from "./provider/settings_provider";
@@ -44,6 +39,7 @@ export { HostingProvider } from "./provider/hosting_provider";
 
 export * from "./misc";
 
+
 export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FLauncherRuntime> {
 	executionContext = new FLoggerLabelsExecutionContext(executionContext, { ...appInfo });
 
@@ -58,33 +54,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 		Container.bind(SettingsProvider).provider({ get() { return ownProvider; } });
 	}
 
-	{ // TODO: Refactor hard-coded Bull stuff
-
-		// const messageBusProvider: MessageBusProvider = new MessageBusProviderImpl(someQueue);
-		// Container.bind(MessageBusProvider).provider({ get() { return messageBusProvider; } });
-
-		// const serverAdapter = new ExpressAdapter();
-		// serverAdapter.setBasePath('/admin/queues');
-
-		// let errorIndex = 0;
-		// someQueue.process(function (job, done) {
-		// 	console.log(new Date());
-		// 	done(new Error(`Test error: ${++errorIndex}`));
-		// });
-
-		// someQueue.add({ ololo: 42 }, {
-		// 	attempts: 500,
-		// 	backoff: {
-		// 		type: "exponential",
-		// 		delay: 1000
-		// 	}
-		// });
-
-		// const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard({
-		// 	queues: [new BullAdapter(someQueue)],
-		// 	serverAdapter: serverAdapter,
-		// });
-
+	{ // TODO: Temporary solution to expose Bull dashboard
 		const messageBus: MessageBus = ProviderLocator.default.get(MessageBusProvider).wrap;
 		if (messageBus instanceof MessageBusBull) {
 			ProviderLocator.default.get(HostingProvider).serverInstances.forEach(s => {
@@ -173,7 +143,6 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 				}
 				const httpPublisherInstance: HttpHostIngress = new HttpHostIngress(
-					storageProvider.databaseFactory,
 					{
 						topicId: hardcodedPublisherConfiguration.topicId,
 						topicName: hardcodedPublisherConfiguration.topicName,
