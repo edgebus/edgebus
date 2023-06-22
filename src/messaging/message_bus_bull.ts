@@ -1,4 +1,4 @@
-import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
+import { FConfigurationException, FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger } from "@freemework/common";
 
 import { DoneCallback, Job, JobOptions, Queue } from "bull";
 import * as Bull from "bull";
@@ -7,7 +7,7 @@ import { createBullBoard } from "@bull-board/api";
 import { BullAdapter } from "@bull-board/api/bullAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 
-import { IngressApiIdentifier, TopicApiIdentifier, EgressApiIdentifier, MessageApiIdentifier } from "../misc/api-identifier";
+import { EgressIdentifier, Label, LabelIdentifier, MessageIdentifier, TopicIdentifier } from "../model";
 import { Message } from "../model/message";
 import { MessageBus } from "./message_bus";
 import { MessageBusBase } from "./message_bus_base";
@@ -27,6 +27,8 @@ import { Delivery } from "../model";
  * See: https://www.npmjs.com/package/bull
  */
 export class MessageBusBull extends MessageBusBase {
+	private readonly log: FLogger;
+
 	public get serverAdapterRouter() {
 		return this._serverAdapter.getRouter();
 	}
@@ -39,6 +41,8 @@ export class MessageBusBull extends MessageBusBase {
 	) {
 		super(storage);
 
+		this.log = FLogger.create(MessageBusBull.name);
+
 		const db: number = Number.parseInt(redisUrl.pathname.substring(1) ?? '0');
 		const port: number = Number.parseInt(redisUrl.port ?? '6379');
 		const host: string = redisUrl.hostname;
@@ -50,8 +54,8 @@ export class MessageBusBull extends MessageBusBase {
 		this._redisOpts = Object.freeze(redisOpts);
 
 		this._channels = new Map();
-		this._bullEgressQueues = new Map<EgressApiIdentifier["value"], Queue>();
-		this._bullTopicQueues = new Map<TopicApiIdentifier["value"], TopicQueueItem>();
+		this._bullEgressQueues = new Map<EgressIdentifier["value"], Queue>();
+		this._bullTopicQueues = new Map<TopicIdentifier["value"], TopicQueueItem>();
 
 		this._bullJobOpts = Object.freeze({
 			attempts: 512,
@@ -74,7 +78,7 @@ export class MessageBusBull extends MessageBusBase {
 		executionContext: FExecutionContext,
 		ingress: Ingress,
 		topic: Topic,
-		message: Message.Id & Message.Data
+		message: Message.Id & Message.Data & Message.Labels
 	): Promise<void> {
 		const topicQueueItem: TopicQueueItem = this.getOrRegisterTopicQueue(topic);
 
@@ -84,12 +88,13 @@ export class MessageBusBull extends MessageBusBase {
 				topicId: topic.topicId.value,
 				message: {
 					id: message.messageId.value,
-					mediaType: message.mediaType,
-					headers: message.headers,
-					ingressBody: Buffer.from(message.ingressBody).toString("base64"),
-					ingressBodyJson: message.mediaType === MIME_APPLICATION_JSON ? JSON.parse(Buffer.from(message.ingressBody).toString()) : null,
-					body: Buffer.from(message.body).toString("base64"),
-					bodyJson: message.mediaType === MIME_APPLICATION_JSON ? JSON.parse(Buffer.from(message.body).toString()) : null,
+					mediaType: message.messageMediaType,
+					headers: message.messageHeaders,
+					ingressBody: Buffer.from(message.messageIngressBody).toString("base64"),
+					ingressBodyJson: message.messageMediaType === MIME_APPLICATION_JSON ? JSON.parse(Buffer.from(message.messageIngressBody).toString()) : null,
+					body: Buffer.from(message.messageBody).toString("base64"),
+					bodyJson: message.messageMediaType === MIME_APPLICATION_JSON ? JSON.parse(Buffer.from(message.messageBody).toString()) : null,
+					labels: message.messageLabels.map(l => ({ id: l.labelId, value: l.labelValue }))
 				}
 			},
 			this._bullJobOpts
@@ -125,25 +130,36 @@ export class MessageBusBull extends MessageBusBase {
 			this._channels.set(egress.egressId.value, new Map());
 		}
 		this._channels.get(egress.egressId.value)!.set(topic.topicId.value, channel);
+
 		return channel;
 	}
 
 	protected async onInit(): Promise<void> {
+		await super.onInit();
 		//
-		const executionContext: FExecutionContext = this.initExecutionContext;
-		await this.storage.using(
-			executionContext,
-			async (db: Database) => {
-				const topics: Array<Topic> = await db.listTopics(executionContext);
-				const egresses: Array<Egress> = await db.listEgresses(executionContext);
-				for (const topic of topics) {
-					this.getOrRegisterTopicQueue(topic);
+		try {
+			const executionContext: FExecutionContext = this.initExecutionContext;
+			await this.storage.using(
+				executionContext,
+				async (db: Database) => {
+					const topics: Array<Topic> = await db.listTopics(executionContext);
+					const egresses: Array<Egress> = await db.listEgresses(executionContext);
+					for (const topic of topics) {
+						this.getOrRegisterTopicQueue(topic);
+					}
+					for (const egress of egresses) {
+						this.getOrRegisterEgressQueue(egress);
+					}
 				}
-				for (const egress of egresses) {
-					this.getOrRegisterEgressQueue(egress);
-				}
+			);
+		} catch (e) {
+			try {
+				await super.onDispose();
+			} catch (e2) {
+				throw new FExceptionAggregate([FException.wrapIfNeeded(e), FException.wrapIfNeeded(e2)])
 			}
-		);
+			throw e;
+		}
 	}
 
 	protected onDispose(): void | Promise<void> {
@@ -161,7 +177,7 @@ export class MessageBusBull extends MessageBusBase {
 		});
 		const topicQueueItem: TopicQueueItem = Object.freeze({
 			queue,
-			targetEgressQueues: new Set<[EgressApiIdentifier, Queue]>()
+			targetEgressQueues: new Set<[EgressIdentifier, Queue]>()
 		});
 		this._bullTopicQueues.set(topic.topicId.value, topicQueueItem);
 		this._bullBoardController.addQueue(new BullAdapter(queue));
@@ -199,7 +215,7 @@ export class MessageBusBull extends MessageBusBase {
 		return queue;
 	}
 
-	private getTopicQueueItem(topicId: TopicApiIdentifier): TopicQueueItem {
+	private getTopicQueueItem(topicId: TopicIdentifier): TopicQueueItem {
 		const topicQueueItem: TopicQueueItem | undefined = this._bullTopicQueues.get(topicId.value);
 		if (topicQueueItem === undefined) {
 			throw new FExceptionInvalidOperation(`Integrity error. No such topic queue '${topicId.value}'.`);
@@ -214,18 +230,18 @@ export class MessageBusBull extends MessageBusBase {
 			(async () => {
 				try {
 					await this.storage.using(executionContext, async (db: Database) => {
-						const topicId: TopicApiIdentifier = TopicApiIdentifier.parse(job.data.topicId);
-						const egressId: EgressApiIdentifier = EgressApiIdentifier.parse(job.data.egressId);
+						const topicId: TopicIdentifier = TopicIdentifier.parse(job.data.topicId);
+						const egressId: EgressIdentifier = EgressIdentifier.parse(job.data.egressId);
 
 						const rawMessage = job.data.message;
-						const messageId = MessageApiIdentifier.parse(rawMessage.id);
+						const messageId = MessageIdentifier.parse(rawMessage.id);
 
 						await db.lockEgressMessageQueue(
 							executionContext, { egressId, topicId, messageId }
 						);
 
 						try {
-							const topicChannelsMap: Map<TopicApiIdentifier["value"], MessageBusBullEventChannel> | undefined
+							const topicChannelsMap: Map<TopicIdentifier["value"], MessageBusBullEventChannel> | undefined
 								= this._channels.get(egressId.value);
 
 							if (topicChannelsMap === undefined || topicChannelsMap.size === 0) {
@@ -237,19 +253,32 @@ export class MessageBusBull extends MessageBusBase {
 								throw new FException("No any egress consumers");
 							}
 
-							const message: Message.Id & Message.Data = {
+							const labels: Array<Label> = [];
+							{
+								const labelIds: Array<LabelIdentifier> = rawMessage.labels.map((l: any) => LabelIdentifier.parse(l.id));
+								for (const labelId of labelIds) {
+									labels.push(await db.getLabel(executionContext, { labelId }));
+								}
+							}
+
+							const message: Message = {
 								messageId,
-								mediaType: rawMessage.mediaType,
-								headers: rawMessage.headers,
-								ingressBody: Buffer.from(rawMessage.ingressBody, "base64"),
-								body: Buffer.from(rawMessage.body, "base64"),
+								messageMediaType: rawMessage.mediaType,
+								messageHeaders: rawMessage.headers,
+								messageIngressBody: Buffer.from(rawMessage.ingressBody, "base64"),
+								messageBody: Buffer.from(rawMessage.body, "base64"),
+								messageLabels: labels
 							};
 
 							const event: MessageBus.Channel.Event = {
 								source: channel,
 								data: message
 							};
-							await channel.notify(executionContext, event);
+
+							const isMatchLabels: boolean = this.matchLabels(egressId, message.messageLabels);
+							if (isMatchLabels) {
+								await channel.notify(executionContext, event);
+							}
 
 							await db.removeEgressMessageQueue(
 								executionContext, { egressId, topicId, messageId }
@@ -257,8 +286,9 @@ export class MessageBusBull extends MessageBusBase {
 
 							await db.createDelivery(executionContext, {
 								egressId,
-								topicId, messageId,
-								status: Delivery.Status.Success,
+								topicId,
+								messageId,
+								status: isMatchLabels ? Delivery.Status.Success : Delivery.Status.Skip,
 								successEvidence: event.deliveryEvidence ?? null
 							});
 
@@ -284,7 +314,24 @@ export class MessageBusBull extends MessageBusBase {
 					});
 				}
 				catch (e) {
-					done(FException.wrapIfNeeded(e));
+					const inputData = (() => {
+						try {
+							const topicId: TopicIdentifier = TopicIdentifier.parse(job.data.topicId);
+							const egressId: EgressIdentifier = EgressIdentifier.parse(job.data.egressId);
+							const messageId: MessageIdentifier = MessageIdentifier.parse(job.data.message.id);
+							return { topicId, egressId, messageId }
+						} catch (e2) {
+							return null;
+						}
+					})();
+
+					const wrappedException: FException = FException.wrapIfNeeded(e);
+					const errMsg = inputData
+						? `Filed delivery message ${inputData.messageId}, topic ${inputData.topicId}, egress ${inputData.egressId}`
+						: 'Filed parse job for delivery';
+					this.log.info(executionContext, errMsg);
+					this.log.debug(executionContext, errMsg, wrappedException);
+					done(wrappedException);
 				}
 			})()
 		);
@@ -295,7 +342,7 @@ export class MessageBusBull extends MessageBusBase {
 		unpromise(
 			(async () => {
 				try {
-					const topicId: TopicApiIdentifier = TopicApiIdentifier.parse(job.data.topicId);
+					const topicId: TopicIdentifier = TopicIdentifier.parse(job.data.topicId);
 					const topicQueueItem: TopicQueueItem = this.getTopicQueueItem(topicId);
 					for (const [targetEgressId, targetEgressQueue] of topicQueueItem.targetEgressQueues) {
 						await targetEgressQueue.add(
@@ -317,9 +364,9 @@ export class MessageBusBull extends MessageBusBase {
 		);
 	}
 
-	private readonly _channels: Map<EgressApiIdentifier["value"], Map<TopicApiIdentifier["value"], MessageBusBullEventChannel>>;
-	private readonly _bullEgressQueues: Map<EgressApiIdentifier["value"], Queue>;
-	private readonly _bullTopicQueues: Map<TopicApiIdentifier["value"], TopicQueueItem>;
+	private readonly _channels: Map<EgressIdentifier["value"], Map<TopicIdentifier["value"], MessageBusBullEventChannel>>;
+	private readonly _bullEgressQueues: Map<EgressIdentifier["value"], Queue>;
+	private readonly _bullTopicQueues: Map<TopicIdentifier["value"], TopicQueueItem>;
 	private readonly _serverAdapter: ExpressAdapter;
 	private readonly _bullJobOpts: JobOptions;
 	private readonly _redisOpts: RedisOptions;
@@ -328,7 +375,7 @@ export class MessageBusBull extends MessageBusBase {
 
 interface TopicQueueItem {
 	readonly queue: Queue;
-	readonly targetEgressQueues: Set<[EgressApiIdentifier, Queue]>;
+	readonly targetEgressQueues: Set<[EgressIdentifier, Queue]>;
 }
 
 class MessageBusBullEventChannel

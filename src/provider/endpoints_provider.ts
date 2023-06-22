@@ -17,7 +17,7 @@ import { InfoRestEndpoint } from "../endpoints/info_rest_endpoint";
 import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endpoint";
 import { IngressApiRestEndpoint } from "../endpoints/ingress_api_rest_endpoint";
 import { EgressApiRestEndpoint } from "../endpoints/egress_api_rest_endpoint";
-import { WebSocketHostEgressEndpoint } from "../endpoints/websocket_host_subscriber_endpoint";
+import { WebSocketHostEgressEndpoint } from "../endpoints/websocket_host_egress_endpoint";
 import { ProviderLocator } from "../provider_locator";
 import { ManagementApiProvider } from "./management_api_provider";
 

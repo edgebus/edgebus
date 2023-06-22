@@ -7,14 +7,11 @@ import * as bodyParser from "body-parser";
 import { BaseRestEndpoint } from "./base_rest_endpoint";
 
 import { PublisherApi } from "../api/publisher_api";
-import { Ingress } from "../model/ingress";
 import { HttpHostIngress } from "../ingress/http_host.ingress";
-import { Security } from "../model/security";
-import { Topic } from "../model/topic";
 import { endpointHandledException } from "./errors";
 import { Settings } from "../settings";
 import { createExecutionContextMiddleware } from "../misc/express";
-import { IngressApiIdentifier } from "../misc/api-identifier";
+import { IngressIdentifier } from "../model";
 import { Bind } from "../utils/bind";
 
 const ensure: FEnsure = FEnsure.create();
@@ -37,7 +34,7 @@ export class IngressApiRestEndpoint extends BaseRestEndpoint {
 	}
 
 	public addHttpPublisher(executionContext: FExecutionContext, ingress: HttpHostIngress): void {
-		const ingressId: IngressApiIdentifier = ingress.ingressId;
+		const ingressId: IngressIdentifier = ingress.ingressId;
 
 		this._logger.info(executionContext, `Register ingress: ${ingressId} for path: ${ingress.bindPath}`);
 
@@ -161,7 +158,7 @@ export class IngressApiRestEndpoint extends BaseRestEndpoint {
 
 			// TODO validate "id" for UUID
 
-			const ingressId: IngressApiIdentifier = IngressApiIdentifier.parse(ingressIdStr);
+			const ingressId: IngressIdentifier = IngressIdentifier.parse(ingressIdStr);
 
 			const httpPublisher: HttpHostIngress | undefined = this._httpPublishersMap.get(ingressId);
 			if (httpPublisher === undefined) {

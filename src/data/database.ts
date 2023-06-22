@@ -1,14 +1,15 @@
 import { FExecutionContext, FInitable, FInitableBase } from "@freemework/common";
 
-import { EgressApiIdentifier, IngressApiIdentifier, MessageApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { EgressIdentifier, IngressIdentifier, MessageIdentifier, TopicIdentifier } from "../model";
 import { Delivery, Egress, Ingress, Message, Topic } from "../model";
+import { Label } from "../model/label";
+import { LabelHandler } from "../model/label_handler";
 
 export abstract class Database extends FInitableBase {
-
 	public abstract createDelivery(
 		executionContext: FExecutionContext,
 		deliveryData: Partial<Delivery.Id> & Delivery.Data
-	): Promise<Delivery>
+	): Promise<Delivery>;
 
 	public abstract createEgress(
 		executionContext: FExecutionContext,
@@ -29,17 +30,25 @@ export abstract class Database extends FInitableBase {
 	 * @param mimeType TBD
 	 * @param body TBD
 	 * @param originalBody TBD
+	 * @param labels list of message labels
 	 */
 	public abstract createMessage(
 		executionContext: FExecutionContext,
-		ingressApiId: IngressApiIdentifier,
-		messageApiId: MessageApiIdentifier,
+		ingressApiId: IngressIdentifier,
+		messageApiId: MessageIdentifier,
 		headers: Message.Headers,
 		mimeType: string | null,
 		originalBody: Uint8Array | null,
 		body: Uint8Array | null,
-	): Promise<void>;
+		labels: ReadonlyArray<Label>
+	): Promise<Message>;
 
+	public abstract createLabelHandler(
+		executionContext: FExecutionContext,
+		labelHandlerData: Partial<LabelHandler.Id> & LabelHandler.Data
+	): Promise<LabelHandler["labelHandlerId"]>;
+
+	public abstract createLabel(executionContext: FExecutionContext, labelData: Partial<Label.Id> & Label.Data): Promise<Label>;
 
 	public abstract createTopic(
 		executionContext: FExecutionContext,
@@ -50,12 +59,19 @@ export abstract class Database extends FInitableBase {
 
 	public abstract findIngress(executionContext: FExecutionContext, opts: Ingress.Id): Promise<Ingress | null>;
 
+	public abstract findLabel(executionContext: FExecutionContext, opts: Label.Id): Promise<Label | null>;
+
+	public abstract findLabelByValue(executionContext: FExecutionContext, value: Label.Data["labelValue"]): Promise<Label | null>;
+
+	public abstract findLabelHandler(executionContext: FExecutionContext, opts: LabelHandler.Id): Promise<LabelHandler | null>;
+
 	public abstract findTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic | null>;
 
 	public abstract getEgress(executionContext: FExecutionContext, opts: Egress.Id): Promise<Egress>;
 
-
 	public abstract getIngress(executionContext: FExecutionContext, opts: Ingress.Id): Promise<Ingress>;
+
+	public abstract getLabel(executionContext: FExecutionContext, opts: Label.Id): Promise<Label>;
 
 	public abstract getTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic>;
 
@@ -67,6 +83,8 @@ export abstract class Database extends FInitableBase {
 		executionContext: FExecutionContext,
 		opts: Topic.Id | Egress.Id | Message.Id,
 	): Promise<Array<Database.EgressMessageQueue>>;
+
+	public abstract listLabelHandlers(executionContext: FExecutionContext): Promise<Array<LabelHandler>>;
 
 	public abstract listTopics(
 		executionContext: FExecutionContext,
@@ -111,5 +129,5 @@ export abstract class Database extends FInitableBase {
 }
 
 export namespace Database {
-	export type EgressMessageQueue = [TopicApiIdentifier, EgressApiIdentifier, MessageApiIdentifier];
+	export type EgressMessageQueue = [TopicIdentifier, EgressIdentifier, MessageIdentifier];
 }

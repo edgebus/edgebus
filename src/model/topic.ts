@@ -1,9 +1,9 @@
-import { TopicApiIdentifier } from "../misc/api-identifier";
+import { TopicIdentifier } from "./identifiers";
 
 export namespace Topic {
 
 	export interface Id {
-		readonly topicId: TopicApiIdentifier;
+		readonly topicId: TopicIdentifier;
 	}
 	export interface Name {
 		/**

@@ -1,12 +1,10 @@
 import { FException, FExceptionInvalidOperation } from "@freemework/common";
 
-import { Message } from "../model/message";
-import { Topic } from "../model/topic";
-import { Egress } from "../model/egress";
+import { EgressIdentifier, Message } from "../model";
+import { Topic } from "../model";
 import { EventChannelBase } from "../utils/event_channel_base";
 
 import { MessageBus } from "./message_bus";
-import { EgressApiIdentifier } from "../misc/api-identifier";
 import { Bind } from "../utils/bind";
 
 export class MessageBusLocalParallelChannel extends EventChannelBase<Message.Id & Message.Data, MessageBus.Channel.Event>
@@ -15,13 +13,13 @@ export class MessageBusLocalParallelChannel extends EventChannelBase<Message.Id 
 	private readonly _queue: Array<Message>;
 	private readonly _pendingQueue: Array<Message> = [];
 	private readonly _topicName: Topic["topicName"];
-	private readonly _egressId: EgressApiIdentifier;
+	private readonly _egressId: EgressIdentifier;
 	private _tickInterval: NodeJS.Timeout | null;
 	private _insideTick: boolean;
 
 	public constructor(
 		topicName: Topic["topicName"],
-		egressId: EgressApiIdentifier,
+		egressId: EgressIdentifier,
 		queue: Array<Message>,
 		disposer: () => void | Promise<void>,
 	) {

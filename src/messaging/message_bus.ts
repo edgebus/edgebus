@@ -1,30 +1,29 @@
 import { FDisposable, FExecutionContext, FChannelEvent, FInitableBase } from "@freemework/common";
 
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
-import { Topic } from "../model/topic";
-import { Message } from "../model/message";
+import { EgressIdentifier, IngressIdentifier, Message, Topic, TopicIdentifier } from "../model";
+
 
 export abstract class MessageBus extends FInitableBase {
 	public abstract publish(
 		executionContext: FExecutionContext,
-		ingressId: IngressApiIdentifier,
+		ingressId: IngressIdentifier,
 		message: Message.Id & Message.Data
 	): Promise<void>;
 
 	public abstract registerEgress(
 		executionContext: FExecutionContext,
-		egressId: EgressApiIdentifier
+		egressId: EgressIdentifier
 	): Promise<void>;
 
 	public abstract registerTopic(
 		executionContext: FExecutionContext,
-		topicId: TopicApiIdentifier
+		topicId: TopicIdentifier
 	): Promise<void>;
 
 	public abstract retainChannel(
 		executionContext: FExecutionContext,
-		topicId: TopicApiIdentifier,
-		egressId: EgressApiIdentifier
+		topicId: TopicIdentifier,
+		egressId: EgressIdentifier
 	): Promise<MessageBus.Channel>;
 }
 
@@ -66,8 +65,8 @@ export namespace MessageBus {
 		// wakeUp(): void;
 	}
 	export namespace Channel {
-		export type Callback = FChannelEvent.Callback<Message.Id & Message.Data, Event>;
-		export interface Event extends FChannelEvent.Event<Message.Id & Message.Data> {
+		export type Callback = FChannelEvent.Callback<Message, Event>;
+		export interface Event extends FChannelEvent.Event<Message> {
 			readonly source: Channel;
 			deliveryEvidence?: any;
 		}

@@ -22,8 +22,11 @@
 	name = "fireblocks"
 	description = "Fireblock's callbacks"
 	mediaType = "application/json"
+	[[edgebus.setup.topic.labelHandler]]
+		index = "LBHDc3190fcbf16c4c41ac7e846daefc8d2c"
+		kind = "EXTERNAL_PROCESS"
+		path="label_handlers/ext_handler.sh"
 # /Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-
 
 # Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
 [[edgebus.setup.ingress]]
@@ -57,24 +60,24 @@
 
 
 # Setup Web Socket Host egress "EGRS319ef1447b054a5292acecf40345b89b"
-[[edgebus.setup.egress]]
-	index = "EGRS319ef1447b054a5292acecf40345b89b"
-	kind = "WEB_SOCKET_HOST"
-	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# [[edgebus.setup.egress]]
+# 	index = "EGRS319ef1447b054a5292acecf40345b89b"
+# 	kind = "WEB_SOCKET_HOST"
+# 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 # /Setup Web Socket Host egress "EGRS319ef1447b054a5292acecf40345b89b"
 
 # Setup Web Socket Host egress "EGRS707ef6997dc64f79b7449d599a36c5fd"
-[[edgebus.setup.egress]]
-	index = "EGRS707ef6997dc64f79b7449d599a36c5fd"
-	kind = "WEB_SOCKET_HOST"
-	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# [[edgebus.setup.egress]]
+# 	index = "EGRS707ef6997dc64f79b7449d599a36c5fd"
+# 	kind = "WEB_SOCKET_HOST"
+# 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 # /Setup Web Socket Host egress "EGRS707ef6997dc64f79b7449d599a36c5fd"
 
 # Setup Web Socket Host egress "EGRS707ef6997dc64f79b7449d599a36c5fd"
-[[edgebus.setup.egress]]
-	index = "EGRSa8037358602e4b918c581464ed9aa58a"
-	kind = "WEB_SOCKET_HOST"
-	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6 TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# [[edgebus.setup.egress]]
+# 	index = "EGRSa8037358602e4b918c581464ed9aa58a"
+# 	kind = "WEB_SOCKET_HOST"
+# 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6 TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 # /Setup Web Socket Host egress "EGRSRa8037358602e4b918c581464ed9aa58a"
 
 # Setup WebHook egress "EGRSec84237fe6674a15820407ab5a93e97b"
@@ -83,7 +86,7 @@
 	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 	kind = "WEBHOOK"
 	method="POST"
-	url="http:/127.0.0.1:52003/v2/callback/sumsub"
+	url="http://127.0.0.1:3000/webhooks/permission"
 	#[edgebus.setup.egress.ssl]
 	#	trustedCertificateAuthorities = [
 	#		# "file or base64",
@@ -95,3 +98,19 @@
 	#		key = "file or base64"
 	#		key = "file or base64"
 # /Setup Web Socket Host egress "EGRSec84237fe6674a15820407ab5a93e97b"
+
+[[edgebus.setup.egress]]
+	index = "EGRSb35aadb61da8449d899876b7060ff9fb"
+	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	labels = "LOCAL TEST"
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:3000/webhooks/permission"
+
+[[edgebus.setup.egress]]
+	index = "EGRSa9b51c2d1cc444b99efdaee91b18690c"
+	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	labels = "LOCAL"
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:8020"

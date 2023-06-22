@@ -4,10 +4,14 @@ import { FException, FExecutionContext, FInitableBase, FLogger } from "@freemewo
 import { Topic } from "../model/topic";
 
 import { DatabaseFactory } from "../data/database_factory";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import {
+	EgressIdentifier, Egress,
+	IngressIdentifier, Ingress,
+	LabelHandlerIdentifier, LabelHandler,
+	LabelIdentifier, Label,
+	TopicIdentifier
+} from "../model";
 import { Database } from "../data/database";
-import { Ingress } from "../model/ingress";
-import { Egress } from "../model/egress";
 import { MessageBus } from "../messaging/message_bus";
 
 /**
@@ -24,13 +28,13 @@ export class ManagementApi extends FInitableBase {
 	}
 
 	public async createEgress(
-		executionContext: FExecutionContext, ingressData: Partial<Egress.Id> & Egress.Data
+		executionContext: FExecutionContext, egressData: Partial<Egress.Id> & Egress.Data
 	): Promise<Egress> {
 		this.verifyInitializedAndNotDisposed();
 
 		const fullEgressData: Egress.Id & Egress.Data = {
-			...ingressData,
-			egressId: ingressData.egressId ?? new EgressApiIdentifier(),
+			...egressData,
+			egressId: egressData.egressId ?? EgressIdentifier.generate(),
 		};
 
 		const egress: Egress = await this._db.createEgress(
@@ -52,7 +56,7 @@ export class ManagementApi extends FInitableBase {
 
 		const fullIngressData: Ingress.Id & Ingress.Data = {
 			...ingressData,
-			ingressId: ingressData.ingressId ?? new IngressApiIdentifier(),
+			ingressId: ingressData.ingressId ?? IngressIdentifier.generate(),
 		};
 
 		const ingress: Ingress = await this._db.createIngress(
@@ -64,13 +68,51 @@ export class ManagementApi extends FInitableBase {
 		return ingress;
 	}
 
+	public async createLabelHandler(
+		executionContext: FExecutionContext, labelHandlerData: Partial<LabelHandler.Id> & LabelHandler.Data
+	): Promise<LabelHandler["labelHandlerId"]> {
+		this.verifyInitializedAndNotDisposed();
+
+		const fullLabelHandlerData: LabelHandler.Id & LabelHandler.Data = {
+			labelHandlerId: labelHandlerData.labelHandlerId ?? LabelHandlerIdentifier.generate(),
+			topicId: labelHandlerData.topicId,
+			labelHandlerKind: labelHandlerData.labelHandlerKind,
+			externalProcessPath: labelHandlerData.externalProcessPath
+		};
+
+		const labelHandlerId: LabelHandlerIdentifier = await this._db.createLabelHandler(
+			executionContext,
+			fullLabelHandlerData
+		);
+		await this._db.transactionCommit(executionContext);
+
+		this._log.debug(executionContext, () => `Exit createLabelHandler with data: ${JSON.stringify(labelHandlerData)}`);
+		return labelHandlerId;
+	}
+
+
+	public async getOrCreateLabel(
+		executionContext: FExecutionContext, labelValue: Label.Data["labelValue"]
+	): Promise<Label> {
+		this.verifyInitializedAndNotDisposed();
+
+		const label: Label| null = await this._db.findLabelByValue(executionContext, labelValue);
+		if (label !== null) {
+			return label;
+		}
+		const newLabel =this._db.createLabel(executionContext, {labelValue});
+
+		this._log.debug(executionContext, () => `Exit createLabelHandler with data: ${JSON.stringify(labelValue)}`);
+		return newLabel;
+	}
+
 	public async createTopic(
 		executionContext: FExecutionContext, topicData: Partial<Topic.Id> & Topic.Data
 	): Promise<Topic> {
 		this.verifyInitializedAndNotDisposed();
 
 		const fullTopicData: Topic.Id & Topic.Data = {
-			topicId: topicData.topicId ?? new TopicApiIdentifier(),
+			topicId: topicData.topicId ?? TopicIdentifier.generate(),
 			topicName: topicData.topicName,
 			topicDomain: topicData.topicDomain,
 			topicDescription: topicData.topicDescription,
@@ -89,7 +131,7 @@ export class ManagementApi extends FInitableBase {
 		return topic;
 	}
 
-	public async findEgress(executionContext: FExecutionContext, egressId: EgressApiIdentifier): Promise<Egress | null> {
+	public async findEgress(executionContext: FExecutionContext, egressId: EgressIdentifier): Promise<Egress | null> {
 		this.verifyInitializedAndNotDisposed();
 
 		const egress = await this._db.findEgress(executionContext, { egressId });
@@ -97,7 +139,7 @@ export class ManagementApi extends FInitableBase {
 		return egress;
 	}
 
-	public async findIngress(executionContext: FExecutionContext, ingressId: IngressApiIdentifier): Promise<Ingress | null> {
+	public async findIngress(executionContext: FExecutionContext, ingressId: IngressIdentifier): Promise<Ingress | null> {
 		this.verifyInitializedAndNotDisposed();
 
 		const ingress = await this._db.findIngress(executionContext, { ingressId });
@@ -105,7 +147,23 @@ export class ManagementApi extends FInitableBase {
 		return ingress;
 	}
 
-	public async findTopic(executionContext: FExecutionContext, topicId: TopicApiIdentifier): Promise<Topic | null> {
+	public async findLabel(executionContext: FExecutionContext, labelId: LabelIdentifier): Promise<Label | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const label = await this._db.findLabel(executionContext, { labelId });
+
+		return label;
+	}
+
+	public async findLabelHandler(executionContext: FExecutionContext, labelHandlerId: LabelHandlerIdentifier): Promise<LabelHandler | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const labelHandler = await this._db.findLabelHandler(executionContext, { labelHandlerId });
+
+		return labelHandler;
+	}
+
+	public async findTopic(executionContext: FExecutionContext, topicId: TopicIdentifier): Promise<Topic | null> {
 		this.verifyInitializedAndNotDisposed();
 
 		const topic = await this._db.findTopic(executionContext, { topicId });

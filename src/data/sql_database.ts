@@ -74,7 +74,6 @@ export abstract class SqlDatabase extends Database {
 
 	protected async onDispose(): Promise<void> {
 		try {
-			console.log(this.initExecutionContext);
 			await this.transactionRollback(this.initExecutionContext);
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);

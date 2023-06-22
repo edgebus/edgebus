@@ -1,14 +1,13 @@
-import { FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
+import { FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
 
 import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 
 import { MessageBus } from "./message_bus";
 import { MessageBusBase } from "./message_bus_base";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { DatabaseFactory } from "../data/database_factory";
-import { Ingress } from "../model/ingress";
-import { Egress } from "../model/egress";
+import { Ingress } from "../model";
+import { Egress } from "../model";
 
 export class MessageBusRabbitMQ extends MessageBusBase {
 	public constructor(storage: DatabaseFactory, opts: MessageBusRabbitMQ.Opts) {
@@ -47,7 +46,8 @@ export class MessageBusRabbitMQ extends MessageBusBase {
 		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
-	protected onInit(): void | Promise<void> {
+	protected async onInit(): Promise<void> {
+		await super.onInit();
 		// TODO
 	}
 

@@ -1,12 +1,7 @@
-import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger, FExceptionArgument, FDecimal, FDecimalBackendNumber, FExceptionInvalidOperation } from "@freemework/common";
+import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger, FExceptionArgument, FDecimal, FDecimalBackendNumber, FExceptionInvalidOperation, FLoggerConsole } from "@freemework/common";
 import { FLauncherRuntime } from "@freemework/hosting";
 
 import * as _ from "lodash";
-
-import * as Queue from "bull";
-import { createBullBoard } from "@bull-board/api";
-import { BullAdapter } from "@bull-board/api/bullAdapter";
-import { ExpressAdapter } from "@bull-board/express";
 
 // Providers
 import { SettingsProvider, SettingsProviderImpl } from "./provider/settings_provider";
@@ -19,7 +14,7 @@ import { WebSocketHostEgress, WebhookEgress } from "./egress";
 import { MessageBus } from "./messaging/message_bus";
 import { Container } from "typescript-ioc";
 import { Settings } from "./settings";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "./misc/api-identifier";
+import { EgressIdentifier, IngressIdentifier, TopicIdentifier } from "./model";
 import appInfo from "./utils/app_info";
 import { ProviderLocator } from "./provider_locator";
 import { SetupServiceProvider } from "./provider/setup_service_provider";
@@ -44,6 +39,7 @@ export { HostingProvider } from "./provider/hosting_provider";
 
 export * from "./misc";
 
+
 export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FLauncherRuntime> {
 	executionContext = new FLoggerLabelsExecutionContext(executionContext, { ...appInfo });
 
@@ -58,33 +54,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 		Container.bind(SettingsProvider).provider({ get() { return ownProvider; } });
 	}
 
-	{ // TODO: Refactor hard-coded Bull stuff
-
-		// const messageBusProvider: MessageBusProvider = new MessageBusProviderImpl(someQueue);
-		// Container.bind(MessageBusProvider).provider({ get() { return messageBusProvider; } });
-
-		// const serverAdapter = new ExpressAdapter();
-		// serverAdapter.setBasePath('/admin/queues');
-
-		// let errorIndex = 0;
-		// someQueue.process(function (job, done) {
-		// 	console.log(new Date());
-		// 	done(new Error(`Test error: ${++errorIndex}`));
-		// });
-
-		// someQueue.add({ ololo: 42 }, {
-		// 	attempts: 500,
-		// 	backoff: {
-		// 		type: "exponential",
-		// 		delay: 1000
-		// 	}
-		// });
-
-		// const { addQueue, removeQueue, setQueues, replaceQueues } = createBullBoard({
-		// 	queues: [new BullAdapter(someQueue)],
-		// 	serverAdapter: serverAdapter,
-		// });
-
+	{ // TODO: Temporary solution to expose Bull dashboard
 		const messageBus: MessageBus = ProviderLocator.default.get(MessageBusProvider).wrap;
 		if (messageBus instanceof MessageBusBull) {
 			ProviderLocator.default.get(HostingProvider).serverInstances.forEach(s => {
@@ -116,7 +86,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 		/* ---------HARDCODED INITIALIZATION--------------- */
 		{
 			const hardcodedPublisherConfigurations: Array<{
-				readonly topicId: TopicApiIdentifier,
+				readonly topicId: TopicIdentifier,
 				readonly topicName: string;
 				readonly topicDescription: string;
 				readonly topicMediaType: string;
@@ -134,7 +104,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 
 			const { setup } = settings;
 			if (setup !== null) {
-				const { ingresses: ingresses, egresses: egresses, topics } = setup;
+				const { ingresses, egresses, topics } = setup;
 
 				const topicsByIdMap = new Map<string, Settings.Setup.Topic>();
 				for (const topic of topics) {
@@ -143,7 +113,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 
 				for (const ingress of ingresses) {
 					hardcodedPublisherConfigurations.push({
-						topicId: TopicApiIdentifier.parse(topicsByIdMap.get(ingress.topicId)!.topicId),
+						topicId: TopicIdentifier.parse(topicsByIdMap.get(ingress.topicId)!.topicId),
 						topicName: topicsByIdMap.get(ingress.topicId)!.name,
 						topicDescription: topicsByIdMap.get(ingress.topicId)!.description,
 						topicMediaType: topicsByIdMap.get(ingress.topicId)!.mediaType,
@@ -173,7 +143,6 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 				}
 				const httpPublisherInstance: HttpHostIngress = new HttpHostIngress(
-					storageProvider.databaseFactory,
 					{
 						topicId: hardcodedPublisherConfiguration.topicId,
 						topicName: hardcodedPublisherConfiguration.topicName,
@@ -181,7 +150,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 						topicDescription: hardcodedPublisherConfiguration.topicDescription,
 						topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
 					},
-					IngressApiIdentifier.parse(ingressConfiguration.ingressId),
+					IngressIdentifier.parse(ingressConfiguration.ingressId),
 					messageBusProvider.wrap,
 					{
 						transformers: [],
@@ -204,11 +173,11 @@ export default async function (executionContext: FExecutionContext, settings: Se
 
 			// Setup egresses
 			for (const hardcodedSubscriberConfiguration of hardcodedSubscriberConfigurations) {
-				const egressId: EgressApiIdentifier = EgressApiIdentifier.parse(hardcodedSubscriberConfiguration.egress.egressId);
+				const egressId: EgressIdentifier = EgressIdentifier.parse(hardcodedSubscriberConfiguration.egress.egressId);
 				const channelFactories: Array<MessageBus.ChannelFactory> = [];
 				for (const topicIdStr of hardcodedSubscriberConfiguration.topicIds) {
 					const channelFactory = async (): Promise<MessageBus.Channel> => {
-						const topicId: TopicApiIdentifier = TopicApiIdentifier.parse(topicIdStr);
+						const topicId: TopicIdentifier = TopicIdentifier.parse(topicIdStr);
 						const channel = await messageBusProvider.wrap.retainChannel(executionContext, topicId, egressId);
 						return channel;
 					}

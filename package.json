@@ -11,11 +11,16 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@freemework/sql.misc.migration": "^0.9.0",
+		"@types/chai": "^4.3.5",
 		"@types/lodash": "^4.14.191",
+		"@types/mocha": "^10.0.1",
 		"@types/node": "^18.13.0",
 		"@types/redis-info": "^3.0.0",
 		"@types/uuid": "^9.0.0",
+		"chai": "^4.3.7",
 		"dotenv": "^16.0.3",
+		"mocha": "^10.2.0",
+		"nyc": "^15.1.0",
 		"source-map-support": "^0.5.21",
 		"typescript": "^4.9.5"
 	},
@@ -52,9 +57,8 @@
 		"build:package": "rm -rf lib && tsc --project tsconfig-package.json && cp PACKAGE.md .dist/README.md && jq '{ name: .name, version: .version, description: .description, author: .author, contributors: .contributors, license: .license, keywords: .keywords, repository: .repository, bugs: .bugs, engines: .engines, homepage: .homepage, main: \"lib/index.js\", types: \"lib/index.d.ts\", dependencies: .dependencies, build: .build }' package.json > .dist/package.json",
 		"start": "node --require=dotenv/config bin/edgebus.js --config-file=edgebus.config --config-env",
 		"test": "true",
-		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000",
-		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\"",
-		"migrate-database:local": "env persistentStorageMigration.url=\"postgres://postgres:@127.0.0.1:5432/emptytestdb?schema=notifier\" node bin/migrate-database.js"
+		"test:unit": "tsc && nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha --require source-map-support/register --recursive --timeout 10000 \"test/unit/**/*.test.js\"",
+		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\""
 	},
 	"private": true
 }

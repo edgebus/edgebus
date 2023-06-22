@@ -2,14 +2,14 @@ import { FException, FExceptionInvalidOperation, FExecutionContext } from "@free
 
 import * as _ from "lodash";
 
-import { DatabaseFactory } from "../data/database_factory";
 import { Settings } from "../settings";
 import { ManagementApi } from "../api/management_api";
-import { Topic } from "../model/topic";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
-import { Ingress } from "../model/ingress";
-import { Uint8ArraysEqual } from "../utils/equals";
-import { Egress } from "../model/egress";
+import {
+	EgressIdentifier, Egress,
+	IngressIdentifier, Ingress,
+	LabelHandlerIdentifier,
+	TopicIdentifier, Topic, LabelIdentifier
+} from "../model";
 
 
 export interface SetupService {
@@ -21,7 +21,7 @@ export class SetupServiceImpl implements SetupService {
 
 		// Setup topics
 		for (const setupTopic of setupSettings.topics) {
-			const topicId: TopicApiIdentifier = TopicApiIdentifier.parse(setupTopic.topicId);
+			const topicId: TopicIdentifier = TopicIdentifier.parse(setupTopic.topicId);
 			const topic: Topic | null = await managementApi.findTopic(executionContext, topicId);
 			if (topic !== null) {
 				// compare
@@ -46,12 +46,37 @@ export class SetupServiceImpl implements SetupService {
 					topicMediaType: setupTopic.mediaType,
 				});
 			}
+
+			for (const setupLabelHandler of setupTopic.labelHandlers) {
+				const labelHandlerId: LabelHandlerIdentifier = LabelHandlerIdentifier.parse(setupLabelHandler.labelHandlerId);
+				const labelHandler = await managementApi.findLabelHandler(executionContext, labelHandlerId);
+
+				if (labelHandler !== null) {
+					if (labelHandler.externalProcessPath !== setupLabelHandler.path) {
+						throw new SetupServiceException(`Unable to setup label handler. A label handler '${labelHandlerId}' already presented with different path '${labelHandler.externalProcessPath}'. Setup process expected name '${setupLabelHandler.path}'.`);
+					}
+					if (labelHandler.topicId.value !== topicId.value) {
+						throw new SetupServiceException(`Unable to setup label handler. A label handler '${labelHandlerId}' already presented with different topicId '${labelHandler.topicId}'. Setup process expected topicId '${topicId}'.`);
+					}
+					if (labelHandler.labelHandlerKind !== setupLabelHandler.kind) {
+						throw new SetupServiceException(`Unable to setup label. A labelHandler '${labelHandlerId}' already presented with different kind '${labelHandler.labelHandlerKind}'. Setup process expected kind '${setupLabelHandler.kind}'.`);
+					}
+				} else {
+					await managementApi.createLabelHandler(executionContext, {
+						labelHandlerId,
+						topicId,
+						labelHandlerKind: setupLabelHandler.kind,
+						externalProcessPath: setupLabelHandler.path
+					})
+				}
+			}
+
 		}
 
 		// Setup ingresses
 		for (const setupIngress of setupSettings.ingresses) {
-			const ingressId: IngressApiIdentifier = IngressApiIdentifier.parse(setupIngress.ingressId);
-			const ingressTopicId: TopicApiIdentifier = TopicApiIdentifier.parse(setupIngress.topicId);
+			const ingressId: IngressIdentifier = IngressIdentifier.parse(setupIngress.ingressId);
+			const ingressTopicId: TopicIdentifier = TopicIdentifier.parse(setupIngress.topicId);
 
 			const ingress: Ingress | null = await managementApi.findIngress(executionContext, ingressId);
 			if (ingress !== null) {
@@ -114,8 +139,13 @@ export class SetupServiceImpl implements SetupService {
 
 		// Setup egresses
 		for (const setupEgress of setupSettings.egresses) {
-			const egressId: EgressApiIdentifier = EgressApiIdentifier.parse(setupEgress.egressId);
-			const egressTopicIds: Array<TopicApiIdentifier> = setupEgress.sourceTopicIds.map(TopicApiIdentifier.parse);
+			const egressId: EgressIdentifier = EgressIdentifier.parse(setupEgress.egressId);
+			const egressTopicIds: Array<TopicIdentifier> = setupEgress.sourceTopicIds.map(TopicIdentifier.parse);
+			const labelIds: Array<LabelIdentifier> = [];
+
+			for (const label of setupEgress.labels) {
+				labelIds.push((await managementApi.getOrCreateLabel(executionContext, label)).labelId);
+			}
 
 			const egress: Egress | null = await managementApi.findEgress(executionContext, egressId);
 			if (egress !== null) {
@@ -127,7 +157,8 @@ export class SetupServiceImpl implements SetupService {
 					case Egress.Kind.WebSocketHost:
 						egressData = {
 							egressKind: setupEgress.kind,
-							egressTopicIds: egressTopicIds
+							egressTopicIds: egressTopicIds,
+							egressLabelIds: labelIds
 						};
 						break;
 					case Egress.Kind.Webhook:
@@ -135,7 +166,8 @@ export class SetupServiceImpl implements SetupService {
 							egressKind: setupEgress.kind,
 							egressTopicIds: egressTopicIds,
 							egressHttpMethod: setupEgress.method,
-							egressHttpUrl: setupEgress.url
+							egressHttpUrl: setupEgress.url,
+							egressLabelIds: labelIds
 						}
 						break;
 					default:

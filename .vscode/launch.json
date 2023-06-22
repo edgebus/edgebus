@@ -10,6 +10,7 @@
 				"--nolazy",
 				"--require",
 				"source-map-support/register",
+				"--expose-gc"
 			],
 			"cwd": "${workspaceRoot}",
 			"env": {
@@ -54,6 +55,32 @@
 			"skipFiles": [
 				"<node_internals>/**"
 			],
+		},
+		{
+			"name": "Tests",
+			"type": "node",
+			"request": "launch",
+			"preLaunchTask": "build",
+			"runtimeExecutable": null,
+			"runtimeArgs": [
+				"--nolazy",
+				"--require",
+				"source-map-support/register"
+			],
+			"stopOnEntry": false,
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+			"args": [
+				"--no-timeouts",
+				"--colors",
+				"--debug-brk",
+				"--recursive",
+				"test/**/*.test.js"
+			],
+			"env": {
+				"NODE_ENV": "development"
+			},
+			"sourceMaps": true
 		}
 	]
 }

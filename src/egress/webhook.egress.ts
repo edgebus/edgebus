@@ -4,9 +4,7 @@ import * as ContentType from "content-type";
 import { OutgoingHttpHeaders } from "http";
 
 import { MessageBus } from "../messaging/message_bus";
-import { Message } from "../model/message";
-import { Egress } from "../model/egress";
-import { EgressApiIdentifier } from "../misc/api-identifier";
+import { EgressIdentifier, Egress, Message } from "../model";
 import { Bind } from "../utils/bind";
 import { Settings } from "../settings";
 import { MIME_APPLICATION_JSON } from "../utils/mime";
@@ -94,7 +92,7 @@ export class WebhookEgress extends FInitableBase {
 				const contentType: ContentType.ParsedMediaType | null = contentTypeValue !== undefined
 					? ContentType.parse(contentTypeValue) : null;
 
-					event.deliveryEvidence = {
+				event.deliveryEvidence = {
 					kind: Egress.Kind.Webhook,
 					headers: response.headers,
 					body: response.body.toString("base64"),
@@ -122,7 +120,7 @@ export class WebhookEgress extends FInitableBase {
 	}
 
 	private static _extractHttpMethod(message: Message.Data): string | null {
-		const httpMethod = message.headers['http.method'];
+		const httpMethod = message.messageHeaders['http.method'];
 		if (httpMethod !== undefined) {
 			return httpMethod;
 		} else {
@@ -133,7 +131,7 @@ export class WebhookEgress extends FInitableBase {
 	private static _extractHttpHeaders(message: Message.Data): OutgoingHttpHeaders {
 		const httpHeaders: OutgoingHttpHeaders = {};
 
-		for (const [msgHeader, value] of Object.entries(message.headers)) {
+		for (const [msgHeader, value] of Object.entries(message.messageHeaders)) {
 			if (msgHeader.startsWith(Message.HeaderPrefix.HTTP)) {
 				const httpHeader: string = msgHeader.substring(Message.HeaderPrefix.HTTP.length);
 				switch (httpHeader) {
@@ -152,13 +150,13 @@ export class WebhookEgress extends FInitableBase {
 	}
 
 	private static _extractHttpBody(message: Message.Data): Buffer {
-		return Buffer.from(message.body);
+		return Buffer.from(message.messageBody);
 	}
 }
 
 export namespace WebhookEgress {
 	export interface Opts {
-		readonly egressId: EgressApiIdentifier;
+		readonly egressId: EgressIdentifier;
 		readonly deliveryUrl: URL;
 		readonly deliveryHttpMethod: "GET" | "POST" | "PUT" | "DELETE" | string | null;
 		readonly ssl: Settings.SSL | null;

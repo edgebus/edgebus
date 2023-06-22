@@ -1,5 +1,5 @@
 import { FException } from "@freemework/common";
-import { IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { IngressIdentifier, TopicIdentifier } from "./identifiers";
 
 export namespace Ingress {
 	export const enum Kind {
@@ -24,14 +24,14 @@ export namespace Ingress {
 	 * The ID of the Webhook
 	 */
 	export interface Id {
-		readonly ingressId: IngressApiIdentifier;
+		readonly ingressId: IngressIdentifier;
 	}
 
 	export interface DataBase {
 		/**
 		 * Name of the attached topic
 		 */
-		readonly ingressTopicId: TopicApiIdentifier;
+		readonly ingressTopicId: TopicIdentifier;
 
 		/**
 		 * Kind of ingress

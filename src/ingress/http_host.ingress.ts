@@ -6,21 +6,12 @@ import * as  _ from "lodash";
 
 import { MessageBus } from "../messaging/message_bus";
 
-import { Topic } from "../model/topic";
-import { Message } from "../model/message";
-import { Ingress } from "../model/ingress";
+import { IngressIdentifier, MessageIdentifier, Message, Topic } from "../model";
 
 import { BaseIngress } from "./base.ingress";
-import { DatabaseFactory } from "../data/database_factory";
 import { HttpBadRequestException } from "../endpoints/exceptions";
-import { MIME_APPLICATION_JSON, MIME_APPLICATION_JSON_UTF8 } from "../utils/mime";
-import { IngressApiIdentifier, MessageApiIdentifier } from "../misc/api-identifier";
+import { MIME_APPLICATION_JSON } from "../utils/mime";
 import { Bind } from "../utils/bind";
-
-
-const _supportedMediaTypes: Set<string> = new Set();
-_supportedMediaTypes.add("application/json");
-
 
 export class HttpHostIngress extends BaseIngress {
 
@@ -29,19 +20,13 @@ export class HttpHostIngress extends BaseIngress {
 	private readonly _successResponseGenerator: Exclude<HttpHostIngress.Opts["successResponseGenerator"], undefined> | null;
 	private readonly _transformers: HttpHostIngress.Opts["transformers"] | null;
 
-	public static get supportedMediaTypes(): IterableIterator<string> {
-		return _supportedMediaTypes.keys();
-	}
-
 	public constructor(
-		private readonly _storage: DatabaseFactory,
 		topic: Topic.Id & Topic.Name & Topic.Data,
-		ingressId: IngressApiIdentifier,
+		ingressId: IngressIdentifier,
 		private readonly _messageBus: MessageBus,
 		opts?: HttpHostIngress.Opts
 	) {
 		super(topic, ingressId);
-		this._log.trace(FExecutionContext.Default, "Instance creating");
 		this.bindPath = null;
 		this._successResponseGenerator = null;
 		this._transformers = null;
@@ -67,13 +52,11 @@ export class HttpHostIngress extends BaseIngress {
 
 		switch (topic.topicMediaType) {
 			case MIME_APPLICATION_JSON:
-			case MIME_APPLICATION_JSON_UTF8:
 				this.router.use(this._handleMessageApplicationJson);
 				break;
 			default:
 				throw new FExceptionArgument(`Not supported mediaType: ${topic.topicMediaType}`, "topic");
 		}
-		this._log.trace(FExecutionContext.Default, "Instance created");
 	}
 
 	protected onInit(): void | Promise<void> {
@@ -105,7 +88,7 @@ export class HttpHostIngress extends BaseIngress {
 					)
 				)
 			) {
-				throw new HttpBadRequestException(`Non-supported content type '${contentTypeValue}'. Expected content type '${MIME_APPLICATION_JSON}' or '${MIME_APPLICATION_JSON_UTF8}'.`);
+				throw new HttpBadRequestException(`Non-supported content type '${contentTypeValue}'. Expected content type '${MIME_APPLICATION_JSON}'.`);
 			}
 
 			const headers: Message.Headers = Object.freeze({
@@ -125,8 +108,8 @@ export class HttpHostIngress extends BaseIngress {
 				)
 			});
 
-			const ingressId: IngressApiIdentifier = this.ingressId;
-			const messageId: MessageApiIdentifier = new MessageApiIdentifier();
+			const ingressId: IngressIdentifier = this.ingressId;
+			const messageId: MessageIdentifier = MessageIdentifier.generate();
 
 			let body = ingressBody;
 			if (this._transformers !== null) {
@@ -135,12 +118,12 @@ export class HttpHostIngress extends BaseIngress {
 				}
 			}
 
-			const message: Message.Id & Message.Data = Object.freeze({
+			const message: Message.Id & Message.Data = Object.freeze<Message.Id & Message.Data>({
 				messageId,
-				headers,
-				mediaType: MIME_APPLICATION_JSON,
-				ingressBody,
-				body
+				messageHeaders: headers,
+				messageMediaType: MIME_APPLICATION_JSON,
+				messageIngressBody: ingressBody,
+				messageBody: body
 			});
 
 			await this._messageBus.publish(req.executionContext, ingressId, message);

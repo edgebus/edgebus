@@ -24,7 +24,7 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 	wscat --connect ws://127.0.0.1:8083/egress/websocket_host/EGRS319ef1447b054a5292acecf40345b89b
 	```
 
-### Sender >--HTTP--> EdgeBus >--WebSocket connection established by Consumer--> Consumer
+### Sender >--HTTP--> EdgeBus >--HTTP--> Consumer
 
 1. Configure egress as HTTP Sender
 1. Run service itself

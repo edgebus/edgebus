@@ -1,16 +1,14 @@
 import { FInitableBase, FLogger } from "@freemework/common";
 
-import { Ingress } from "../model/ingress";
-import { Topic } from "../model/topic";
-import { IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { IngressIdentifier, TopicIdentifier, Topic } from "../model";
 
 export abstract class BaseIngress extends FInitableBase {
-	public readonly ingressId: IngressApiIdentifier;
+	public readonly ingressId: IngressIdentifier;
 	protected readonly _log: FLogger;
 	private readonly _topicName: Topic["topicName"];
-	private readonly _topicId: TopicApiIdentifier;
+	private readonly _topicId: TopicIdentifier;
 
-	public constructor(topic: Topic.Id & Topic.Name, ingressId: IngressApiIdentifier) {
+	public constructor(topic: Topic.Id & Topic.Name, ingressId: IngressIdentifier) {
 		super();
 		this.ingressId = ingressId;
 		this._log = FLogger.create(this.constructor.name);
@@ -19,5 +17,5 @@ export abstract class BaseIngress extends FInitableBase {
 	}
 
 	protected get topicName(): Topic["topicName"] { return this._topicName; }
-	protected get topicId(): TopicApiIdentifier { return this._topicId; }
+	protected get topicId(): TopicIdentifier { return this._topicId; }
 }

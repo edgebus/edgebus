@@ -7,13 +7,11 @@ import { MessageBus } from "./message_bus";
 import { MessageBusLocalParallelChannel } from "./message_bus_local.parallel_channel";
 import { MessageBusLocalSequenceChannel } from "./message_bus_local.sequence_channel";
 import { MessageBusBase } from "./message_bus_base";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { DatabaseFactory } from "../data/database_factory";
-import { Egress } from "../model/egress";
-import { Ingress } from "../model/ingress";
+import { EgressIdentifier, Egress, Ingress } from "../model";
 
 export class MessageBusLocal extends MessageBusBase {
-	private readonly _messageQueues: Map<Topic["topicName"], Map<EgressApiIdentifier, Array<Message>>>;
+	private readonly _messageQueues: Map<Topic["topicName"], Map<EgressIdentifier, Array<Message>>>;
 	private readonly _channels: Map<string, Set<MessageBusLocalChannel>>;
 	private _opts: MessageBusLocal.Opts;
 
@@ -32,7 +30,7 @@ export class MessageBusLocal extends MessageBusBase {
 	): Promise<void> {
 		const messageId = message.messageId;
 
-		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topic.topicName);
+		let topicQueuesMap: Map<EgressIdentifier, Array<Message>> | undefined = this._messageQueues.get(topic.topicName);
 		if (topicQueuesMap === undefined) {
 			topicQueuesMap = new Map();
 			this._messageQueues.set(topic.topicName, topicQueuesMap);
@@ -85,7 +83,7 @@ export class MessageBusLocal extends MessageBusBase {
 			this._channels.set(channelId, new Set());
 		}
 
-		let topicQueuesMap: Map<EgressApiIdentifier, Array<Message>> | undefined = this._messageQueues.get(topic.topicName);
+		let topicQueuesMap: Map<EgressIdentifier, Array<Message>> | undefined = this._messageQueues.get(topic.topicName);
 		if (topicQueuesMap === undefined) {
 			topicQueuesMap = new Map();
 			this._messageQueues.set(topic.topicName, topicQueuesMap);
@@ -118,7 +116,8 @@ export class MessageBusLocal extends MessageBusBase {
 		return channel;
 	}
 
-	protected onInit(): void | Promise<void> {
+	protected async onInit(): Promise<void> {
+		await super.onInit();
 		// TODO
 	}
 
@@ -126,7 +125,7 @@ export class MessageBusLocal extends MessageBusBase {
 		// TODO
 	}
 
-	private static _makeChannelId(topicName: Topic["topicName"], egressId: EgressApiIdentifier): string {
+	private static _makeChannelId(topicName: Topic["topicName"], egressId: EgressIdentifier): string {
 		const channelId: string = `${egressId.uuid}.${topicName}`;
 		return channelId;
 	}
