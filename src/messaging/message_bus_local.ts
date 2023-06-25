@@ -118,7 +118,8 @@ export class MessageBusLocal extends MessageBusBase {
 		return channel;
 	}
 
-	protected onInit(): void | Promise<void> {
+	protected async onInit(): Promise<void> {
+		await super.onInit();
 		// TODO
 	}
 

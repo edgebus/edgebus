@@ -129,21 +129,31 @@ export class MessageBusBull extends MessageBusBase {
 	}
 
 	protected async onInit(): Promise<void> {
+		await super.onInit();
 		//
-		const executionContext: FExecutionContext = this.initExecutionContext;
-		await this.storage.using(
-			executionContext,
-			async (db: Database) => {
-				const topics: Array<Topic> = await db.listTopics(executionContext);
-				const egresses: Array<Egress> = await db.listEgresses(executionContext);
-				for (const topic of topics) {
-					this.getOrRegisterTopicQueue(topic);
+		try {
+			const executionContext: FExecutionContext = this.initExecutionContext;
+			await this.storage.using(
+				executionContext,
+				async (db: Database) => {
+					const topics: Array<Topic> = await db.listTopics(executionContext);
+					const egresses: Array<Egress> = await db.listEgresses(executionContext);
+					for (const topic of topics) {
+						this.getOrRegisterTopicQueue(topic);
+					}
+					for (const egress of egresses) {
+						this.getOrRegisterEgressQueue(egress);
+					}
 				}
-				for (const egress of egresses) {
-					this.getOrRegisterEgressQueue(egress);
-				}
+			);
+		} catch (e) {
+			try {
+				await super.onDispose();
+			} catch (e2) {
+				throw new FExceptionAggregate([FException.wrapIfNeeded(e), FException.wrapIfNeeded(e2)])
 			}
-		);
+			throw e;
+		}
 	}
 
 	protected onDispose(): void | Promise<void> {

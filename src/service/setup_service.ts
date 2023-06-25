@@ -6,7 +6,7 @@ import { DatabaseFactory } from "../data/database_factory";
 import { Settings } from "../settings";
 import { ManagementApi } from "../api/management_api";
 import { Topic } from "../model/topic";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { EgressApiIdentifier, IngressApiIdentifier, LabelHandlerApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { Ingress } from "../model/ingress";
 import { Uint8ArraysEqual } from "../utils/equals";
 import { Egress } from "../model/egress";
@@ -46,6 +46,31 @@ export class SetupServiceImpl implements SetupService {
 					topicMediaType: setupTopic.mediaType,
 				});
 			}
+
+			for (const setupLabelHandler of setupTopic.labelHandlers) {
+				const labelHandlerId: LabelHandlerApiIdentifier = LabelHandlerApiIdentifier.parse(setupLabelHandler.labelHandlerId);
+				const labelHandler = await managementApi.findLabelHandler(executionContext, labelHandlerId);
+
+				if (labelHandler !== null) {
+					if (labelHandler.externalProcessPath !== setupLabelHandler.path) {
+						throw new SetupServiceException(`Unable to setup label handler. A label handler '${labelHandlerId}' already presented with different path '${labelHandler.externalProcessPath}'. Setup process expected name '${setupLabelHandler.path}'.`);
+					}
+					if (labelHandler.topicId.value !== topicId.value) {
+						throw new SetupServiceException(`Unable to setup label handler. A label handler '${labelHandlerId}' already presented with different topicId '${labelHandler.topicId}'. Setup process expected topicId '${topicId}'.`);
+					}
+					if (labelHandler.labelHandlerKind !== setupLabelHandler.kind) {
+						throw new SetupServiceException(`Unable to setup label. A labelHandler '${labelHandlerId}' already presented with different kind '${labelHandler.labelHandlerKind}'. Setup process expected kind '${setupLabelHandler.kind}'.`);
+					}
+				} else {
+					await managementApi.createLabelHandler(executionContext, {
+						labelHandlerId,
+						topicId,
+						labelHandlerKind: setupLabelHandler.kind,
+						externalProcessPath: setupLabelHandler.path
+					})
+				}
+			}
+
 		}
 
 		// Setup ingresses

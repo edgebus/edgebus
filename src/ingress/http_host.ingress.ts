@@ -125,7 +125,8 @@ export class HttpHostIngress extends BaseIngress {
 				headers,
 				mediaType: MIME_APPLICATION_JSON,
 				ingressBody,
-				body
+				body,
+				labels: []
 			});
 
 			await this._messageBus.publish(req.executionContext, ingressId, message);

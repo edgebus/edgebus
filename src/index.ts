@@ -104,7 +104,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 
 			const { setup } = settings;
 			if (setup !== null) {
-				const { ingresses: ingresses, egresses: egresses, topics } = setup;
+				const { ingresses, egresses, topics } = setup;
 
 				const topicsByIdMap = new Map<string, Settings.Setup.Topic>();
 				for (const topic of topics) {

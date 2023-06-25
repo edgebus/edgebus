@@ -22,8 +22,11 @@
 	name = "fireblocks"
 	description = "Fireblock's callbacks"
 	mediaType = "application/json"
+	[[edgebus.setup.topic.labelHandler]]
+		index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
+		kind = "EXTERNAL_PROCESS"
+		path="ext_handler.sh"
 # /Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-
 
 # Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
 [[edgebus.setup.ingress]]

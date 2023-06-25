@@ -4,11 +4,13 @@ import { FException, FExecutionContext, FInitableBase, FLogger } from "@freemewo
 import { Topic } from "../model/topic";
 
 import { DatabaseFactory } from "../data/database_factory";
-import { EgressApiIdentifier, IngressApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
+import { EgressApiIdentifier, IngressApiIdentifier, LabelApiIdentifier, LabelHandlerApiIdentifier, TopicApiIdentifier } from "../misc/api-identifier";
 import { Database } from "../data/database";
 import { Ingress } from "../model/ingress";
 import { Egress } from "../model/egress";
 import { MessageBus } from "../messaging/message_bus";
+import { LabelHandler } from "../model/label_handler";
+import { Label } from "../model/label";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
@@ -64,6 +66,29 @@ export class ManagementApi extends FInitableBase {
 		return ingress;
 	}
 
+	public async createLabelHandler(
+		executionContext: FExecutionContext, labelHandlerData: Partial<LabelHandler.Id> & LabelHandler.Data
+	): Promise<LabelHandler["labelHandlerId"]> {
+		this.verifyInitializedAndNotDisposed();
+
+		const fullLabelHandlerData: LabelHandler.Id & LabelHandler.Data = {
+			labelHandlerId: labelHandlerData.labelHandlerId ?? new LabelHandlerApiIdentifier(),
+			topicId: labelHandlerData.topicId,
+			labelHandlerKind: labelHandlerData.labelHandlerKind,
+			externalProcessPath: labelHandlerData.externalProcessPath
+		};
+
+		const labelHandlerId: LabelHandlerApiIdentifier = await this._db.createLabelHandler(
+			executionContext,
+			fullLabelHandlerData
+		);
+		await this._db.transactionCommit(executionContext);
+
+		this._log.debug(executionContext, () => `Exit createLabelHandler with data: ${JSON.stringify(labelHandlerData)}`);
+		return labelHandlerId;
+	}
+
+
 	public async createTopic(
 		executionContext: FExecutionContext, topicData: Partial<Topic.Id> & Topic.Data
 	): Promise<Topic> {
@@ -103,6 +128,22 @@ export class ManagementApi extends FInitableBase {
 		const ingress = await this._db.findIngress(executionContext, { ingressId });
 
 		return ingress;
+	}
+
+	public async findLabel(executionContext: FExecutionContext, labelId: LabelApiIdentifier): Promise<Label | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const label = await this._db.findLabel(executionContext, { labelId });
+
+		return label;
+	}
+
+	public async findLabelHandler(executionContext: FExecutionContext, labelHandlerId: LabelHandlerApiIdentifier): Promise<LabelHandler | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const labelHandler = await this._db.findLabelHandler(executionContext, { labelHandlerId });
+
+		return labelHandler;
 	}
 
 	public async findTopic(executionContext: FExecutionContext, topicId: TopicApiIdentifier): Promise<Topic | null> {

@@ -7,7 +7,9 @@ export const enum ApiIdentifierPrefix {
 	MESSAGE = "MSSG",
 	TOPIC = "TOPC",
 	INGRESS = "IGRS",
-	EGRESS = "EGRS"
+	EGRESS = "EGRS",
+	LABEL = "LBEL",
+	LABEL_HANDLER = "LBHD"
 }
 
 export abstract class ApiIdentifier {
@@ -146,4 +148,36 @@ export class EgressApiIdentifier extends ApiIdentifier {
 
 	public static fromUuid(uuid: string): EgressApiIdentifier { return new EgressApiIdentifier(uuid); }
 	public get prefix(): ApiIdentifierPrefix.EGRESS { return ApiIdentifierPrefix.EGRESS; }
+}
+
+export class LabelHandlerApiIdentifier extends ApiIdentifier {
+	public static parse(apiId: string): LabelHandlerApiIdentifier {
+		const [prefix, uuid] = ApiIdentifier.parseIdentifierParts(apiId);
+		if (prefix !== ApiIdentifierPrefix.LABEL_HANDLER) {
+			throw new FExceptionArgument(
+				`Bad Label handler API identifier '${apiId}'. Expected prefix '${ApiIdentifierPrefix.LABEL_HANDLER}', but got '${prefix}'.`,
+				"apiId"
+			);
+		}
+		return new LabelHandlerApiIdentifier(uuid);
+	}
+
+	public static fromUuid(uuid: string): LabelHandlerApiIdentifier { return new LabelHandlerApiIdentifier(uuid); }
+	public get prefix(): ApiIdentifierPrefix.LABEL_HANDLER { return ApiIdentifierPrefix.LABEL_HANDLER; }
+}
+
+export class LabelApiIdentifier extends ApiIdentifier {
+	public static parse(apiId: string): LabelApiIdentifier {
+		const [prefix, uuid] = ApiIdentifier.parseIdentifierParts(apiId);
+		if (prefix !== ApiIdentifierPrefix.LABEL) {
+			throw new FExceptionArgument(
+				`Bad Label API identifier '${apiId}'. Expected prefix '${ApiIdentifierPrefix.LABEL}', but got '${prefix}'.`,
+				"apiId"
+			);
+		}
+		return new LabelApiIdentifier(uuid);
+	}
+
+	public static fromUuid(uuid: string): LabelApiIdentifier { return new LabelApiIdentifier(uuid); }
+	public get prefix(): ApiIdentifierPrefix.LABEL { return ApiIdentifierPrefix.LABEL; }
 }

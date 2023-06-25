@@ -3,14 +3,36 @@ import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 import * as _ from "lodash";
 
-import { DeliveryApiIdentifier, EgressApiIdentifier, IngressApiIdentifier, MessageApiIdentifier, TopicApiIdentifier } from "../../misc/api-identifier";
+import { DeliveryApiIdentifier, EgressApiIdentifier, IngressApiIdentifier, LabelApiIdentifier, LabelHandlerApiIdentifier, MessageApiIdentifier, TopicApiIdentifier } from "../../misc/api-identifier";
 import { Delivery, Egress, Ingress, Message, Topic, ensureEgressKind, ensureIngressKind } from "../../model";
 import { SqlDatabase } from "../sql_database";
 import { Database } from "../database";
+import { Label } from "../../model/label";
+import { LabelHandler, ensureLabelHandlerKind } from "../../model/label_handler";
 
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
 		super(sqlConnectionFactory);
+	}
+
+	public async bindLabelToMessage(
+		executionContext: FExecutionContext,
+		message: Message.Id,
+		label: Label.Id
+	): Promise<void> {
+		await this.sqlConnection
+			.statement(`
+			INSERT INTO "tb_message_label" ("label_id", "message_id")
+				VALUES (
+					(SELECT "id" FROM "tb_label" WHERE "api_uuid" = $1), 
+					(SELECT "id" FROM "tb_message" WHERE "api_uuid" = $2)
+				)
+			`)
+			.execute(
+				executionContext,
+				/* 1 */label.labelId.uuid,
+				/* 2 */message.messageId.uuid,
+			);
 	}
 
 	public async createDelivery(
@@ -224,7 +246,7 @@ export class PostgresDatabase extends SqlDatabase {
 		mimeType: string | null,
 		originalBody: Uint8Array | null,
 		body: Uint8Array | null,
-	): Promise<void> {
+	): Promise<Message> {
 		this.verifyInitializedAndNotDisposed();
 
 		const messageResultRecord: FSqlResultRecord = await this.sqlConnection
@@ -247,7 +269,7 @@ export class PostgresDatabase extends SqlDatabase {
 					$6::UUID AS "ingress_uuid"
 				) AS INPUT
 				LEFT JOIN "tb_ingress" AS SUB ON SUB."api_uuid" = INPUT."ingress_uuid"
-				RETURNING "id", "api_uuid" "topic_id", "ingress_id", "media_type", "body", "original_body", "headers", "utc_created_at"
+				RETURNING "id", "api_uuid", "topic_id", "ingress_id", "media_type", "body", "original_body", "headers", "utc_created_at"
 			`)
 			.executeSingle(
 				executionContext,
@@ -271,7 +293,86 @@ export class PostgresDatabase extends SqlDatabase {
 			`)
 			.execute(executionContext, messageDbId);
 
-		// const message: Message = PostgresDatabase._mapMessageDbRow(messageResultRecord);
+
+
+		return PostgresDatabase._mapCreatedMessageDbRow(messageResultRecord);
+	}
+
+	public async createLabelHandler(
+		executionContext: FExecutionContext,
+		labelHandlerData: Partial<LabelHandler.Id> & LabelHandler.Data
+	): Promise<LabelHandler["labelHandlerId"]> {
+		this.verifyInitializedAndNotDisposed();
+
+		const topicSqlRecord: FSqlResultRecord | null = await this.sqlConnection
+			.statement(`
+				SELECT "id"
+				FROM "tb_topic" 
+				WHERE "api_uuid" = $1 AND "utc_deleted_date" IS NULL
+			`)
+			.executeSingleOrNull(
+				executionContext,
+			/* 1 */labelHandlerData.topicId.uuid
+			);
+
+		if (!topicSqlRecord) {
+			throw new FExceptionInvalidOperation(`Can not find topic ${labelHandlerData.topicId} to create label handler`);
+		}
+
+		const labelHandlerId: LabelHandlerApiIdentifier = labelHandlerData.labelHandlerId ?? new LabelHandlerApiIdentifier();
+
+		const sqlMainRecord: FSqlResultRecord = await this.sqlConnection
+			.statement(`
+					INSERT INTO "tb_label_handler" ("api_uuid", "kind", "topic_id")
+					VALUES ($1, $2, (
+						SELECT T."id" FROM "tb_topic" AS T WHERE T."api_uuid" = $3
+					))
+					RETURNING "id", "api_uuid", "kind", "topic_id", $3 AS "topic_api_uuid", "utc_created_date", "utc_deleted_date"
+				`)
+			.executeSingle(
+				executionContext,
+				/* 1 */labelHandlerId.uuid,
+				/* 2 */labelHandlerData.labelHandlerKind,
+				/* 3 */labelHandlerData.topicId.uuid
+			);
+
+		const labelHandlerDbId = sqlMainRecord.get("id").asInteger;
+
+		await this.sqlConnection
+			.statement(`
+					INSERT INTO "tb_label_handler_external_process" ("id", "path")
+					VALUES ($1, $2)
+					RETURNING "path"
+				`)
+			.execute(
+				executionContext,
+				/* 1 */labelHandlerDbId,
+				/* 2 */labelHandlerData.externalProcessPath,
+			);
+
+		return labelHandlerId;
+	}
+
+	public async createLabel(executionContext: FExecutionContext, labelData: Partial<Label.Id> & Label.Data): Promise<Label> {
+		this.verifyInitializedAndNotDisposed();
+
+		const labelId: LabelApiIdentifier = labelData.labelId ?? new LabelApiIdentifier();
+
+		const sqlRecord: FSqlResultRecord = await this.sqlConnection
+			.statement(`
+				INSERT INTO "tb_label"("api_uuid", "value")
+				VALUES ($1, $2)
+				RETURNING "api_uuid", "value", "utc_created_date", "utc_deleted_date"
+			`)
+			.executeSingle(
+				executionContext,
+			/* 1 */labelId.uuid,
+			/* 2 */labelData.value,
+			);
+
+		const labelModel: Label = PostgresDatabase._mapLabelDbRow(sqlRecord);
+		return labelModel;
+
 	}
 
 	public async createTopic(
@@ -454,6 +555,82 @@ export class PostgresDatabase extends SqlDatabase {
 		return ingressModel;
 	}
 
+	public async findLabel(executionContext: FExecutionContext, opts: Label.Id): Promise<Label | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
+			.statement(`
+				SELECT "id", "api_uuid", "value", "utc_created_date", "utc_deleted_date"
+				FROM "tb_label"
+				WHERE "api_uuid" = $1 AND "utc_deleted_date" IS NULL
+			`)
+			.executeSingleOrNull(
+				executionContext,
+				opts.labelId.uuid,
+			);
+
+		if (sqlRecord === null) {
+			return null;
+		}
+
+		const label: Label = PostgresDatabase._mapLabelDbRow(sqlRecord);
+
+		return label;
+	}
+
+	public async findLabelByValue(executionContext: FExecutionContext, value: Label.Data["value"]): Promise<Label | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
+			.statement(`
+				SELECT "id", "api_uuid", "value", "utc_created_date", "utc_deleted_date"
+				FROM "tb_label"
+				WHERE "value" = $1 AND "utc_deleted_date" IS NULL
+			`)
+			.executeSingleOrNull(
+				executionContext,
+				value,
+			);
+
+		if (sqlRecord === null) {
+			return null;
+		}
+
+		const label: Label = PostgresDatabase._mapLabelDbRow(sqlRecord);
+
+		return label;
+	}
+
+	public async findLabelHandler(executionContext: FExecutionContext, opts: LabelHandler.Id): Promise<LabelHandler | null> {
+		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
+			.statement(`
+				SELECT 
+					LH."id",
+					LH."api_uuid",
+					LH."kind",
+					LH."utc_created_date",
+					LH."utc_deleted_date",
+					T."api_uuid" AS "topic_api_uuid",
+					EP."path"
+				FROM "tb_label_handler" AS LH
+					INNER JOIN "tb_topic" AS T ON T."id" = LH."topic_id"
+					LEFT JOIN "tb_label_handler_external_process" AS EP ON EP."id" = LH."id"
+				WHERE LH."api_uuid" = $1 AND LH."utc_deleted_date" IS NULL
+			`)
+			.executeSingleOrNull(
+				executionContext,
+				opts.labelHandlerId.uuid,
+			);
+
+		if (sqlRecord === null) {
+			return null;
+		}
+
+		const labelHandler: LabelHandler = PostgresDatabase._mapLabelHandlerDbRow(sqlRecord);
+
+		return labelHandler;
+	}
+
 	public async findTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic | null> {
 		this.verifyInitializedAndNotDisposed();
 
@@ -512,6 +689,8 @@ export class PostgresDatabase extends SqlDatabase {
 
 		return egressModel;
 	}
+
+
 
 	public async lockEgressMessageQueue(
 		executionContext: FExecutionContext,
@@ -627,6 +806,28 @@ export class PostgresDatabase extends SqlDatabase {
 	): Promise<Array<Database.EgressMessageQueue>> {
 		//
 		throw new FExceptionInvalidOperation("Not implemented yet");
+	}
+
+	public async listLabelHandlers(executionContext: FExecutionContext): Promise<Array<LabelHandler>> {
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+					SELECT 
+						LH."api_uuid",
+						T."api_uuid" AS "topic_api_uuid",
+						LH."kind",
+						LH."utc_created_date",
+						LH."utc_deleted_date",
+						EP."path"
+					FROM "tb_label_handler" AS LH
+						INNER JOIN "tb_topic" AS T ON T."id" = LH."topic_id"
+						LEFT JOIN "tb_label_handler_external_process" AS EP ON EP."id" = LH."id"
+					WHERE LH."utc_deleted_date" IS NULL
+				`)
+			.executeQuery(
+				executionContext,
+			);
+
+		return sqlRecords.map(e => PostgresDatabase._mapLabelHandlerDbRow(e));
 	}
 
 	public async listTopics(
@@ -869,6 +1070,76 @@ export class PostgresDatabase extends SqlDatabase {
 				});
 			default:
 				throw new FExceptionInvalidOperation(`Unsupported ingress kind: '${ingressKind}'`);
+		}
+	}
+
+	private static _mapCreatedMessageDbRow(
+		sqlRecord: FSqlResultRecord,
+	): Message {
+		const messageUuid: string = sqlRecord.get("api_uuid").asString;
+		const headers: Record<string, string> = sqlRecord.get("headers").asObject;
+		const mediaType: string = sqlRecord.get("media_type").asString;
+		const ingressBody: Uint8Array | null = sqlRecord.get("original_body").asBinaryNullable;
+		const body: Uint8Array = sqlRecord.get("body").asBinary;
+
+		const messageId: MessageApiIdentifier = MessageApiIdentifier.fromUuid(messageUuid);
+
+		return {
+			messageId,
+			headers,
+			mediaType,
+			ingressBody: ingressBody ?? body,
+			body,
+			status: Message.Status.Kind.NEW,
+			deliveryAttemptsCount: 0
+		}
+	}
+
+	private static _mapLabelDbRow(
+		sqlRow: FSqlResultRecord
+	): Label {
+		const labelUuid: string = sqlRow.get("api_uuid").asString;
+		const labelValue: string = sqlRow.get("value").asString;
+		const labelCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
+		const labelDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
+
+		const label: Label = {
+			labelId: LabelApiIdentifier.fromUuid(labelUuid),
+			value: labelValue,
+			labelCreatedAt,
+			labelDeletedAt
+		};
+
+		return Object.freeze<Label>(label);
+	}
+
+	private static _mapLabelHandlerDbRow(
+		sqlRow: FSqlResultRecord,
+	): LabelHandler {
+		const labelHandlerUuid: string = sqlRow.get("api_uuid").asString;
+		const topicUuid: string = sqlRow.get("topic_api_uuid").asString;
+		const labelHandlerKind: string = sqlRow.get("kind").asString;
+		const labelHandlerCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
+		const labelHandlerDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
+		const labelHandlerId: LabelHandlerApiIdentifier = LabelHandlerApiIdentifier.fromUuid(labelHandlerUuid);
+		const topicId: TopicApiIdentifier = TopicApiIdentifier.fromUuid(topicUuid);
+
+		switch (labelHandlerKind) {
+			case LabelHandler.Kind.ExternalProcess:
+				const externalProcessPath: string = sqlRow.get("path").asString;
+
+				const labelHandler: LabelHandler = {
+					labelHandlerId,
+					topicId,
+					labelHandlerKind: LabelHandler.Kind.ExternalProcess,
+					externalProcessPath,
+					labelHandlerCreatedAt,
+					labelHandlerDeletedAt
+				}
+				return Object.freeze<LabelHandler>(labelHandler);
+
+			default:
+				throw new FExceptionInvalidOperation(`Not supported label handler kind: ${labelHandlerKind}`);
 		}
 	}
 

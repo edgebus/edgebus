@@ -2,8 +2,7 @@ import { FConfiguration, FException, FExceptionInvalidOperation, FUtilUnreadonly
 import { FHostingConfiguration } from "@freemework/hosting";
 
 import { Router } from "express-serve-static-core";
-import { Ingress as IngressModel } from "./model/ingress";
-import { Egress as EgressModel } from "./model/egress";
+import { Ingress as IngressModel, Egress as EgressModel, LabelHandler as LabelHandlerModel } from "./model";
 import { existsSync, readFileSync } from "fs";
 
 export class Settings {
@@ -243,7 +242,24 @@ export namespace Settings {
 			readonly name: string;
 			readonly description: string;
 			readonly mediaType: string;
+			readonly labelHandlers: ReadonlyArray<LabelHandler>
 		}
+
+		export type LabelHandler =
+			| LabelHandler.ExternalProcess;
+
+		export namespace LabelHandler {
+			export interface Base {
+				readonly labelHandlerId: string;
+				readonly kind: LabelHandlerModel.Kind;
+			}
+
+			export interface ExternalProcess extends Base {
+				readonly kind: LabelHandlerModel.Kind.ExternalProcess;
+				readonly path: string;
+			}
+		}
+
 	}
 }
 
@@ -359,6 +375,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 	const egresses: Array<Settings.Setup.Egress> = [];
 	const topics: Array<Settings.Setup.Topic> = [];
 
+
 	const publisherKey: string = "ingress";
 	if (setupConfiguration.hasNamespace(publisherKey)) {
 		const publishersConfiguration: Array<FConfiguration> = setupConfiguration.getArray(publisherKey);
@@ -453,7 +470,31 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				const name: string = topicConfiguration.get("name").asString;
 				const description: string = topicConfiguration.get("description").asString;
 				const mediaType: string = topicConfiguration.get("mediaType").asString;
-				const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType };
+				
+				const labelHandlers: Array<Settings.Setup.LabelHandler> = []
+				const labelHandlerKey: string = "labelHandler";
+				if (topicConfiguration.hasNamespace(labelHandlerKey)) {
+					const labelHandlersConfiguration = topicConfiguration.getArray(labelHandlerKey);
+					for (const labelHandlerConfiguration of labelHandlersConfiguration) {
+						const labelHandlerId: string = labelHandlerConfiguration.get("index").asString;
+						const kind: string = labelHandlerConfiguration.get("kind").asString;
+						switch (kind) {
+							case LabelHandlerModel.Kind.ExternalProcess:
+								const path: string = labelHandlerConfiguration.get("path").asString;
+								labelHandlers.push(Object.freeze({
+									labelHandlerId,
+									kind,
+									path,
+								}));
+								break;
+							default:
+								throw new FExceptionInvalidOperation(`Unsupported ${labelHandlerConfiguration.configurationNamespace}.type '${kind}'.`);
+						}
+					}
+
+				}
+
+				const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers) };
 				topics.push(Object.freeze(topicSettings));
 			}
 		}
@@ -461,7 +502,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 		return Object.freeze({
 			ingresses: Object.freeze(ingresses),
 			egresses: Object.freeze(egresses),
-			topics: Object.freeze(topics),
+			topics: Object.freeze(topics)
 		});
 	}
 	else {

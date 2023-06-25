@@ -47,7 +47,8 @@ export class MessageBusRabbitMQ extends MessageBusBase {
 		throw new FExceptionInvalidOperation("Not implemented yet");
 	}
 
-	protected onInit(): void | Promise<void> {
+	protected async onInit(): Promise<void> {
+		await super.onInit();
 		// TODO
 	}
 
