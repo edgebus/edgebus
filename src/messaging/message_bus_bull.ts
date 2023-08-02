@@ -27,7 +27,7 @@ import { Delivery } from "../model";
  * See: https://www.npmjs.com/package/bull
  */
 export class MessageBusBull extends MessageBusBase {
-	private readonly log: FLogger;
+	protected readonly log: FLogger;
 
 	public get serverAdapterRouter() {
 		return this._serverAdapter.getRouter();

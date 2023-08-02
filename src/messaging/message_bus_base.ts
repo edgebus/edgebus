@@ -1,4 +1,4 @@
-import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
+import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
 
 import { DatabaseFactory } from "../data/database_factory";
 import { EgressIdentifier, IngressIdentifier, TopicIdentifier } from "../model";
@@ -13,9 +13,9 @@ import { ExternalLabelsHandler } from "./labels_handler/external_process_labels_
 import { Label } from "../model";
 
 export abstract class MessageBusBase extends MessageBus {
-
 	private readonly labelHandlers: Map<TopicIdentifier, ReadonlyArray<LabelsHandlerBase>>;
 	private readonly egressLabels: Map<EgressIdentifier, ReadonlyArray<Label>>;
+	protected readonly log: FLogger;
 
 	public constructor(
 		protected readonly storage: DatabaseFactory,
@@ -23,6 +23,7 @@ export abstract class MessageBusBase extends MessageBus {
 		super();
 		this.labelHandlers = new Map();
 		this.egressLabels = new Map<EgressIdentifier, ReadonlyArray<Label>>();
+		this.log = FLogger.create(MessageBusBase.name);
 	}
 
 	protected async onInit(): Promise<void> {
@@ -69,6 +70,7 @@ export abstract class MessageBusBase extends MessageBus {
 
 				const labelValues: Set<Label["labelValue"]> = new Set();
 				const labelHandlers: ReadonlyArray<LabelsHandlerBase> | undefined = this.labelHandlers.get(topic.topicId);
+
 				if (labelHandlers !== undefined) {
 					const exs: Array<FException> = [];
 					await Promise.all(
@@ -91,6 +93,8 @@ export abstract class MessageBusBase extends MessageBus {
 					}
 					labels.push(label);
 				}
+
+				this.log.info(executionContext, `Add labels: ${[...labelValues].map(e => `"${e}"`).join(', ')} for message: ${message.messageId}, topic: ${topic.topicId}`);
 
 				const messageInstance: Message = await db.createMessage(
 					executionContext,
