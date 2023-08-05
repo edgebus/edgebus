@@ -107,7 +107,6 @@ jobs:
           BUILD_IS_RELEASE_CANDIDATE="yes"
         else
           BUILD_TAG_VERSION=$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f1 | rev)
-          BUILD_TAG_VERSION="${{ github.ref_name }}"
           BUILD_VERSION_APPENDER=""
           BUILD_IS_RELEASE_CANDIDATE="no"
         fi
