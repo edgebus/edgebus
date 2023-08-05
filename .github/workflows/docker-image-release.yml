@@ -121,7 +121,7 @@ jobs:
         echo "project_url=${BUILD_PROJECT_URL}" | tee -a "${GITHUB_OUTPUT}"
         echo "rc_version=${BUILD_RC_VERSION}" | tee -a "${GITHUB_OUTPUT}"
         echo "tag_version=${BUILD_TAG_VERSION}" | tee -a "${GITHUB_OUTPUT}"
-        if [ -n "${REGISTRY_DOCKERHUB_REPOSITORY_PATH}" ]; then
+        if [ -n "${REGISTRY_DOCKERHUB_REPOSITORY_ORG}" ]; then
           echo "dockerhub_publish=yes" | tee -a "${GITHUB_OUTPUT}"
         else
           echo "dockerhub_publish=no" | tee -a "${GITHUB_OUTPUT}"
