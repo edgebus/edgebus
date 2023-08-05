@@ -16,7 +16,7 @@ env:
   # Set path to GitHub Container Repository
   REGISTRY_GHCR_REPOSITORY_PATH: "${{ github.repository }}/typescript-service"
   # To enable publish into Docker Hub (https://hub.docker.com/)
-  # set path to Docker Hub repository. Like: theanurin/luksoid
+  # by set Docker Hub user/organization ID
   REGISTRY_DOCKERHUB_REPOSITORY_ORG: "theanurin"
 
 on:
@@ -107,7 +107,6 @@ jobs:
           BUILD_IS_RELEASE_CANDIDATE="yes"
         else
           BUILD_TAG_VERSION=$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f1 | rev)
-          BUILD_TAG_VERSION="${{ github.ref_name }}"
           BUILD_VERSION_APPENDER=""
           BUILD_IS_RELEASE_CANDIDATE="no"
         fi
@@ -122,7 +121,7 @@ jobs:
         echo "project_url=${BUILD_PROJECT_URL}" | tee -a "${GITHUB_OUTPUT}"
         echo "rc_version=${BUILD_RC_VERSION}" | tee -a "${GITHUB_OUTPUT}"
         echo "tag_version=${BUILD_TAG_VERSION}" | tee -a "${GITHUB_OUTPUT}"
-        if [ -n "${REGISTRY_DOCKERHUB_REPOSITORY_PATH}" ]; then
+        if [ -n "${REGISTRY_DOCKERHUB_REPOSITORY_ORG}" ]; then
           echo "dockerhub_publish=yes" | tee -a "${GITHUB_OUTPUT}"
         else
           echo "dockerhub_publish=no" | tee -a "${GITHUB_OUTPUT}"
