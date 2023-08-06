@@ -22,7 +22,7 @@ env:
 on:
   push:
     tags:
-      - '*'
+      - 'typescript-service-*'
 
 run-name: Docker Images (${{ format('{0}.{1}', github.ref_name, github.sha) }})
 
