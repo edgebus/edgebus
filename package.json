@@ -1,6 +1,6 @@
 {
 	"name": "@edgebus/service",
-	"version": "0.4.4",
+	"version": "0.4.10",
 	"title": "EdgeBus Service",
 	"description": "EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.",
 	"author": "ZXTeam <pub@zxteam.org> (http://www.zxteam.org)",
