@@ -8,12 +8,12 @@ import { Topic } from "../model/topic";
 import { Ingress } from "../model/ingress";
 import { Egress } from "../model/egress";
 import { LabelHandler } from "../model/label_handler";
-import { LabelsHandlerBase } from "./labels_handler/labels_handler_base";
+import { AbstractLabelsHandler } from "./labels_handler/abstract_labels_handler";
 import { ExternalLabelsHandler } from "./labels_handler/external_process_labels_handler";
 import { Label } from "../model";
 
 export abstract class MessageBusBase extends MessageBus {
-	private readonly labelHandlers: Map<TopicIdentifier, ReadonlyArray<LabelsHandlerBase>>;
+	private readonly labelHandlers: Map<TopicIdentifier, ReadonlyArray<AbstractLabelsHandler>>;
 	private readonly egressLabels: Map<EgressIdentifier, ReadonlyArray<Label>>;
 	protected readonly log: FLogger;
 
@@ -30,7 +30,7 @@ export abstract class MessageBusBase extends MessageBus {
 		await this.storage.using(this.initExecutionContext, async (db) => {
 			const labelHandlersList: Array<LabelHandler> = await db.listLabelHandlers(this.initExecutionContext);
 
-			const labelHandlerFactory = (labelHandlerModel: LabelHandler): LabelsHandlerBase => {
+			const labelHandlerFactory = (labelHandlerModel: LabelHandler): AbstractLabelsHandler => {
 				switch (labelHandlerModel.labelHandlerKind) {
 					case LabelHandler.Kind.ExternalProcess:
 						return new ExternalLabelsHandler(labelHandlerModel.externalProcessPath);
@@ -40,7 +40,7 @@ export abstract class MessageBusBase extends MessageBus {
 			}
 
 			for (const labelHandler of labelHandlersList) {
-				let labelHandlers: ReadonlyArray<LabelsHandlerBase> | undefined = this.labelHandlers.get(labelHandler.topicId);
+				let labelHandlers: ReadonlyArray<AbstractLabelsHandler> | undefined = this.labelHandlers.get(labelHandler.topicId);
 				if (labelHandlers === undefined) { labelHandlers = []; }
 				this.labelHandlers.set(
 					labelHandler.topicId,
@@ -69,7 +69,8 @@ export abstract class MessageBusBase extends MessageBus {
 				const ingress: Ingress = await db.getIngress(executionContext, { ingressId });
 
 				const labelValues: Set<Label["labelValue"]> = new Set();
-				const labelHandlers: ReadonlyArray<LabelsHandlerBase> | undefined = this.labelHandlers.get(topic.topicId);
+				const labelHandlers: ReadonlyArray<AbstractLabelsHandler> | undefined
+					= this.labelHandlers.get(topic.topicId);
 
 				if (labelHandlers !== undefined) {
 					const exs: Array<FException> = [];
@@ -94,7 +95,7 @@ export abstract class MessageBusBase extends MessageBus {
 					labels.push(label);
 				}
 
-				this.log.info(executionContext, `Add labels: ${[...labelValues].map(e => `"${e}"`).join(', ')} for message: ${message.messageId}, topic: ${topic.topicId}`);
+				this.log.info(executionContext, () => `Add labels: ${[...labelValues].map(e => `"${e}"`).join(', ')} for message: ${message.messageId}, topic: ${topic.topicId}`);
 
 				const messageInstance: Message = await db.createMessage(
 					executionContext,

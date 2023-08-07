@@ -1,18 +1,33 @@
 import { FEnsure, FEnsureException, FException, FExecutionContext, FLogger } from "@freemework/common";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { Message } from "../../model";
-import { ExternalProcessException, ExternalProcessExceptionCannotSpawn, ExternalProcessExceptionKilled, ExternalProcessExceptionParse, ExternalProcessExceptionTimeout, ExternalProcessExceptionUnexpectedExitCode } from "./external_process_exception";
+import { LabelsHandlerException } from "./labels_handler_exception";
 
 const ensure: FEnsure = FEnsure.create();
 
+export class ExternalLabelsHandlerException extends LabelsHandlerException { }
+
+export class ExternalProcessException extends ExternalLabelsHandlerException { }
+
+export class ExternalProcessExceptionCannotSpawn extends ExternalProcessException { }
+
+export class ExternalProcessExceptionTimeout extends ExternalProcessException { }
+
+export class ExternalProcessExceptionUnexpectedExitCode extends ExternalProcessException { }
+
+export class ExternalProcessExceptionParse extends ExternalProcessException { }
+
+export class ExternalProcessExceptionKilled extends ExternalProcessException { }
+
+
 export class ExternalProcess {
-	private readonly path: string;
+	private readonly executablePath: string;
 	private readonly timeoutMs: number;
 	private timeout: NodeJS.Timeout | null = null;
 	private readonly log: FLogger;
 
-	constructor(path: string, timeoutMs: number) {
-		this.path = path;
+	constructor(executablePath: string, timeoutMs: number) {
+		this.executablePath = executablePath;
 		this.timeoutMs = timeoutMs;
 		this.log = FLogger.create(ExternalProcess.name);
 	}
@@ -22,9 +37,9 @@ export class ExternalProcess {
 		message: Message.Id & Message.Data
 	): Promise<Array<string>> {
 		return new Promise(async (resolve, reject) => {
-			const cmd: ChildProcessWithoutNullStreams | ExternalProcessExceptionCannotSpawn = await runSpawn(this.path, this.timeoutMs);
+			const cmd: ChildProcessWithoutNullStreams | ExternalProcessExceptionCannotSpawn = await runSpawn(this.executablePath, this.timeoutMs);
 			if (cmd instanceof ExternalProcessExceptionCannotSpawn) {
-				this.log.info(executionContext, () => `Failed spawn external process ${this.path}`);
+				this.log.info(executionContext, () => `Failed spawn external process ${this.executablePath}`);
 				reject(cmd);
 				return;
 			}
@@ -62,25 +77,25 @@ export class ExternalProcess {
 						if (e instanceof FEnsureException) {
 							const errMsg = 'Parse error. Expected json array of strings from external label handler.';
 
-							this.log.info(executionContext, () => errMsg);
+							this.log.info(executionContext, errMsg);
 							reject(new ExternalProcessExceptionParse(errMsg, FException.wrapIfNeeded(e)));
 						} else {
 							const errMsg = 'Unexpected exception.';
 
-							this.log.info(executionContext, () => errMsg);
+							this.log.info(executionContext, errMsg);
 							reject(new ExternalProcessException(errMsg, FEnsureException.wrapIfNeeded(e)));
 						}
 					}
 				} else {
 					if (cmd.killed) {
-						this.log.info(executionContext, () => `External process ${this.path} killed.`);
+						this.log.info(executionContext, () => `External process ${this.executablePath} killed.`);
 						reject(new ExternalProcessExceptionKilled());
 					} else {
 						if (this.timeout) {
 							clearTimeout(this.timeout);
 						}
-						const errMsg = `External process ${this.path} exit with unexpected code.`;
-						this.log.info(executionContext, () => errMsg);
+						const errMsg = `External process ${this.executablePath} exit with unexpected code.`;
+						this.log.info(executionContext, errMsg);
 						reject(new ExternalProcessExceptionUnexpectedExitCode(errMsg));
 					}
 				}
@@ -90,9 +105,9 @@ export class ExternalProcess {
 
 			this.timeout = setTimeout(() => {
 				cmd.kill();
-				const errMsg = `External process ${this.path} timeout.`;
+				const errMsg = `External process ${this.executablePath} timeout.`;
 
-				this.log.info(executionContext, () => errMsg);
+				this.log.info(executionContext, errMsg);
 				reject(new ExternalProcessExceptionTimeout(errMsg));
 			}, this.timeoutMs);
 
@@ -107,6 +122,9 @@ function runSpawn(path: string, timeoutMs: number): Promise<ChildProcessWithoutN
 	return new Promise((res) => {
 		const cmd = spawn(path);
 		const timeout = setTimeout(() => {
+			if (cmd.exitCode !== null) {
+				cmd.kill();
+			}
 			res(new ExternalProcessExceptionCannotSpawn(`Failed spawn external process ${path}, timeout`));
 		}, timeoutMs);
 

@@ -1,11 +1,13 @@
 import { FExecutionContext } from "@freemework/common";
-import { LabelHandler, Message } from "../../model";
-import { LabelsHandlerBase } from "./labels_handler_base";
-import path = require("path");
+
+import * as path from "path";
+
+import { Label, LabelHandler, Message } from "../../model";
+
 import { ExternalProcess } from "./external_process";
+import { AbstractLabelsHandler } from "./abstract_labels_handler";
 
-
-export class ExternalLabelsHandler extends LabelsHandlerBase {
+export class ExternalLabelsHandler extends AbstractLabelsHandler {
 	private readonly timeoutMs;
 	private readonly externalProcessPath: LabelHandler.ExternalProcess["externalProcessPath"];
 
@@ -15,16 +17,21 @@ export class ExternalLabelsHandler extends LabelsHandlerBase {
 		this.timeoutMs = 15 * 1000;
 	}
 
-	public execute(
+	public async execute(
 		executionContext: FExecutionContext,
 		message: Message.Id & Message.Data
-	): Promise<Array<string>> {
-		const newExternalProcess = new ExternalProcess(this.getLabelHandlerFullPath(this.externalProcessPath), this.timeoutMs);
-		return newExternalProcess.execute(executionContext, message);
+	): Promise<Array<Label["labelValue"]>> {
+		const newExternalProcess: ExternalProcess = new ExternalProcess(
+			ExternalLabelsHandler.getLabelsHandlerAbsolutePath(this.externalProcessPath),
+			this.timeoutMs
+		);
+		return await newExternalProcess.execute(executionContext, message);
 	}
 
-	private getLabelHandlerFullPath(labelHandlerPath: string): string {
-		const fullPath = path.join(process.cwd(), labelHandlerPath);
+	private static getLabelsHandlerAbsolutePath(labelHandlerPath: string): string {
+		const fullPath = path.isAbsolute(labelHandlerPath)
+			? path.join(process.cwd(), labelHandlerPath)
+			: labelHandlerPath;
 		return fullPath;
 	}
 }
