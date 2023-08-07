@@ -114,8 +114,8 @@ jobs:
           BUILD_VERSION_APPENDER=""
           BUILD_IS_RELEASE_CANDIDATE="no"
         fi
-        BUILD_IMAGE_TAG_PREFIX_MAJOR="${BUILD_TAG_VERSION_PREFIX}.$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1)"
-        BUILD_IMAGE_TAG_PREFIX_MAJOR_MINOR="${BUILD_TAG_VERSION_PREFIX}.$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1-2)"
+        BUILD_IMAGE_TAG_PREFIX_MAJOR="${BUILD_TAG_VERSION_PREFIX}-$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1)"
+        BUILD_IMAGE_TAG_PREFIX_MAJOR_MINOR="${BUILD_TAG_VERSION_PREFIX}-$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1-2)"
 
         echo "version_appender=${BUILD_VERSION_APPENDER}" | tee -a "${GITHUB_OUTPUT}"
         echo "commit_short_sha=${SHORT_SHA}" | tee -a "${GITHUB_OUTPUT}"

@@ -115,6 +115,8 @@ jobs:
             BUILD_VERSION_APPENDER="-snapshot"
             BUILD_IS_RELEASE_CANDIDATE="no"
           fi
+          BUILD_IMAGE_TAG_PREFIX_MAJOR="${BUILD_TAG_VERSION_PREFIX}-$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1)"
+          BUILD_IMAGE_TAG_PREFIX_MAJOR_MINOR="${BUILD_TAG_VERSION_PREFIX}-$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1-2)"
         else
           BUILD_IMAGE_TAG_PREFIX="${{ github.ref_name }}"
           BUILD_TAG_VERSION=""
