@@ -218,7 +218,7 @@ jobs:
       run: |
         docker build \
           --platform=${{ matrix.platform }} \
-          --build-arg TEST_IMAGE="ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${APP_DOCKER_IMAGE_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
+          --build-arg TEST_IMAGE="ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${APP_DOCKER_IMAGE_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
           --build-arg BUILD_CONFIGURATION=snapshot \
           --tag "${GEN_IMAGE_TAG}" \
           --file "${DOCKER_FILES_DIR}/${{ matrix.dockerfile }}" \
@@ -280,30 +280,30 @@ jobs:
       run: |
         if [ "${{ github.ref_type }}" == "tag" ]; then
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ needs.configure.outputs.build_commit_short_sha }}"
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ needs.configure.outputs.build_commit_short_sha }}"
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}"
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}"
           if [ "${{ needs.configure.outputs.build_is_release_candidate }}" == "no" ]; then
             skopeo copy --all \
-              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
-              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version_major_minor }}"
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version_major_minor }}${{ needs.configure.outputs.build_version_appender }}"
             skopeo copy --all \
-              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
-              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version_major }}"
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version_major }}${{ needs.configure.outputs.build_version_appender }}"
           fi
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
             "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:latest"
         else
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ needs.configure.outputs.build_commit_short_sha }}"
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ needs.configure.outputs.build_commit_short_sha }}"
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}"
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}"
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_tag_version }}${{ needs.configure.outputs.build_version_appender }}.${{ github.sha }}" \
             "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:latest"
         fi
