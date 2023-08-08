@@ -111,12 +111,12 @@ FROM node:${IMAGE_TAG_NODEJS} AS imager_base
 
 # Imager for 'snapshot' build includes snapshot related stuff into final image
 FROM imager_base AS imager_snapshot
-RUN apk add --no-cache curl jq
+ONBUILD RUN apk add --no-cache curl jq python3
 ONBUILD ENV DO_INIT_SLEEP=4
 
 # Imager for 'release' build includes release related stuff into final image
 FROM imager_base AS imager_release
-RUN apk add --no-cache jq
+ONBUILD RUN apk add --no-cache jq python3
 ONBUILD ENV DO_INIT_SLEEP=
 
 # Final image
