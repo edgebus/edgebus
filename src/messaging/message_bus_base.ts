@@ -95,7 +95,12 @@ export abstract class MessageBusBase extends MessageBus {
 					labels.push(label);
 				}
 
-				this.log.info(executionContext, () => `Add labels: ${[...labelValues].map(e => `"${e}"`).join(', ')} for message: ${message.messageId}, topic: ${topic.topicId}`);
+				this.log.info(executionContext, () => {
+					if (labelValues.size > 0) {
+						return `Add labels: ${[...labelValues].map(e => `"${e}"`).join(', ')} for message: ${message.messageId}, topic: ${topic.topicId}`;
+					}
+					return `No labels for message: ${message.messageId}, topic: ${topic.topicId}`;
+				});
 
 				const messageInstance: Message = await db.createMessage(
 					executionContext,

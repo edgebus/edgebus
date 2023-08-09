@@ -1,4 +1,4 @@
-import { FException, FExceptionArgument, FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
+import { FException, FExceptionArgument, FExceptionInvalidOperation, FExecutionContext, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import * as ContentType from "content-type";
 import { Request, Response, Router } from "express";
@@ -68,6 +68,7 @@ export class HttpHostIngress extends BaseIngress {
 
 	@Bind
 	private async _handleMessageApplicationJson(req: Request, res: Response): Promise<void> {
+		let executionContext: FExecutionContext = req.executionContext;
 		try {
 			const ingressBody: unknown = req.body;
 			if (!(ingressBody instanceof Uint8Array)) {
@@ -111,6 +112,11 @@ export class HttpHostIngress extends BaseIngress {
 			const ingressId: IngressIdentifier = this.ingressId;
 			const messageId: MessageIdentifier = MessageIdentifier.generate();
 
+			executionContext = new FLoggerLabelsExecutionContext(executionContext, {
+				ingressId: ingressId.value,
+				messageId: messageId.value
+			});
+
 			let body = ingressBody;
 			if (this._transformers !== null) {
 				for (const transformer of this._transformers) {
@@ -126,7 +132,7 @@ export class HttpHostIngress extends BaseIngress {
 				messageBody: body
 			});
 
-			await this._messageBus.publish(req.executionContext, ingressId, message);
+			await this._messageBus.publish(executionContext, ingressId, message);
 
 			res.header("EDGEBUS-MESSAGE-ID", message.messageId.value)
 			if (this._successResponseGenerator !== null) {
@@ -149,8 +155,8 @@ export class HttpHostIngress extends BaseIngress {
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);
 			const msg: string = `Failure to process published message. Error: ${ex.message}`;
-			this._log.warn(req.executionContext, msg);
-			this._log.debug(req.executionContext, msg, ex);
+			this._log.warn(executionContext, msg);
+			this._log.debug(executionContext, msg, ex);
 			if (ex instanceof HttpBadRequestException) {
 				res.writeHead(400, "Bad Request");
 			} else {

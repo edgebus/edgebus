@@ -30,8 +30,8 @@ export class ExternalLabelsHandler extends AbstractLabelsHandler {
 
 	private static getLabelsHandlerAbsolutePath(labelHandlerPath: string): string {
 		const fullPath = path.isAbsolute(labelHandlerPath)
-			? path.join(process.cwd(), labelHandlerPath)
-			: labelHandlerPath;
+			? labelHandlerPath
+			: path.join(process.cwd(), labelHandlerPath);
 		return fullPath;
 	}
 }

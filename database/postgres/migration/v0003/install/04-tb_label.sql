@@ -1,7 +1,7 @@
 CREATE TABLE "{{database.schema.runtime.name}}"."tb_label" (
 	"id" SERIAL NOT NULL,
 	"api_uuid" UUID NOT NULL,
-	"value" VARCHAR(32),
+	"value" VARCHAR(512),
 	"utc_created_date" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
 	"utc_deleted_date" TIMESTAMP WITHOUT TIME ZONE NULL,
 
