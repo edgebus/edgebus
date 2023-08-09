@@ -108,6 +108,7 @@ COPY --from=builder1 /stage /stage
 
 # Base imager
 FROM node:${IMAGE_TAG_NODEJS} AS imager_base
+ONBUILD ENV LOG_LEVEL=info
 
 # Imager for 'snapshot' build includes snapshot related stuff into final image
 FROM imager_base AS imager_snapshot

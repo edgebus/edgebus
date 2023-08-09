@@ -18,23 +18,29 @@ body = json.load(sys.stdin)
 result = []
 
 if body["type"] == "TRANSACTION_CREATED" or body["type"] == "TRANSACTION_STATUS_UPDATED":
-	destinationName = body.get("data",{}).get("destination",{}).get("name")
-	if destinationName is not None:
-		destinationNameMatch = re.search('^\\((.+)\\) .+$', destinationName)
-		if destinationNameMatch is not None:
-			destinationNameLabel = destinationNameMatch.group(1)
-			if destinationNameLabel not in result:
-				result.append(destinationNameLabel)
-				print("Detect label '%s' according by type == 'TRANSACTION_CREATED/TRANSACTION_STATUS_UPDATED'" % destinationNameLabel, file=sys.stderr)
+	destination = body.get("data",{}).get("destination",{})
+	if destination is not None:
+		destinationName = destination.get("name")
+		destinationType = destination.get("type")
+		if destinationName is not None and destinationType == "VAULT_ACCOUNT":
+			destinationNameMatch = re.search('^\\((.+)\\) .+$', destinationName)
+			if destinationNameMatch is not None:
+				destinationNameLabel = destinationNameMatch.group(1)
+				if destinationNameLabel not in result:
+					result.append(destinationNameLabel)
+					print("Detect label '%s' according by type == 'TRANSACTION_CREATED/TRANSACTION_STATUS_UPDATED'" % destinationNameLabel, file=sys.stderr)
 
-	sourceName = body.get("data",{}).get("source",{}).get("name")
-	if sourceName is not None:
-		sourceNameMatch = re.search('^\\((.+)\\) .+$', sourceName)
-		if sourceNameMatch is not None:
-			sourceNameLabel = sourceNameMatch.group(1)
-			if sourceNameLabel not in result:
-				result.append(sourceNameLabel)
-				print("Detect label '%s' according by type == 'TRANSACTION_CREATED/TRANSACTION_STATUS_UPDATED'" % sourceNameLabel, file=sys.stderr)
+	source = body.get("data",{}).get("source",{})
+	if source is not None:
+		sourceName = destination.get("name")
+		sourceType = destination.get("type")
+		if sourceName is not None and sourceType == "VAULT_ACCOUNT":
+			sourceNameMatch = re.search('^\\((.+)\\) .+$', sourceName)
+			if sourceNameMatch is not None:
+				sourceNameLabel = sourceNameMatch.group(1)
+				if sourceNameLabel not in result:
+					result.append(sourceNameLabel)
+					print("Detect label '%s' according by type == 'TRANSACTION_CREATED/TRANSACTION_STATUS_UPDATED'" % sourceNameLabel, file=sys.stderr)
 
 elif body["type"] == "VAULT_ACCOUNT_ASSET_ADDED":
 	accountName = body.get("accountName")

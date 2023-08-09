@@ -1,12 +1,13 @@
-import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger } from "@freemework/common";
+import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FInitableBase, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import { DatabaseFactory } from "../data/database_factory";
+import { Database } from "../data/database";
 import { EgressIdentifier, IngressIdentifier, TopicIdentifier } from "../model";
 import { Message } from "../model/message";
 import { MessageBus } from "./message_bus";
 import { Topic } from "../model/topic";
 import { Ingress } from "../model/ingress";
-import { Egress } from "../model/egress";
+import { Egress, UnsupportedEgressFilterLabelPolicyNeverException } from "../model/egress";
 import { LabelHandler } from "../model/label_handler";
 import { AbstractLabelsHandler } from "./labels_handler/abstract_labels_handler";
 import { ExternalLabelsHandler } from "./labels_handler/external_process_labels_handler";
@@ -14,7 +15,7 @@ import { Label } from "../model";
 
 export abstract class MessageBusBase extends MessageBus {
 	private readonly labelHandlers: Map<TopicIdentifier, ReadonlyArray<AbstractLabelsHandler>>;
-	private readonly egressLabels: Map<EgressIdentifier, ReadonlyArray<Label>>;
+	private readonly egressFilterLabels: Map<EgressIdentifier, ReadonlyArray<Label>>;
 	protected readonly log: FLogger;
 
 	public constructor(
@@ -22,7 +23,7 @@ export abstract class MessageBusBase extends MessageBus {
 	) {
 		super();
 		this.labelHandlers = new Map();
-		this.egressLabels = new Map<EgressIdentifier, ReadonlyArray<Label>>();
+		this.egressFilterLabels = new Map<EgressIdentifier, ReadonlyArray<Label>>();
 		this.log = FLogger.create(MessageBusBase.name);
 	}
 
@@ -66,6 +67,10 @@ export abstract class MessageBusBase extends MessageBus {
 			executionContext,
 			async (db) => {
 				const topic: Topic = await db.getTopic(executionContext, { ingressId });
+				executionContext = new FLoggerLabelsExecutionContext(executionContext, {
+					topicId: topic.topicId.value
+				});
+
 				const ingress: Ingress = await db.getIngress(executionContext, { ingressId });
 
 				const labelValues: Set<Label["labelValue"]> = new Set();
@@ -75,13 +80,17 @@ export abstract class MessageBusBase extends MessageBus {
 				if (labelHandlers !== undefined) {
 					const exs: Array<FException> = [];
 					await Promise.all(
-						labelHandlers.map(labelHandler => labelHandler.execute(executionContext, {
-							...message
-						}).then(
-							resolvedLabels => resolvedLabels.forEach(
-								resolvedLabel => labelValues.add(resolvedLabel)
-							)
-						).catch(e => exs.push(FException.wrapIfNeeded(e))))
+						labelHandlers.map(async (labelHandler) => {
+							try {
+								const resolvedLabels = await labelHandler.execute(executionContext, { ...message });
+								for (const resolvedLabel of resolvedLabels) {
+									labelValues.add(resolvedLabel);
+								}
+							} catch (e) {
+								exs.push(FException.wrapIfNeeded(e));
+							}
+						})
+
 					);
 					FExceptionAggregate.throwIfNeeded(exs);
 				}
@@ -95,12 +104,14 @@ export abstract class MessageBusBase extends MessageBus {
 					labels.push(label);
 				}
 
-				this.log.info(executionContext, () => {
-					if (labelValues.size > 0) {
-						return `Add labels: ${[...labelValues].map(e => `"${e}"`).join(', ')} for message: ${message.messageId}, topic: ${topic.topicId}`;
-					}
-					return `No labels for message: ${message.messageId}, topic: ${topic.topicId}`;
-				});
+				if (labelHandlers !== undefined) {
+					this.log.info(executionContext, () => {
+						if (labelValues.size > 0) {
+							return `Attach labels: ${[...labelValues].map(e => `"${e}"`).join(', ')}`;
+						}
+						return `No labels for the message`;
+					});
+				}
 
 				const messageInstance: Message = await db.createMessage(
 					executionContext,
@@ -155,16 +166,16 @@ export abstract class MessageBusBase extends MessageBus {
 				const topic: Topic = await db.getTopic(executionContext, { topicId });
 				const egress: Egress = await db.getEgress(executionContext, { egressId });
 
-				if (!this.egressLabels.has(egress.egressId)) {
+				if (!this.egressFilterLabels.has(egress.egressId)) {
 					const labels: Array<Label> = [];
-					for (const labelId of egress.egressLabelIds) {
+					for (const labelId of egress.egressFilterLabelIds) {
 						const label: Label | null = await db.findLabel(executionContext, { labelId });
 						if (label === null) {
 							throw new FException(`Can not find label ${labelId.toString()}`);
 						}
 						labels.push(label);
 					}
-					this.egressLabels.set(egress.egressId, Object.freeze(labels))
+					this.egressFilterLabels.set(egress.egressId, Object.freeze(labels))
 				}
 
 				return await this.onRetainChannel(executionContext, topic, egress);
@@ -172,19 +183,44 @@ export abstract class MessageBusBase extends MessageBus {
 		);
 	}
 
-	protected matchLabels(egressId: EgressIdentifier, messageLabels: ReadonlyArray<Label>): boolean {
-		const egressLabels: ReadonlyArray<Label> | undefined = this.egressLabels.get(egressId);
-		if (egressLabels === undefined) {
+	protected async matchLabels(
+		executionContext: FExecutionContext,
+		db: Database,
+		egressId: EgressIdentifier,
+		messageLabels: ReadonlyArray<Label>
+	): Promise<boolean> {
+		const { egressFilterLabelPolicy } = await db.getEgress(executionContext, { egressId });
+
+		if (egressFilterLabelPolicy === Egress.FilterLabelPolicy.IGNORE) {
 			return true;
 		}
 
-		const messageLabelValues: Array<string> = messageLabels.map(e => e.labelValue);
-		for (const egressLabel of egressLabels) {
-			if (!messageLabelValues.includes(egressLabel.labelValue)) {
+		if (egressFilterLabelPolicy === Egress.FilterLabelPolicy.SKIP) {
+			return messageLabels.length === 0;
+		}
+
+		const messageLabelValues: ReadonlyArray<string> = messageLabels.map(e => e.labelValue);
+		const egressLabels: ReadonlyArray<string> | undefined = this.egressFilterLabels.get(egressId)?.map(e => e.labelValue);
+
+		switch (egressFilterLabelPolicy) {
+			case Egress.FilterLabelPolicy.LAX: {
+				if (egressLabels === undefined) { return true; }
+				for (const messageLabel of messageLabelValues) {
+					if (egressLabels.includes(messageLabel)) { return true; }
+				}
 				return false;
 			}
+			case Egress.FilterLabelPolicy.STRICT: {
+				if (egressLabels === undefined) { return true; }
+				for (const egressLabel of egressLabels) {
+					if (!messageLabelValues.includes(egressLabel)) { return false; }
+				}
+				return true;
+			}
+			default:
+				throw new UnsupportedEgressFilterLabelPolicyNeverException(egressFilterLabelPolicy);
 		}
-		return true;
+
 	}
 
 	protected abstract onPublish(
@@ -209,5 +245,4 @@ export abstract class MessageBusBase extends MessageBus {
 		topic: Topic,
 		egress: Egress
 	): Promise<MessageBus.Channel>;
-
 }

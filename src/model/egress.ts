@@ -17,6 +17,30 @@ export namespace Egress {
 		WebSocketHost = "WEB_SOCKET_HOST"
 	}
 
+	export const enum FilterLabelPolicy {
+		/**
+		 * Deliver a message if ALL labels presented
+		 * Required "labels" list
+		 */
+		STRICT = "strict",
+
+		/**
+		 * Deliver a message if ANY label presented
+		 * Required "labels" list
+		 */
+		LAX = "lax",
+
+		/**
+		 * Skip a message if any labels presented
+		 */
+		SKIP = "skip",
+
+		/**
+		 * Deliver a message always (ignore filter at all)
+		 */
+		IGNORE = "ignore"
+	}
+
 	/**
 	 * The API Identifier of the Egress
 	 */
@@ -24,24 +48,35 @@ export namespace Egress {
 		readonly egressId: EgressIdentifier;
 	}
 
-	export interface DataBase {
+	export interface DataCommon {
 		/**
-		 * Name of the attached topic
+		 * Attached topic ids
 		 */
-		// TODO: Change type to ReadonlyArray<Topic.Id & Topic.Name> 
 		readonly egressTopicIds: ReadonlyArray<TopicIdentifier>;
 
+		/**
+		 * Kind of Egress
+		 */
 		readonly egressKind: Kind;
 
-		readonly egressLabelIds: ReadonlyArray<LabelIdentifier>;
+		/**
+		 * Filter policy
+		 */
+		readonly egressFilterLabelPolicy: FilterLabelPolicy;
+
+		/**
+		 * Set of label identifiers for filter
+		 */
+		readonly egressFilterLabelIds: ReadonlyArray<LabelIdentifier>;
+
 		// readonly egressConverters: ReadonlyArray<Converter>;
 	}
 
-	export interface Telegram extends DataBase {
+	export interface Telegram extends DataCommon {
 		readonly egressKind: Kind.Telegram;
 		// readonly todo: string | null;
 	}
-	export interface Webhook extends DataBase {
+	export interface Webhook extends DataCommon {
 		readonly egressKind: Kind.Webhook;
 
 		/**
@@ -65,7 +100,7 @@ export namespace Egress {
 		//  */
 		// readonly egressHeaderToken: string;
 	}
-	export interface WebSocketHost extends DataBase {
+	export interface WebSocketHost extends DataCommon {
 		readonly egressKind: Kind.WebSocketHost;
 
 		// /**
@@ -74,7 +109,7 @@ export namespace Egress {
 		// readonly egressTrustedCaCertificate: string | null;
 	}
 
-	export type Data= Telegram | Webhook | WebSocketHost;
+	export type Data = Telegram | Webhook | WebSocketHost;
 
 	export interface Instance {
 		readonly egressCreatedAt: Date;
@@ -89,18 +124,36 @@ export type Egress
 	;
 
 
-export function ensureEgressKind(kind: string): asserts kind is Egress.Kind {
-	const friendlyKind: Egress.Kind = kind as Egress.Kind;
+export function ensureEgressKind(kindLike: string): asserts kindLike is Egress.Kind {
+	const friendlyKind: Egress.Kind = kindLike as Egress.Kind;
 	switch (friendlyKind) {
 		case Egress.Kind.Telegram:
 		case Egress.Kind.Webhook:
 		case Egress.Kind.WebSocketHost:
 			return;
 		default:
-			throw new EnsureIngressKindNeverException(friendlyKind);
+			throw new UnsupportedEgressKindNeverException(friendlyKind);
 	}
 }
-class EnsureIngressKindNeverException extends FException {
+class UnsupportedEgressKindNeverException extends FException {
+	public constructor(kind: never) {
+		super(`Wrong ingress kind value '${kind}'`);
+	}
+}
+
+export function ensureEgressFilterLabelPolicy(filterLabelPolicyLike: string): asserts filterLabelPolicyLike is Egress.FilterLabelPolicy {
+	const friendlyKind: Egress.FilterLabelPolicy = filterLabelPolicyLike as Egress.FilterLabelPolicy;
+	switch (friendlyKind) {
+		case Egress.FilterLabelPolicy.IGNORE:
+		case Egress.FilterLabelPolicy.LAX:
+		case Egress.FilterLabelPolicy.SKIP:
+		case Egress.FilterLabelPolicy.STRICT:
+			return;
+		default:
+			throw new UnsupportedEgressFilterLabelPolicyNeverException(friendlyKind);
+	}
+}
+export class UnsupportedEgressFilterLabelPolicyNeverException extends FException {
 	public constructor(kind: never) {
 		super(`Wrong ingress kind value '${kind}'`);
 	}

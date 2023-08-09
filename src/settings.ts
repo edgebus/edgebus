@@ -1,4 +1,4 @@
-import { FConfiguration, FException, FExceptionInvalidOperation, FUtilUnreadonly } from "@freemework/common";
+import { FConfiguration, FConfigurationValue, FException, FExceptionInvalidOperation, FUtilUnreadonly } from "@freemework/common";
 import { FHostingConfiguration } from "@freemework/hosting";
 
 import { Router } from "express-serve-static-core";
@@ -213,7 +213,10 @@ export namespace Settings {
 				 * API Identifiers of source topics
 				 */
 				readonly sourceTopicIds: ReadonlyArray<string>;
-				readonly labels: ReadonlyArray<Label.Data["labelValue"]>
+
+				readonly filterLabelPolicy: EgressModel.FilterLabelPolicy;
+
+				readonly filterLabels: ReadonlyArray<Label.Data["labelValue"]>
 			}
 
 			export interface Webhook extends Base {
@@ -438,18 +441,35 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				const egressId: string = subscriberConfiguration.get("index").asString;
 				const type: string = subscriberConfiguration.get("kind").asString;
 				const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
-				const labels: Array<string> = (() => {
-					if (subscriberConfiguration.has("labels")) {
-						const labels: string = subscriberConfiguration.get("labels").asString;
-						return labels.split(" ").filter(w => w !== "");
-					} else { 
-						return [];
+				const filterLabelPolicy: EgressModel.FilterLabelPolicy = (function () {
+					const filterLabelPolicyValue: FConfigurationValue = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE);
+					const filterLabelPolicyStr = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE).asString as EgressModel.FilterLabelPolicy;
+					switch (filterLabelPolicyStr) {
+						case EgressModel.FilterLabelPolicy.IGNORE:
+						case EgressModel.FilterLabelPolicy.LAX:
+						case EgressModel.FilterLabelPolicy.SKIP:
+						case EgressModel.FilterLabelPolicy.STRICT:
+							return filterLabelPolicyStr;
+						default:
+							{
+								const unsupportedFilterLabelPolicy: never = filterLabelPolicyStr;
+								throw new FExceptionInvalidOperation(`Unsupported value '${unsupportedFilterLabelPolicy}' for '${filterLabelPolicyValue.key}' configuration key.`);
+							}
+					}
+				})();
+				const filterLabels: ReadonlyArray<string> = (() => {
+					if (subscriberConfiguration.has("filter_labels")) {
+						const labels: string = subscriberConfiguration.get("filter_labels").asString;
+						return Object.freeze(labels.split(" ").filter(w => w !== ""));
+					} else {
+						return Object.freeze([]);
 					}
 				})();
 				const baseSubscriberSettings = {
 					egressId,
 					sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== ""),
-					labels
+					filterLabelPolicy,
+					filterLabels,
 				};
 				let subscriberSettings: Settings.Setup.Egress;
 				switch (type) {

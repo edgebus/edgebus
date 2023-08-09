@@ -17,6 +17,7 @@ import { SqlDatabase } from "../sql_database";
 import { Database } from "../database";
 import { Label } from "../../model/label";
 import { LabelHandler } from "../../model/label_handler";
+import { ensureEgressFilterLabelPolicy } from "../../model/egress";
 
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
@@ -133,14 +134,15 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const egressMainRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-				INSERT INTO "tb_egress"("kind", "api_uuid")
-				VALUES ($1, $2)
-				RETURNING "id", "kind", "api_uuid", "utc_created_date", "utc_deleted_date"
+				INSERT INTO "tb_egress"("kind", "api_uuid", "filter_label_policy")
+				VALUES ($1, $2, $3)
+				RETURNING "id", "kind", "api_uuid", "filter_label_policy", "utc_created_date", "utc_deleted_date"
 			`)
 			.executeSingle(
 				executionContext,
 				/* 1 */egressData.egressKind,
-				/* 2 */egressId.uuid
+				/* 2 */egressId.uuid,
+				/* 3 */egressData.egressFilterLabelPolicy,
 			);
 		const egressDbId: number = egressMainRecord.get("id").asNumber; // INT
 
@@ -149,12 +151,8 @@ export class PostgresDatabase extends SqlDatabase {
 			case Egress.Kind.WebSocketHost:
 				egressExtRecord = await this.sqlConnection
 					.statement(`
-						INSERT INTO "tb_egress_websockethost"(
-							"id", "kind"
-						)
-						VALUES (
-							$1, $2
-						)
+						INSERT INTO "tb_egress_websockethost"("id", "kind")
+						VALUES ($1, $2)
 						RETURNING "id", "kind"
 					`)
 					.executeSingle(
@@ -200,11 +198,14 @@ export class PostgresDatabase extends SqlDatabase {
 				/* 2 */egressData.egressTopicIds.map(s => s.uuid)
 			);
 
-		for (const labelId of egressData.egressLabelIds) {
+		for (const labelId of egressData.egressFilterLabelIds) {
 			await this.bindLabelToEgress(executionContext, egressId, labelId);
 		}
 
-		const egressModel: Egress = PostgresDatabase._mapEgressDbRow(egressMainRecord, egressExtRecord, egressData.egressLabelIds, egressData.egressTopicIds);
+		const egressModel: Egress = PostgresDatabase._mapEgressDbRow(egressMainRecord, egressExtRecord, {
+			egressLabels: egressData.egressFilterLabelIds,
+			egressTopics: egressData.egressTopicIds
+		});
 		return egressModel;
 	}
 
@@ -455,6 +456,7 @@ export class PostgresDatabase extends SqlDatabase {
 					E."id",
 					E."kind",
 					E."api_uuid",
+					E."filter_label_policy",
 					E."utc_created_date",
 					E."utc_deleted_date",
 					(
@@ -777,6 +779,7 @@ export class PostgresDatabase extends SqlDatabase {
 					E."id",
 					E."kind",
 					E."api_uuid",
+					E."filter_label_policy",
 					E."utc_created_date",
 					E."utc_deleted_date",
 					(
@@ -1047,16 +1050,21 @@ export class PostgresDatabase extends SqlDatabase {
 	private static _mapEgressDbRow(
 		egressMainRecord: FSqlResultRecord,
 		egressExtRecord: FSqlResultRecord,
-		egressLabels?: ReadonlyArray<LabelIdentifier>,
-		egressTopics?: ReadonlyArray<TopicIdentifier>,
+		optional?: {
+			readonly egressLabels: ReadonlyArray<LabelIdentifier>;
+			readonly egressTopics: ReadonlyArray<TopicIdentifier>;
+		}
 	): Egress {
 		const egressUuid: string = egressMainRecord.get("api_uuid").asString;
 		const egressKind: string = egressMainRecord.get("kind").asString;
+		const egressFilterLabelPolicy: string = egressMainRecord.get("filter_label_policy").asString;
 		const egressCreatedAt: Date = egressMainRecord.get("utc_created_date").asDate;
 		const egressDeletedAt: Date | null = egressMainRecord.get("utc_deleted_date").asDateNullable;
 
 		ensureEgressKind(egressKind);
+		ensureEgressFilterLabelPolicy(egressFilterLabelPolicy);
 
+		let egressTopics: ReadonlyArray<TopicIdentifier> | undefined = optional?.egressTopics;
 		if (egressTopics === undefined) {
 			try {
 				const egressTopicUuids: Array<string> | null = egressMainRecord.get("topic_uuids").asObjectNullable;
@@ -1068,10 +1076,11 @@ export class PostgresDatabase extends SqlDatabase {
 			}
 		}
 
-		if (egressLabels === undefined) {
+		let egressFilterLabelIds: ReadonlyArray<LabelIdentifier> | undefined = optional?.egressLabels;
+		if (egressFilterLabelIds === undefined) {
 			try {
 				const egressLabelUuids: Array<string> | null = egressMainRecord.get("label_uuids").asObjectNullable;
-				egressLabels = egressLabelUuids !== null
+				egressFilterLabelIds = egressLabelUuids !== null
 					? egressLabelUuids.map(LabelIdentifier.fromUuid)
 					: [];
 			} catch (e) {
@@ -1079,12 +1088,13 @@ export class PostgresDatabase extends SqlDatabase {
 			}
 		}
 
-		const egressBase: Egress.Id & Omit<Egress.DataBase, "egressKind"> & Egress.Instance = {
+		const egressBase: Egress.Id & Omit<Egress.DataCommon, "egressKind"> & Egress.Instance = {
 			egressId: EgressIdentifier.fromUuid(egressUuid),
 			egressTopicIds: egressTopics,
 			egressCreatedAt: egressCreatedAt,
 			egressDeletedAt: egressDeletedAt,
-			egressLabelIds: egressLabels
+			egressFilterLabelPolicy,
+			egressFilterLabelIds,
 		};
 
 		switch (egressKind) {

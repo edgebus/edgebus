@@ -1,4 +1,4 @@
-import { FConfigurationException, FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger } from "@freemework/common";
+import { FConfigurationException, FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import { DoneCallback, Job, JobOptions, Queue } from "bull";
 import * as Bull from "bull";
@@ -225,16 +225,25 @@ export class MessageBusBull extends MessageBusBase {
 
 	@Bind
 	private egressJobProcessor(job: Job, done: DoneCallback) {
-		const executionContext: FExecutionContext = this.initExecutionContext;
 		unpromise(
 			(async () => {
+				let executionContext: FExecutionContext = this.initExecutionContext;
 				try {
-					await this.storage.using(executionContext, async (db: Database) => {
-						const topicId: TopicIdentifier = TopicIdentifier.parse(job.data.topicId);
-						const egressId: EgressIdentifier = EgressIdentifier.parse(job.data.egressId);
+					const topicId: TopicIdentifier = TopicIdentifier.parse(job.data.topicId);
+					const egressId: EgressIdentifier = EgressIdentifier.parse(job.data.egressId);
 
+					executionContext = new FLoggerLabelsExecutionContext(executionContext, {
+						topicId: topicId.value,
+						egressId: egressId.value,
+					});
+
+					await this.storage.using(executionContext, async (db: Database) => {
 						const rawMessage = job.data.message;
 						const messageId = MessageIdentifier.parse(rawMessage.id);
+
+						executionContext = new FLoggerLabelsExecutionContext(executionContext, {
+							messageId: messageId.value
+						});
 
 						await db.lockEgressMessageQueue(
 							executionContext, { egressId, topicId, messageId }
@@ -253,11 +262,11 @@ export class MessageBusBull extends MessageBusBase {
 								throw new FException("No any egress consumers");
 							}
 
-							const labels: Array<Label> = [];
+							const messageLabels: Array<Label> = [];
 							{
 								const labelIds: Array<LabelIdentifier> = rawMessage.labels.map((l: any) => LabelIdentifier.parse(l.id));
 								for (const labelId of labelIds) {
-									labels.push(await db.getLabel(executionContext, { labelId }));
+									messageLabels.push(await db.getLabel(executionContext, { labelId }));
 								}
 							}
 
@@ -267,7 +276,7 @@ export class MessageBusBull extends MessageBusBase {
 								messageHeaders: rawMessage.headers,
 								messageIngressBody: Buffer.from(rawMessage.ingressBody, "base64"),
 								messageBody: Buffer.from(rawMessage.body, "base64"),
-								messageLabels: labels
+								messageLabels
 							};
 
 							const event: MessageBus.Channel.Event = {
@@ -275,7 +284,8 @@ export class MessageBusBull extends MessageBusBase {
 								data: message
 							};
 
-							const isMatchLabels: boolean = this.matchLabels(egressId, message.messageLabels);
+							// const isMatchLabels: boolean = await this.matchLabels(executionContext, db, egressId, message.messageLabels);
+							const isMatchLabels: boolean = true;
 							if (isMatchLabels) {
 								await channel.notify(executionContext, event);
 							}
@@ -284,6 +294,8 @@ export class MessageBusBull extends MessageBusBase {
 								executionContext, { egressId, topicId, messageId }
 							);
 
+							const status: Delivery.Status = isMatchLabels ? Delivery.Status.Success : Delivery.Status.Skip;
+
 							await db.createDelivery(executionContext, {
 								egressId,
 								topicId,
@@ -291,6 +303,8 @@ export class MessageBusBull extends MessageBusBase {
 								status: isMatchLabels ? Delivery.Status.Success : Delivery.Status.Skip,
 								successEvidence: event.deliveryEvidence ?? null
 							});
+
+							this.log.info(executionContext, () => `Delivery completed with status '${status}'.`);
 
 							done();
 						}
@@ -326,11 +340,10 @@ export class MessageBusBull extends MessageBusBase {
 					})();
 
 					const wrappedException: FException = FException.wrapIfNeeded(e);
-					const errMsg = inputData
-						? `Filed delivery message ${inputData.messageId}, topic ${inputData.topicId}, egress ${inputData.egressId}`
-						: 'Filed parse job for delivery';
-					this.log.info(executionContext, errMsg);
-					this.log.debug(executionContext, errMsg, wrappedException);
+					if (wrappedException.message !== "No any egress consumers") {
+						this.log.info(executionContext, () => `Delivery failure with error: ${wrappedException.message}`);
+						this.log.debug(executionContext, "Delivery failure", wrappedException);
+					}
 					done(wrappedException);
 				}
 			})()
@@ -341,20 +354,51 @@ export class MessageBusBull extends MessageBusBase {
 	private topicJobProcessor(job: Job, done: DoneCallback) {
 		unpromise(
 			(async () => {
+				let executionContext: FExecutionContext = this.initExecutionContext;
 				try {
 					const topicId: TopicIdentifier = TopicIdentifier.parse(job.data.topicId);
+
+					executionContext = new FLoggerLabelsExecutionContext(executionContext, { topicId: topicId.value });
+
 					const topicQueueItem: TopicQueueItem = this.getTopicQueueItem(topicId);
-					for (const [targetEgressId, targetEgressQueue] of topicQueueItem.targetEgressQueues) {
-						await targetEgressQueue.add(
-							"EGRESS",
+
+					await this.storage.using(executionContext, async (db) => {
+
+						for (const [targetEgressId, targetEgressQueue] of topicQueueItem.targetEgressQueues) {
+							const rawMessage = job.data.message;
+							const messageId = MessageIdentifier.parse(rawMessage.id);
+
+							const cycleExecutionContext: FExecutionContext = new FLoggerLabelsExecutionContext(executionContext, {
+								egressId: targetEgressId.value,
+								messageId: messageId.value,
+							});
+
+							const messageLabels: Array<Label> = [];
 							{
-								topicId: job.data.topicId,
-								egressId: targetEgressId,
-								message: job.data.message
-							},
-							this._bullJobOpts
-						);
-					}
+								const labelIds: Array<LabelIdentifier> = rawMessage.labels.map((l: any) => LabelIdentifier.parse(l.id));
+								for (const labelId of labelIds) {
+									messageLabels.push(await db.getLabel(cycleExecutionContext, { labelId }));
+								}
+							}
+
+							const isMessageMatchToEgress: boolean = await this.matchLabels(cycleExecutionContext, db, targetEgressId, messageLabels);
+							if (isMessageMatchToEgress) {
+								this.log.info(cycleExecutionContext, () => `Message was routed at routing phase.`);
+								await targetEgressQueue.add(
+									"EGRESS",
+									{
+										topicId: job.data.topicId,
+										egressId: targetEgressId,
+										message: job.data.message
+									},
+									this._bullJobOpts
+								);
+							} else {
+								this.log.info(cycleExecutionContext, () => `Message was skipped at routing phase.`);
+							}
+						}
+					});
+
 					done();
 				}
 				catch (e) {

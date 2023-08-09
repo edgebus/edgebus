@@ -1,4 +1,4 @@
-import { FException, FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
+import { FException, FExceptionInvalidOperation, FExecutionContext, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import * as _ from "lodash";
 
@@ -141,13 +141,18 @@ export class SetupServiceImpl implements SetupService {
 		for (const setupEgress of setupSettings.egresses) {
 			const egressId: EgressIdentifier = EgressIdentifier.parse(setupEgress.egressId);
 			const egressTopicIds: Array<TopicIdentifier> = setupEgress.sourceTopicIds.map(TopicIdentifier.parse);
+			const filterLabelPolicy: Egress.FilterLabelPolicy = setupEgress.filterLabelPolicy;
 			const labelIds: Array<LabelIdentifier> = [];
 
-			for (const label of setupEgress.labels) {
-				labelIds.push((await managementApi.getOrCreateLabel(executionContext, label)).labelId);
+			const setupEgressExecutionContext: FExecutionContext = new FLoggerLabelsExecutionContext(executionContext, {
+				egressId: egressId.value,
+			});
+
+			for (const label of setupEgress.filterLabels) {
+				labelIds.push((await managementApi.getOrCreateLabel(setupEgressExecutionContext, label)).labelId);
 			}
 
-			const egress: Egress | null = await managementApi.findEgress(executionContext, egressId);
+			const egress: Egress | null = await managementApi.findEgress(setupEgressExecutionContext, egressId);
 			if (egress !== null) {
 				// compare
 			} else {
@@ -158,7 +163,8 @@ export class SetupServiceImpl implements SetupService {
 						egressData = {
 							egressKind: setupEgress.kind,
 							egressTopicIds: egressTopicIds,
-							egressLabelIds: labelIds
+							egressFilterLabelPolicy: filterLabelPolicy,
+							egressFilterLabelIds: labelIds
 						};
 						break;
 					case Egress.Kind.Webhook:
@@ -167,13 +173,14 @@ export class SetupServiceImpl implements SetupService {
 							egressTopicIds: egressTopicIds,
 							egressHttpMethod: setupEgress.method,
 							egressHttpUrl: setupEgress.url,
-							egressLabelIds: labelIds
+							egressFilterLabelPolicy: filterLabelPolicy,
+							egressFilterLabelIds: labelIds,
 						}
 						break;
 					default:
 						throw new FExceptionInvalidOperation("Not implemented yet");
 				}
-				await managementApi.createEgress(executionContext, { ...egressData, egressId });
+				await managementApi.createEgress(setupEgressExecutionContext, { ...egressData, egressId });
 			}
 		}
 	}
