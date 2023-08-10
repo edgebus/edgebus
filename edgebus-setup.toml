@@ -8,17 +8,17 @@
 #"edgebus.setup.egress.indexes" = "..."
 
 
-# Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-[[edgebus.setup.topic]]
-	index = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-	name = "sumsub"
-	description = "Sumsub's callbacks"
-	mediaType = "application/json"
-	# [[edgebus.setup.topic.labelHandler]]
-	# 	index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
-	# 	kind = "EXTERNAL_PROCESS"
-	# 	path="label_handlers/ext_handler.sh"
-# /Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# # Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# [[edgebus.setup.topic]]
+# 	index = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# 	name = "sumsub"
+# 	description = "Sumsub's callbacks"
+# 	mediaType = "application/json"
+# 	# [[edgebus.setup.topic.labelHandler]]
+# 	# 	index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
+# 	# 	kind = "EXTERNAL_PROCESS"
+# 	# 	path="label_handlers/ext_handler.sh"
+# # /Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 
 # Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 [[edgebus.setup.topic]]
@@ -32,35 +32,43 @@
 		path="label_handlers/fireblocks_label_handler.py"
 # /Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 
-# Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
-[[edgebus.setup.ingress]]
-	index = "IGRS9028c57498b641988fc71355e9ac622e"
-	kind = "HTTP_HOST"
-	path = "/v2/callback/sumsub"
-	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-	[edgebus.setup.ingress.response]
-		status_code = 201
-		status_message = "Accepted"
-		body = '{ "success": true }'
-	[edgebus.setup.ingress.response.header]
-		"Content-Type" = "application/json"
-		"X-EdgeBus-Token" = "abc"
-# /Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
 
-# Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
+# Setup HTTP-host ingress "IGRS2647fd452e5646d9b504e472447e399d"
 [[edgebus.setup.ingress]]
-	index = "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
-	kind = "HTTP_HOST"
-	path = "/v2/callback/fireblocks"
+	index = "IGRS2647fd452e5646d9b504e472447e399d"
+	kind = "WEB_SOCKET_CLIENT"
 	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-	[edgebus.setup.ingress.response]
-		status_code = 200
-		status_message = "OK"
-		body = '{ "ok": "ok" }'
-	[edgebus.setup.ingress.response.header]
-		"Content-Type" = "application/json"
-		"X-EdgeBus-Token" = "abc"
-# /Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
+# /Setup HTTP-host ingress "IGRS2647fd452e5646d9b504e472447e399d"
+
+# # Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
+# [[edgebus.setup.ingress]]
+# 	index = "IGRS9028c57498b641988fc71355e9ac622e"
+# 	kind = "HTTP_HOST"
+# 	path = "/v2/callback/sumsub"
+# 	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# 	[edgebus.setup.ingress.response]
+# 		status_code = 201
+# 		status_message = "Accepted"
+# 		body = '{ "success": true }'
+# 	[edgebus.setup.ingress.response.header]
+# 		"Content-Type" = "application/json"
+# 		"X-EdgeBus-Token" = "abc"
+# # /Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
+
+# # Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
+# [[edgebus.setup.ingress]]
+# 	index = "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
+# 	kind = "HTTP_HOST"
+# 	path = "/v2/callback/fireblocks"
+# 	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# 	[edgebus.setup.ingress.response]
+# 		status_code = 200
+# 		status_message = "OK"
+# 		body = '{ "ok": "ok" }'
+# 	[edgebus.setup.ingress.response.header]
+# 		"Content-Type" = "application/json"
+# 		"X-EdgeBus-Token" = "abc"
+# # /Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
 
 
 # # Setup Web Socket Host egress "EGRS319ef1447b054a5292acecf40345b89b"
@@ -103,36 +111,36 @@
 # 	#		key = "file or base64"
 # # /Setup Web Socket Host egress "EGRSec84237fe6674a15820407ab5a93e97b"
 
-[[edgebus.setup.egress]]
-	index = "EGRSb35aadb61da8449d899876b7060ff9fb"
-	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-	filter_label_policy = "strict"
-	filter_labels = "test fireblocks_label_handler"
-	kind = "WEBHOOK"
-	method="POST"
-	url="http://127.0.0.1:3000/webhooks/permission"
+# [[edgebus.setup.egress]]
+# 	index = "EGRSb35aadb61da8449d899876b7060ff9fb"
+# 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# 	filter_label_policy = "strict"
+# 	filter_labels = "test fireblocks_label_handler"
+# 	kind = "WEBHOOK"
+# 	method="POST"
+# 	url="http://127.0.0.1:3000/webhooks/permission"
 
-[[edgebus.setup.egress]]
-	index = "EGRS618f5ffa1bea4fc6bb1e3fa51a7594ff"
-	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-	filter_label_policy = "lax"
-	filter_labels = "test fireblocks_label_handler"
-	kind = "WEBHOOK"
-	method="POST"
-	url="http://127.0.0.1:3000/webhooks/permission"
+# [[edgebus.setup.egress]]
+# 	index = "EGRS618f5ffa1bea4fc6bb1e3fa51a7594ff"
+# 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# 	filter_label_policy = "lax"
+# 	filter_labels = "test fireblocks_label_handler"
+# 	kind = "WEBHOOK"
+# 	method="POST"
+# 	url="http://127.0.0.1:3000/webhooks/permission"
 
-[[edgebus.setup.egress]]
-	index = "EGRS7fdc3dda84cb4468aa6a8efa53231b2a"
-	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-	filter_label_policy = "skip"
-	kind = "WEBHOOK"
-	method="POST"
-	url="http://127.0.0.1:3000/webhooks/permission"
+# [[edgebus.setup.egress]]
+# 	index = "EGRS7fdc3dda84cb4468aa6a8efa53231b2a"
+# 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# 	filter_label_policy = "skip"
+# 	kind = "WEBHOOK"
+# 	method="POST"
+# 	url="http://127.0.0.1:3000/webhooks/permission"
 
-[[edgebus.setup.egress]]
-	index = "EGRS331be6d9417f49e8921cba61f1857bd7"
-	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
-	filter_label_policy = "ignore"
-	kind = "WEBHOOK"
-	method="POST"
-	url="http://127.0.0.1:3000/webhooks/permission"
+# [[edgebus.setup.egress]]
+# 	index = "EGRS331be6d9417f49e8921cba61f1857bd7"
+# 	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# 	filter_label_policy = "ignore"
+# 	kind = "WEBHOOK"
+# 	method="POST"
+# 	url="http://127.0.0.1:3000/webhooks/permission"

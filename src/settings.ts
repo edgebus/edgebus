@@ -91,10 +91,10 @@ export namespace Settings {
 	export type Endpoint =
 		| RestInfoEndpoint
 		| RestManagementEndpoint
-		| RestPublisherEndpoint
+		| RestIngressEndpoint
 		| RestSubscriberEndpoint
 		| ExpressRouterManagementEndpoint
-		| ExpressRouterPublisherEndpoint;
+		| ExpressRouterIngressEndpoint;
 
 	export interface BaseRestEndpoint extends FHostingConfiguration.BindEndpoint, FHostingConfiguration.ServerEndpoint {
 		readonly cors: Cors | null;
@@ -104,7 +104,7 @@ export namespace Settings {
 	}	export interface RestManagementEndpoint extends BaseRestEndpoint {
 		readonly type: "rest-management";
 	}
-	export interface RestPublisherEndpoint extends BaseRestEndpoint {
+	export interface RestIngressEndpoint extends BaseRestEndpoint {
 		readonly type: "rest-ingress";
 	}
 	export interface RestSubscriberEndpoint extends BaseRestEndpoint {
@@ -114,7 +114,7 @@ export namespace Settings {
 		readonly type: "express-router-management";
 		readonly router: Router;
 	}
-	export interface ExpressRouterPublisherEndpoint extends FHostingConfiguration.BindEndpoint {
+	export interface ExpressRouterIngressEndpoint extends FHostingConfiguration.BindEndpoint {
 		readonly type: "express-router-ingress";
 		readonly router: Router;
 	}
@@ -187,7 +187,8 @@ export namespace Settings {
 
 			export interface WebSocketClient extends Base {
 				readonly kind: IngressModel.Kind.WebSocketClient;
-				// TBD
+
+				readonly url: URL;
 			}
 
 			export interface WebSocketHost extends Base {
@@ -308,7 +309,7 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Settings.Endpoint
 			const cors = endpointConfiguration.hasNamespace("cors")
 				? parseCors(endpointConfiguration.getNamespace("cors")) : null;
 
-			const httpEndpoint: Settings.RestPublisherEndpoint = Object.freeze({
+			const httpEndpoint: Settings.RestIngressEndpoint = Object.freeze({
 				type: endpointType,
 				servers: endpointConfiguration.get("servers").asString.split(" "),
 				bindPath: endpointConfiguration.get("bindPath", "/").asString,
@@ -380,19 +381,19 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 	const topics: Array<Settings.Setup.Topic> = [];
 
 
-	const publisherKey: string = "ingress";
-	if (setupConfiguration.hasNamespace(publisherKey)) {
-		const publishersConfiguration: Array<FConfiguration> = setupConfiguration.getArray(publisherKey);
-		for (const publisherConfiguration of publishersConfiguration) {
-			const ingressId: string = publisherConfiguration.get("index").asString;
-			const type: string = publisherConfiguration.get("kind").asString;
-			const topicId: string = publisherConfiguration.get("target_topic_id").asString;
-			const basePublisherSettings = { ingressId, topicId };
+	const ingressConfigurationKey: string = "ingress";
+	if (setupConfiguration.hasNamespace(ingressConfigurationKey)) {
+		const ingressesConfiguration: Array<FConfiguration> = setupConfiguration.getArray(ingressConfigurationKey);
+		for (const ingressConfiguration of ingressesConfiguration) {
+			const ingressId: string = ingressConfiguration.get("index").asString;
+			const type: string = ingressConfiguration.get("kind").asString;
+			const topicId: string = ingressConfiguration.get("target_topic_id").asString;
+			const ingressBaseSettings = { ingressId, topicId };
 			let ingressSettings: Settings.Setup.Ingress;
 			switch (type) {
 				case IngressModel.Kind.HttpHost:
 					{
-						const responseConfiguration: FConfiguration | null = publisherConfiguration.findNamespace("response");
+						const responseConfiguration: FConfiguration | null = ingressConfiguration.findNamespace("response");
 						const responseHeadersConfiguration: FConfiguration | null = responseConfiguration === null
 							? null
 							: responseConfiguration.findNamespace("header");
@@ -418,9 +419,9 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 							}, {} as Record<string, string | null>);
 
 						ingressSettings = {
-							...basePublisherSettings,
+							...ingressBaseSettings,
 							kind: type,
-							path: publisherConfiguration.get("path").asString,
+							path: ingressConfiguration.get("path").asString,
 							responseStatusCode,
 							responseStatusMessage,
 							responseHeaders: Object.freeze(responseHeaders),
@@ -428,8 +429,19 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 						};
 					}
 					break;
+				case IngressModel.Kind.WebSocketClient:
+					{
+						const url: URL = new URL(ingressConfiguration.get("url").asString);
+
+						ingressSettings = {
+							...ingressBaseSettings,
+							kind: type,
+							url
+						};
+					}
+					break;
 				default:
-					throw new FExceptionInvalidOperation(`Unsupported ${publisherConfiguration.configurationNamespace}.type '${type}'.`);
+					throw new FExceptionInvalidOperation(`Unsupported ${ingressConfiguration.configurationNamespace}.type '${type}'.`);
 			}
 			ingresses.push(Object.freeze(ingressSettings));
 		}

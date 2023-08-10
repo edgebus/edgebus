@@ -106,7 +106,13 @@ export class SetupServiceImpl implements SetupService {
 						}
 						break;
 					case Ingress.Kind.WebSocketClient:
-						throw new FExceptionInvalidOperation("Not implemented yet");
+						if (ingress.ingressKind !== Ingress.Kind.WebSocketClient) {
+							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different kind '${ingress.ingressKind}'. Setup process expected type '${Ingress.Kind.WebSocketClient}'.`);
+						}
+						if (ingress.ingressWebSocketClientUrl.toString() !== setupIngress.url.toString()) {
+							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different path '${ingress.ingressWebSocketClientUrl}'. Setup process expected path '${setupIngress.url}'.`);
+						}
+						break;
 					case Ingress.Kind.WebSocketHost:
 						throw new FExceptionInvalidOperation("Not implemented yet");
 					default:
@@ -128,6 +134,13 @@ export class SetupServiceImpl implements SetupService {
 							ingressHttpHostResponseHeaders: setupIngress.responseHeaders,
 							ingressHttpHostResponseStatusCode: setupIngress.responseStatusCode,
 							ingressHttpHostResponseStatusMessage: setupIngress.responseStatusMessage,
+						};
+						break;
+					case Ingress.Kind.WebSocketClient:
+						ingressData = {
+							ingressKind: setupIngress.kind,
+							ingressTopicId: ingressTopicId,
+							ingressWebSocketClientUrl: setupIngress.url
 						};
 						break;
 					default:

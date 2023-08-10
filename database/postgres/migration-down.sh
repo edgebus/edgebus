@@ -46,13 +46,13 @@ docker run --network=edgebus-local-tier \
   --env "POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/devdb" \
   --env "TARGET_VERSION=v0000" \
   --env LOG_LEVEL=info \
-  --volume "${DIR}/.dist:/var/local/sqlmigrationrunner-postgres//migration" \
+  --volume "${DIR}/.dist:/var/local/sqlmigrationrunner-postgres/migration" \
   theanurin/sqlmigrationrunner-postgres:0.1.0 \
     rollback --no-sleep
 docker run --network=edgebus-local-tier \
   --rm --interactive --tty \
   --env "POSTGRES_URL=postgres://postgres@postgres:5432/devdb" \
   --env LOG_LEVEL=info \
-  --volume "${DIR}/.dist:/var/local/sqlmigrationrunner-postgres//migration" \
+  --volume "${DIR}/.dist:/var/local/sqlmigrationrunner-postgres/migration" \
   theanurin/sqlmigrationrunner-postgres:0.1.0 \
     rollback --no-sleep

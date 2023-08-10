@@ -76,6 +76,7 @@ export namespace Ingress {
 	export interface WebSocketClient extends DataBase {
 		readonly ingressKind: Kind.WebSocketClient;
 
+		readonly ingressWebSocketClientUrl: URL;
 		// TBD
 	}
 

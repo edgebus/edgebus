@@ -263,6 +263,24 @@ export class PostgresDatabase extends SqlDatabase {
 						/* 7 */ingressData.ingressHttpHostResponseBody,
 					);
 				break;
+			case Ingress.Kind.WebSocketClient:
+				sqlExtendedRecord = await this.sqlConnection
+					.statement(`
+						INSERT INTO "tb_ingress_websocketclient"(
+							"id", "kind", "url"
+						)
+						VALUES (
+							$1, $2, $3
+						)
+						RETURNING "id", "kind", "url"
+					`)
+					.executeSingle(
+						executionContext,
+						/* 1 */sqlMainRecord.get("id").asNumber,
+						/* 2 */ingressData.ingressKind,
+						/* 3 */ingressData.ingressWebSocketClientUrl.toString(),
+					);
+				break;
 			default:
 				throw new FExceptionInvalidOperation(`Not supported ingress kind: ${ingressData.ingressKind}`);
 		}
@@ -588,6 +606,18 @@ export class PostgresDatabase extends SqlDatabase {
 					.executeSingle(
 						executionContext,
 						/* 1 */ingressDbId,
+					);
+				break;
+			case Ingress.Kind.WebSocketClient:
+				sqlExtendedRecord = await this.sqlConnection
+					.statement(`
+							SELECT "id", "kind", "url"
+							FROM "tb_ingress_websocketclient"
+							WHERE "id" = $1
+						`)
+					.executeSingle(
+						executionContext,
+							/* 1 */ingressDbId,
 					);
 				break;
 			default:
@@ -1145,6 +1175,12 @@ export class PostgresDatabase extends SqlDatabase {
 					ingressHttpHostResponseStatusMessage: sqlExtendedRecord.get("response_status_message").asStringNullable,
 					ingressHttpHostResponseHeaders: sqlExtendedRecord.get("response_headers").asObjectNullable,
 					ingressHttpHostResponseBody: sqlExtendedRecord.get("response_body").asBinaryNullable,
+				});
+			case Ingress.Kind.WebSocketClient:
+				return Object.freeze<Ingress>({
+					...ingressBase,
+					ingressKind,
+					ingressWebSocketClientUrl: new URL(sqlExtendedRecord.get("url").asString),
 				});
 			default:
 				throw new FExceptionInvalidOperation(`Unsupported ingress kind: '${ingressKind}'`);

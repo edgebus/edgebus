@@ -103,7 +103,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					break;
 				}
 				case "rest-ingress": {
-					const friendlyEndpoint: Settings.RestPublisherEndpoint = endpoint;
+					const friendlyEndpoint: Settings.RestIngressEndpoint = endpoint;
 					const endpointInstance = new IngressApiRestEndpoint(
 						endpointServers, this._apiProvider.publisherApi, friendlyEndpoint,
 						//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)

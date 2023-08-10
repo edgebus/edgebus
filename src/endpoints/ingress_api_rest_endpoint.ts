@@ -24,7 +24,7 @@ export class IngressApiRestEndpoint extends BaseRestEndpoint {
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
 		api: PublisherApi,
-		opts: Settings.RestPublisherEndpoint
+		opts: Settings.RestIngressEndpoint
 	) {
 		super(servers, opts);
 

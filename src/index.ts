@@ -23,6 +23,7 @@ import { ApiProvider } from "./provider/api_provider";
 import { Egress } from "./model/egress";
 import { Ingress } from "./model/ingress";
 import { MessageBusBull } from "./messaging/message_bus_bull";
+import { WebSocketClientIngress } from "./ingress/web_socket_client.ingress";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
@@ -139,36 +140,59 @@ export default async function (executionContext: FExecutionContext, settings: Se
 			// Setup HTTP ingress
 			for (const hardcodedPublisherConfiguration of hardcodedPublisherConfigurations) {
 				const ingressConfiguration = hardcodedPublisherConfiguration.ingressConfiguration;
-				if (ingressConfiguration.kind !== Ingress.Kind.HttpHost) {
-					throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
-				}
-				const httpPublisherInstance: HttpHostIngress = new HttpHostIngress(
-					{
-						topicId: hardcodedPublisherConfiguration.topicId,
-						topicName: hardcodedPublisherConfiguration.topicName,
-						topicDomain: null,
-						topicDescription: hardcodedPublisherConfiguration.topicDescription,
-						topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
-					},
-					IngressIdentifier.parse(ingressConfiguration.ingressId),
-					messageBusProvider.wrap,
-					{
-						transformers: [],
-						bindPath: ingressConfiguration.path,
-						successResponseGenerator: () => ({
-							headers: ingressConfiguration.responseHeaders,
-							body: ingressConfiguration.responseBody,
-							statusCode: ingressConfiguration.responseStatusCode,
-							statusDescription: ingressConfiguration.responseStatusMessage,
-						})
+				const ingressId: IngressIdentifier = IngressIdentifier.parse(ingressConfiguration.ingressId);
+				if (ingressConfiguration.kind === Ingress.Kind.WebSocketClient) {
+					const webSocketClientIngress: WebSocketClientIngress = new WebSocketClientIngress(
+						{
+							topicId: hardcodedPublisherConfiguration.topicId,
+							topicName: hardcodedPublisherConfiguration.topicName,
+							topicDomain: null,
+							topicDescription: hardcodedPublisherConfiguration.topicDescription,
+							topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+						},
+						ingressId,
+						messageBusProvider.wrap,
+						{
+							wsOptions: {},
+							transformers: [],
+							url: ingressConfiguration.url
+						}
+					);
+					await webSocketClientIngress.init(executionContext);
+					itemsToDispose.push(webSocketClientIngress);
+				} else {
+
+					if (ingressConfiguration.kind !== Ingress.Kind.HttpHost) {
+						throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 					}
-				);
-				//harcodedItemsToDispose.push(httpPublisherInstance);
-				for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
-					publisherApiRestEndpoint.addHttpPublisher(executionContext, httpPublisherInstance);
+					const httpPublisherInstance: HttpHostIngress = new HttpHostIngress(
+						{
+							topicId: hardcodedPublisherConfiguration.topicId,
+							topicName: hardcodedPublisherConfiguration.topicName,
+							topicDomain: null,
+							topicDescription: hardcodedPublisherConfiguration.topicDescription,
+							topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+						},
+						ingressId,
+						messageBusProvider.wrap,
+						{
+							transformers: [],
+							bindPath: ingressConfiguration.path,
+							successResponseGenerator: () => ({
+								headers: ingressConfiguration.responseHeaders,
+								body: ingressConfiguration.responseBody,
+								statusCode: ingressConfiguration.responseStatusCode,
+								statusDescription: ingressConfiguration.responseStatusMessage,
+							})
+						}
+					);
+					//harcodedItemsToDispose.push(httpPublisherInstance);
+					for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
+						publisherApiRestEndpoint.addHttpPublisher(executionContext, httpPublisherInstance);
+					}
+					await httpPublisherInstance.init(executionContext);
+					itemsToDispose.push(httpPublisherInstance);
 				}
-				await httpPublisherInstance.init(executionContext);
-				itemsToDispose.push(httpPublisherInstance);
 			}
 
 			// Setup egresses
