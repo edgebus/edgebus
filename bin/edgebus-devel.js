@@ -2,17 +2,19 @@
 
 "use strict";
 
-const { FLogger, FLoggerConsole, FLoggerLevel } = require("@freemework/common");
+const { FLogger, FLoggerLevel } = require("@freemework/common");
 const { Flauncher } = require("@freemework/hosting");
 
 const fs = require("fs");
 const { Container } = require("typescript-ioc");
 
-const loggerLevel = FLoggerLevel.parse((process.env.LOG_LEVEL ?? "info").toUpperCase());
-FLogger.setLoggerFactory((loggerName)=> FLoggerConsole.create(loggerName, loggerLevel));
+const { default: runtimeFactory, Settings, LoggerConsole } = require("..");
 
-const { default: runtimeFactory, Settings } = require("..");
-
+{
+	const loggerLevel = FLoggerLevel.parse((process.env.LOG_LEVEL ?? "info").toUpperCase());
+	const loggerFormat = (process.env.LOG_FORMAT ?? "text").toLowerCase() === "json" ? "json" : "text"
+	FLogger.setLoggerFactory((loggerName) => LoggerConsole.create(loggerName, { level: loggerLevel, format: loggerFormat }));
+}
 
 // Contract providers
 const { BuildInfoProvider } = require("../src/provider/build_info_provider");

@@ -10,6 +10,7 @@ import { IngressIdentifier, MessageIdentifier, Message, Topic } from "../model";
 
 import { BaseIngress } from "./base.ingress";
 import { WebSocketMessenger } from "../misc/web_socket_messenger";
+import { Bind } from "../utils/bind";
 
 
 export class WebSocketClientIngress extends BaseIngress {
@@ -20,7 +21,6 @@ export class WebSocketClientIngress extends BaseIngress {
 	private readonly _ignoreStartupFailedConnection: boolean;
 	private readonly _wsOptions: WebSocket.ClientOptions;
 	private _lazyMessenger: WebSocketMessenger | Promise<WebSocketMessenger> | null;
-
 
 	protected getMessenger(executionContext: FExecutionContext): Promise<WebSocketMessenger> {
 		if (this._lazyMessenger === null) {
@@ -52,11 +52,10 @@ export class WebSocketClientIngress extends BaseIngress {
 		opts: WebSocketClientIngress.Opts
 	) {
 		super(topic, ingressId);
-		// this._successResponseGenerator = null;
 		this._transformers = null;
 		this._lazyMessenger = null;
 
-		this._ignoreStartupFailedConnection = false;
+		this._ignoreStartupFailedConnection = true;
 		this._wsOptions = opts && opts.wsOptions || {};
 		this._url = opts.url;
 
@@ -73,8 +72,13 @@ export class WebSocketClientIngress extends BaseIngress {
 	}
 
 	protected async onInit(): Promise<void> {
+		let executionContext = new FLoggerLabelsExecutionContext(this.initExecutionContext, {
+			url: this._url.toString(),
+			ingressId: this.ingressId.value
+		});
+
 		try {
-			await this.getMessenger(this.initExecutionContext); // Self-check for connectivity
+			await this.getMessenger(executionContext); // Self-check for connectivity
 		} catch (e) {
 			const err: FException = FException.wrapIfNeeded(e);
 			if (this._ignoreStartupFailedConnection) {
@@ -118,7 +122,8 @@ export class WebSocketClientIngress extends BaseIngress {
 		}
 
 		executionContext = new FLoggerLabelsExecutionContext(executionContext, {
-			url: this._url.toString()
+			url: this._url.toString(),
+			ingressId: this.ingressId.value
 		});
 
 		// Get a messenger (actually create new messenger instance due this._wsMessenger === null)
@@ -132,7 +137,7 @@ export class WebSocketClientIngress extends BaseIngress {
 					this._watchdogTimeout = setTimeout(() => this._watchdog(), this._watchdogInterval);
 				}
 
-				this._log.debug(executionContext, 'Watchdog established connection to the Aggregator');
+				this._log.debug(executionContext, 'Watchdog established connection');
 			})
 			.catch(e => {
 				// Failed to establish connection, increase interval
@@ -164,23 +169,30 @@ export class WebSocketClientIngress extends BaseIngress {
 			this._url,
 			{
 				wsOptions: this._wsOptions,
-				// incomingPingTimeout: 60000,
-				// outgoingPingTimeout: 60000,
+				// incomingPingTimeout: 30000,
+				outgoingPingTimeout: 30000,
 			}
 		);
 		await messenger.init(executionContext);
-		messenger.addHandler(this._handleMessage.bind(this));
+		messenger.addHandler(this._handleMessage);
 		return messenger;
 	}
 
+	@Bind
 	private async _handleMessage(
 		executionContext: FExecutionContext,
 		event: FChannelSubscriber.Event<WebSocket.Data> | FException
 	): Promise<void> {
+		executionContext = new FLoggerLabelsExecutionContext(executionContext, {
+			url: this._url.toString(),
+			ingressId: this.ingressId.value
+		});
+
 		if (event instanceof FException) {
 			if (this._lazyMessenger !== null && !(this._lazyMessenger instanceof Promise)) {
 				const messenger: WebSocketMessenger = this._lazyMessenger;
 				this._lazyMessenger = null;
+				messenger.removeHandler(this._handleMessage);
 				messenger.dispose()
 					.catch(e => this._brokenConnectionErrorRenderer(executionContext, e));
 			}

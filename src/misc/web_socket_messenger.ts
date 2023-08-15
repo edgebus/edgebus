@@ -12,6 +12,8 @@ import * as http from "http";
 import * as crypto from "crypto";
 import * as  _ from "lodash";
 
+import { Bind } from "../utils/bind";
+
 export namespace SslConnectionProblem {
 	export interface Debug {
 		caCerts?: ReadonlyArray<string>;
@@ -56,8 +58,6 @@ export class WebSocketMessenger
 	extends FInitableBase
 	implements FChannelPublisher<WebSocket.Data>, FChannelSubscriber<WebSocket.Data> {
 	private _log: FLogger;
-	//private readonly _watchdogInterval: number;
-	private readonly _handleMessageListener: (data: WebSocket.Data) => void;
 	private readonly _callbacks: Array<WebSocketMessenger.Callback>;
 	private _ws: WebSocket | null;
 
@@ -77,8 +77,6 @@ export class WebSocketMessenger
 
 		this._log = FLogger.create(this.constructor.name);
 
-		this._handleMessageListener = (data) => this._handleMessage(data);
-		//this._watchdogInterval = 1000;
 		this._wsUrl = wsUrl;
 		this._wsOptions = opts !== undefined && opts.wsOptions !== undefined ? opts.wsOptions : {};
 		this._incomingPingTimeout = opts !== undefined && opts.incomingPingTimeout !== undefined ? opts.incomingPingTimeout : 0;
@@ -195,7 +193,7 @@ export class WebSocketMessenger
 				});
 		}
 
-		ws.on("message", this._handleMessageListener);
+		ws.on("message", this._handleMessage);
 
 		// wsEstablishingConnectionPromise will:
 		// - resolve after connection established
@@ -256,13 +254,21 @@ export class WebSocketMessenger
 			let outgoingPingInterval: NodeJS.Timeout | null = null;
 			let isAlive: boolean = true;
 			function heartbeat() {
-				if (isAlive === false) { ws.terminate(); }
+				if (isAlive === false) {
+					ws.terminate();
+				}
 
 				isAlive = false;
 				ws.ping();
 			}
-			ws.on("pong", function () { isAlive = true; });
-			ws.on("close", function () { if (outgoingPingInterval !== null) { clearInterval(outgoingPingInterval); } });
+			ws.on("pong", function () {
+				isAlive = true;
+			});
+			ws.on("close", function () {
+				if (outgoingPingInterval !== null) {
+					clearInterval(outgoingPingInterval);
+				}
+			});
 			outgoingPingInterval = setInterval(heartbeat, outgoingPingTimeout);
 		}
 	}
@@ -273,7 +279,7 @@ export class WebSocketMessenger
 		if (this._ws !== null) {
 			try {
 				this._log.trace(this.initExecutionContext, "Destroying");
-				this._ws.removeListener("message", this._handleMessageListener);
+				this._ws.removeListener("message", this._handleMessage);
 				this._ws.close();
 			} catch (e) {
 				if (e instanceof Error && e.message === "WebSocket was closed before the connection was established") {
@@ -312,6 +318,7 @@ export class WebSocketMessenger
 		});
 	}
 
+	@Bind
 	protected _handleMessage(data: WebSocket.Data): void {
 		if (this._callbacks.length > 0) {
 			this._notifySubscribers(this.initExecutionContext, { data });
@@ -331,7 +338,7 @@ export class WebSocketMessenger
 		}
 	}
 
-	protected _logCallbackError(err: any): void {
+	private _logCallbackError(err: any): void {
 		// This very bad situation. The user-developer did wrote shit code that raise an error from callback.
 		// const this._log: FLogger = FExecutionContextLogger.of(this.initExecutionContext).logger;
 		const ex: FException = FException.wrapIfNeeded(err);
