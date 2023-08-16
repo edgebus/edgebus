@@ -80,7 +80,14 @@ export default async function (executionContext: FExecutionContext, settings: Se
 			const setupSettings: Settings.Setup | null = ProviderLocator.default.get(SettingsProvider).setup;
 			if (setupSettings !== null) {
 				const setupServiceProvider: SetupServiceProvider = ProviderLocator.default.get(SetupServiceProvider);
-				await setupServiceProvider.setup(executionContext, setupSettings);
+				await setupServiceProvider.setup(
+					executionContext = new FLoggerLabelsExecutionContext(executionContext, {
+						phase: "setup"
+					}),
+					setupSettings
+				);
+			} else {
+				log.info(executionContext, "Skip setup process due no setup settings");
 			}
 		}
 

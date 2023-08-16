@@ -9,9 +9,12 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
+if [ -z "${ZONE}" ]; then
+	ZONE=local
+fi
 
 docker run --interactive --tty --rm \
   --mount type=bind,source="${DIR}",target=/data \
-  --env ENV=local \
+  --env ENV=${ZONE} \
   --env SOURCE_PATH=migration \
   theanurin/sqlmigrationbuilder:1.0.1

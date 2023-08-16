@@ -1,4 +1,4 @@
-import { FException, FExceptionInvalidOperation, FExecutionContext, FLoggerLabelsExecutionContext } from "@freemework/common";
+import { FException, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import * as _ from "lodash";
 
@@ -17,12 +17,22 @@ export interface SetupService {
 }
 
 export class SetupServiceImpl implements SetupService {
+	private readonly _log: FLogger;
+
+	public constructor() {
+		this._log = FLogger.create(this.constructor.name);
+	}
+
 	public async setup(executionContext: FExecutionContext, managementApi: ManagementApi, setupSettings: Settings.Setup): Promise<void> {
+		this._log.info(executionContext, "Running setup process...");
 
 		// Setup topics
 		for (const setupTopic of setupSettings.topics) {
+			const setupTopicExecutionContext: FExecutionContext = new FLoggerLabelsExecutionContext(executionContext, {
+				setupTopicId: setupTopic.topicId
+			});
 			const topicId: TopicIdentifier = TopicIdentifier.parse(setupTopic.topicId);
-			const topic: Topic | null = await managementApi.findTopic(executionContext, topicId);
+			const topic: Topic | null = await managementApi.findTopic(setupTopicExecutionContext, topicId);
 			if (topic !== null) {
 				// compare
 				if (topic.topicName !== setupTopic.name) {
@@ -37,19 +47,25 @@ export class SetupServiceImpl implements SetupService {
 				if (topic.topicDomain !== null) {
 					throw new SetupServiceException(`Unable to setup topics. A topic '${topicId}' already presented with domain '${topic.topicDomain}'. Setup process expected NO domain.`);
 				}
+				this._log.info(setupTopicExecutionContext, () => `Skip topic '${setupTopic.name}' creation due it already exist`);
 			} else {
-				await managementApi.createTopic(executionContext, {
+				await managementApi.createTopic(setupTopicExecutionContext, {
 					topicId,
 					topicName: setupTopic.name,
 					topicDescription: setupTopic.description,
 					topicDomain: null,
 					topicMediaType: setupTopic.mediaType,
 				});
+				this._log.info(setupTopicExecutionContext, () => `A new topic '${setupTopic.name}' was created`);
 			}
 
 			for (const setupLabelHandler of setupTopic.labelHandlers) {
+				const setupLabelHandlerExecutionContext: FExecutionContext = new FLoggerLabelsExecutionContext(setupTopicExecutionContext, {
+					setupLabelHandlerId: setupLabelHandler.labelHandlerId
+				});
+
 				const labelHandlerId: LabelHandlerIdentifier = LabelHandlerIdentifier.parse(setupLabelHandler.labelHandlerId);
-				const labelHandler = await managementApi.findLabelHandler(executionContext, labelHandlerId);
+				const labelHandler = await managementApi.findLabelHandler(setupLabelHandlerExecutionContext, labelHandlerId);
 
 				if (labelHandler !== null) {
 					if (labelHandler.externalProcessPath !== setupLabelHandler.path) {
@@ -61,20 +77,26 @@ export class SetupServiceImpl implements SetupService {
 					if (labelHandler.labelHandlerKind !== setupLabelHandler.kind) {
 						throw new SetupServiceException(`Unable to setup label. A labelHandler '${labelHandlerId}' already presented with different kind '${labelHandler.labelHandlerKind}'. Setup process expected kind '${setupLabelHandler.kind}'.`);
 					}
+					this._log.info(setupTopicExecutionContext, () => `A new labels handler '${setupLabelHandler.kind}' was created`);
 				} else {
-					await managementApi.createLabelHandler(executionContext, {
+					await managementApi.createLabelHandler(setupLabelHandlerExecutionContext, {
 						labelHandlerId,
 						topicId,
 						labelHandlerKind: setupLabelHandler.kind,
 						externalProcessPath: setupLabelHandler.path
-					})
+					});
+					this._log.info(setupTopicExecutionContext, () => `A new labels handler '${setupLabelHandler.kind}' was created`);
 				}
 			}
-
 		}
 
 		// Setup ingresses
 		for (const setupIngress of setupSettings.ingresses) {
+			const setupIngressExecutionContext: FExecutionContext = new FLoggerLabelsExecutionContext(executionContext, {
+				setupTopicId: setupIngress.topicId,
+				setupIngressId: setupIngress.ingressId
+			});
+
 			const ingressId: IngressIdentifier = IngressIdentifier.parse(setupIngress.ingressId);
 			const ingressTopicId: TopicIdentifier = TopicIdentifier.parse(setupIngress.topicId);
 
@@ -118,6 +140,7 @@ export class SetupServiceImpl implements SetupService {
 					default:
 						throw new FExceptionInvalidOperation("Not implemented yet");
 				}
+				this._log.info(setupIngressExecutionContext, () => `Skip ingress '${setupIngress.kind}' creation due it already exist`);
 			} else {
 				// create
 				let ingressData: Ingress.Data;
@@ -147,6 +170,7 @@ export class SetupServiceImpl implements SetupService {
 						throw new FExceptionInvalidOperation("Not implemented yet");
 				}
 				await managementApi.createIngress(executionContext, { ...ingressData, ingressId });
+				this._log.info(setupIngressExecutionContext, () => `A new ingress '${setupIngress.kind}' was created`);
 			}
 		}
 
@@ -168,6 +192,7 @@ export class SetupServiceImpl implements SetupService {
 			const egress: Egress | null = await managementApi.findEgress(setupEgressExecutionContext, egressId);
 			if (egress !== null) {
 				// compare
+				this._log.info(setupEgressExecutionContext, () => `Skip egress '${setupEgress.kind}' creation due it already exist`);
 			} else {
 				//
 				let egressData: Egress.Data;
@@ -194,6 +219,7 @@ export class SetupServiceImpl implements SetupService {
 						throw new FExceptionInvalidOperation("Not implemented yet");
 				}
 				await managementApi.createEgress(setupEgressExecutionContext, { ...egressData, egressId });
+				this._log.info(setupEgressExecutionContext, () => `A new egress '${setupEgress.kind}' was created`);
 			}
 		}
 	}
