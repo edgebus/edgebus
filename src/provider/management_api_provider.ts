@@ -1,4 +1,4 @@
-import { FDisposable, FExecutionContext, FInitable, FInitableBase, FLogger, Fusing } from "@freemework/common";
+import { FDisposable, FExecutionContext, FInitable, FInitableBase, FLogger, FUsing } from "@freemework/common";
 
 import { Provides, Singleton } from "typescript-ioc";
 
@@ -15,7 +15,7 @@ export abstract class UsingProvider<TResource extends FInitable> {
 		executionContext: FExecutionContext,
 		worker: (resource: TResource) => Promise<TResult>
 	): Promise<TResult> {
-		return Fusing(executionContext, () => this.create(), worker);
+		return FUsing(executionContext, () => this.create(), worker);
 	}
 
 	protected abstract create(): TResource;

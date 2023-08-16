@@ -1,5 +1,10 @@
-import { FDisposable, FExecutionContext, FLoggerLabelsExecutionContext, FInitable, FLogger, FExceptionArgument, FDecimal, FDecimalBackendNumber, FExceptionInvalidOperation, FLoggerConsole } from "@freemework/common";
-import { FLauncherRuntime } from "@freemework/hosting";
+import {
+	FDisposable, FExecutionContext,
+	FLoggerLabelsExecutionContext, FInitable,
+	FLogger, FExceptionArgument, FDecimal, FDecimalRoundMode,
+	FDecimalBackendNumber, FExceptionInvalidOperation, FException
+} from "@freemework/common";
+import { FLauncherRuntime, FLauncherException, FLauncherInitializeRuntimeException, FLauncherRestartRequiredException } from "@freemework/hosting";
 
 import * as _ from "lodash";
 
@@ -18,7 +23,6 @@ import { EgressIdentifier, IngressIdentifier, TopicIdentifier } from "./model";
 import appInfo from "./utils/app_info";
 import { ProviderLocator } from "./provider_locator";
 import { SetupServiceProvider } from "./provider/setup_service_provider";
-import { SetupService } from "./service/setup_service";
 import { ApiProvider } from "./provider/api_provider";
 import { Egress } from "./model/egress";
 import { Ingress } from "./model/ingress";
@@ -40,11 +44,13 @@ export { HostingProvider } from "./provider/hosting_provider";
 
 export * from "./misc";
 
+export class RestartRequireException extends FLauncherRestartRequiredException { }
+
 
 export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FLauncherRuntime> {
 	executionContext = new FLoggerLabelsExecutionContext(executionContext, { ...appInfo });
 
-	FDecimal.configure(new FDecimalBackendNumber(8, FDecimal.RoundMode.Trunc));
+	FDecimal.configure(new FDecimalBackendNumber(8, FDecimalRoundMode.Trunc));
 
 	const log: FLogger = FLogger.create("EdgeBus");
 
@@ -80,12 +86,16 @@ export default async function (executionContext: FExecutionContext, settings: Se
 			const setupSettings: Settings.Setup | null = ProviderLocator.default.get(SettingsProvider).setup;
 			if (setupSettings !== null) {
 				const setupServiceProvider: SetupServiceProvider = ProviderLocator.default.get(SetupServiceProvider);
-				await setupServiceProvider.setup(
+				const wasChanged: boolean = await setupServiceProvider.setup(
 					executionContext = new FLoggerLabelsExecutionContext(executionContext, {
 						phase: "setup"
 					}),
 					setupSettings
 				);
+
+				if (wasChanged) {
+					throw new RestartRequireException({exitCode:100, message: "Setup process was applied. This action required restart of the service. Exiting..."});
+				}
 			} else {
 				log.info(executionContext, "Skip setup process due no setup settings");
 			}
@@ -280,5 +290,4 @@ export default async function (executionContext: FExecutionContext, settings: Se
 			);
 		}
 	};
-
 }

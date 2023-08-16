@@ -13,7 +13,7 @@ import {
 
 
 export interface SetupService {
-	setup(executionContext: FExecutionContext, managementApi: ManagementApi, setupSettings: Settings.Setup): Promise<void>;
+	setup(executionContext: FExecutionContext, managementApi: ManagementApi, setupSettings: Settings.Setup): Promise<boolean>;
 }
 
 export class SetupServiceImpl implements SetupService {
@@ -23,8 +23,10 @@ export class SetupServiceImpl implements SetupService {
 		this._log = FLogger.create(this.constructor.name);
 	}
 
-	public async setup(executionContext: FExecutionContext, managementApi: ManagementApi, setupSettings: Settings.Setup): Promise<void> {
+	public async setup(executionContext: FExecutionContext, managementApi: ManagementApi, setupSettings: Settings.Setup): Promise<boolean> {
 		this._log.info(executionContext, "Running setup process...");
+
+		let wasChanged: boolean = false;
 
 		// Setup topics
 		for (const setupTopic of setupSettings.topics) {
@@ -57,6 +59,7 @@ export class SetupServiceImpl implements SetupService {
 					topicMediaType: setupTopic.mediaType,
 				});
 				this._log.info(setupTopicExecutionContext, () => `A new topic '${setupTopic.name}' was created`);
+				wasChanged = true;
 			}
 
 			for (const setupLabelHandler of setupTopic.labelHandlers) {
@@ -86,6 +89,7 @@ export class SetupServiceImpl implements SetupService {
 						externalProcessPath: setupLabelHandler.path
 					});
 					this._log.info(setupTopicExecutionContext, () => `A new labels handler '${setupLabelHandler.kind}' was created`);
+					wasChanged = true;
 				}
 			}
 		}
@@ -171,6 +175,7 @@ export class SetupServiceImpl implements SetupService {
 				}
 				await managementApi.createIngress(executionContext, { ...ingressData, ingressId });
 				this._log.info(setupIngressExecutionContext, () => `A new ingress '${setupIngress.kind}' was created`);
+				wasChanged = true;
 			}
 		}
 
@@ -179,22 +184,21 @@ export class SetupServiceImpl implements SetupService {
 			const egressId: EgressIdentifier = EgressIdentifier.parse(setupEgress.egressId);
 			const egressTopicIds: Array<TopicIdentifier> = setupEgress.sourceTopicIds.map(TopicIdentifier.parse);
 			const filterLabelPolicy: Egress.FilterLabelPolicy = setupEgress.filterLabelPolicy;
-			const labelIds: Array<LabelIdentifier> = [];
 
 			const setupEgressExecutionContext: FExecutionContext = new FLoggerLabelsExecutionContext(executionContext, {
 				egressId: egressId.value,
 			});
-
-			for (const label of setupEgress.filterLabels) {
-				labelIds.push((await managementApi.getOrCreateLabel(setupEgressExecutionContext, label)).labelId);
-			}
 
 			const egress: Egress | null = await managementApi.findEgress(setupEgressExecutionContext, egressId);
 			if (egress !== null) {
 				// compare
 				this._log.info(setupEgressExecutionContext, () => `Skip egress '${setupEgress.kind}' creation due it already exist`);
 			} else {
-				//
+				const labelIds: Array<LabelIdentifier> = [];
+				for (const label of setupEgress.filterLabels) {
+					labelIds.push((await managementApi.getOrCreateLabel(setupEgressExecutionContext, label)).labelId);
+				}
+
 				let egressData: Egress.Data;
 				switch (setupEgress.kind) {
 					case Egress.Kind.WebSocketHost:
@@ -220,8 +224,10 @@ export class SetupServiceImpl implements SetupService {
 				}
 				await managementApi.createEgress(setupEgressExecutionContext, { ...egressData, egressId });
 				this._log.info(setupEgressExecutionContext, () => `A new egress '${setupEgress.kind}' was created`);
+				wasChanged = true;
 			}
 		}
+		return wasChanged;
 	}
 }
 

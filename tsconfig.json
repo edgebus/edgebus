@@ -4,6 +4,11 @@
 		"alwaysStrict": true,
 		"declaration": true,
 		"experimentalDecorators": true,
+		"lib": [
+			"DOM",
+			"ES2022",
+			"ESNext.Disposable"
+		],
 		"listFiles": false,
 		"module": "commonjs",
 		"moduleResolution": "node",

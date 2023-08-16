@@ -1,4 +1,4 @@
-import { FException, FExceptionAggregate, FExecutionContext, FInitable, FInitableMixin, FLogger, Fusing } from "@freemework/common";
+import { FException, FExceptionAggregate, FExecutionContext, FInitable, FInitableMixin, FLogger, FUsing } from "@freemework/common";
 import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 
@@ -31,7 +31,7 @@ export class PostgresDatabaseFactory extends DatabaseFactory implements FInitabl
 	}
 
 	public using<TResult>(executionContext: FExecutionContext, worker: (db: Database) => Promise<TResult>): Promise<TResult> {
-		return Fusing(executionContext, this.create, async (db: Database) => {
+		return FUsing(executionContext, this.create, async (db: Database) => {
 			try {
 				const workerResult = await worker(db);
 				await db.transactionCommit(executionContext);

@@ -1,6 +1,6 @@
 {
 	"name": "@edgebus/service",
-	"version": "0.4.14",
+	"version": "0.4.15",
 	"title": "EdgeBus Service",
 	"description": "EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.",
 	"author": "ZXTeam <pub@zxteam.org> (http://www.zxteam.org)",
@@ -10,25 +10,24 @@
 	],
 	"license": "MIT",
 	"devDependencies": {
-		"@freemework/sql.misc.migration": "^0.9.0",
 		"@types/chai": "^4.3.5",
-		"@types/lodash": "^4.14.191",
+		"@types/lodash": "^4.14.197",
 		"@types/mocha": "^10.0.1",
-		"@types/node": "^18.13.0",
+		"@types/node": "^18.17.5",
 		"@types/redis-info": "^3.0.0",
-		"@types/uuid": "^9.0.0",
+		"@types/uuid": "^9.0.2",
 		"chai": "^4.3.7",
-		"dotenv": "^16.0.3",
+		"dotenv": "^16.3.1",
 		"mocha": "^10.2.0",
 		"nyc": "^15.1.0",
 		"source-map-support": "^0.5.21",
-		"typescript": "^4.9.5"
+		"typescript": "^5.2.0-beta"
 	},
 	"dependencies": {
 		"@bull-board/express": "^5.2.1",
-		"@freemework/common": "^0.9.7",
-		"@freemework/hosting": "^0.9.0",
-		"@freemework/sql.postgres": "^0.9.1",
+		"@freemework/common": "^0.10.6",
+		"@freemework/hosting": "^0.10.10",
+		"@freemework/sql.postgres": "^0.10.7",
 		"@types/content-type": "^1.1.5",
 		"bull": "^4.10.4",
 		"content-type": "^1.0.5",
@@ -37,7 +36,7 @@
 		"uuid": "^9.0.0"
 	},
 	"engines": {
-		"node": ">=12.0.0 <19"
+		"node": ">=16.0.0 <19"
 	},
 	"keywords": [],
 	"repository": {

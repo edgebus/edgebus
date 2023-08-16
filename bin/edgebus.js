@@ -3,9 +3,9 @@
 "use strict";
 
 const { FLogger, FLoggerLevel } = require("@freemework/common");
-const { Flauncher } = require("@freemework/hosting");
+const { FLauncher } = require("@freemework/hosting");
 
-const { default: runtimeFactory, Settings, LoggerConsole } = require("..");
+const { default: runtimeFactory, Settings, LoggerConsole, RestartRequireException } = require("..");
 
 {
 	const loggerLevel = FLoggerLevel.parse((process.env.LOG_LEVEL ?? "info").toUpperCase());
@@ -13,4 +13,4 @@ const { default: runtimeFactory, Settings, LoggerConsole } = require("..");
 	FLogger.setLoggerFactory((loggerName) => LoggerConsole.create(loggerName, { level: loggerLevel, format: loggerFormat }));
 }
 
-Flauncher(Settings.parse, runtimeFactory);
+FLauncher(Settings.parse, runtimeFactory);

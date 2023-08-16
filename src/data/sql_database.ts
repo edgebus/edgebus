@@ -8,17 +8,14 @@ export abstract class SqlDatabase extends Database {
 		this._log = FLogger.create(this.constructor.name);
 		this._sqlConnection = null;
 		this._sqlConnectionFactory = sqlConnectionFactory;
-		this._transactionIO = null;
+		this._transactionIO = Promise.resolve();
 	}
 
 	public transactionCommit(executionContext: FExecutionContext): Promise<void> {
-		if (!(this._transactionIO instanceof Promise)) {
-			this._transactionIO = Promise.resolve();
-		}
-
 		this._transactionIO = this._transactionIO.then(async () => {
 			//
 			// We have not to cancel this operation, so pass noncancellableExecutionContext
+			//
 			const noncancellableExecutionContext: FExecutionContext = new FCancellationExecutionContext(
 				executionContext,
 				FCancellationToken.Dummy
@@ -31,19 +28,20 @@ export abstract class SqlDatabase extends Database {
 	}
 
 	public async transactionRollback(executionContext: FExecutionContext): Promise<void> {
-		if (!(this._transactionIO instanceof Promise)) {
-			this._transactionIO = Promise.resolve();
-		}
-
 		this._transactionIO = this._transactionIO.then(async () => {
-			//
-			// We have not to cancel this operation, so pass noncancellableExecutionContext
-			const noncancellableExecutionContext: FExecutionContext = new FCancellationExecutionContext(
-				executionContext,
-				FCancellationToken.Dummy
-			);
-			await this.sqlConnection.statement("ROLLBACK TRANSACTION").execute(noncancellableExecutionContext);
-			await this.sqlConnection.statement("BEGIN TRANSACTION").execute(executionContext);
+			const sqlConnection: FSqlConnection | null = this._sqlConnection;
+			if (sqlConnection !== null) {
+				//
+				// We have not to cancel this operation, so pass noncancellableExecutionContext
+				//
+				const noncancellableExecutionContext: FExecutionContext = new FCancellationExecutionContext(
+					executionContext,
+					FCancellationToken.Dummy
+				);
+				await sqlConnection.statement("ROLLBACK TRANSACTION").execute(noncancellableExecutionContext);
+				await sqlConnection.statement("BEGIN TRANSACTION").execute(executionContext);
+
+			}
 		});
 
 		return this._transactionIO;
@@ -88,5 +86,5 @@ export abstract class SqlDatabase extends Database {
 	private readonly _sqlConnectionFactory: FSqlConnectionFactory;
 	private readonly _log: FLogger;
 	private _sqlConnection: FSqlConnection | null;
-	private _transactionIO: null | Promise<void>;
+	private _transactionIO: Promise<void>;
 }

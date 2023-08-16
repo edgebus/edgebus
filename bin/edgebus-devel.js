@@ -3,7 +3,7 @@
 "use strict";
 
 const { FLogger, FLoggerLevel } = require("@freemework/common");
-const { Flauncher } = require("@freemework/hosting");
+const { FLauncher } = require("@freemework/hosting");
 
 const fs = require("fs");
 const { Container } = require("typescript-ioc");
@@ -35,4 +35,4 @@ Container.bind(BuildInfoProvider).provider({ get() { return new DevelBuildInfoPr
 
 
 // Launch app
-Flauncher(Settings.parse, runtimeFactory);
+FLauncher(Settings.parse, runtimeFactory);
