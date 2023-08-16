@@ -380,6 +380,66 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 	const egresses: Array<Settings.Setup.Egress> = [];
 	const topics: Array<Settings.Setup.Topic> = [];
 
+	const egressKey: string = "egress";
+	if (setupConfiguration.hasNamespace(egressKey)) {
+		const subscribersConfiguration = setupConfiguration.getArray(egressKey);
+		for (const subscriberConfiguration of subscribersConfiguration) {
+			const egressId: string = subscriberConfiguration.get("index").asString;
+			const type: string = subscriberConfiguration.get("kind").asString;
+			const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
+			const filterLabelPolicy: EgressModel.FilterLabelPolicy = (function () {
+				const filterLabelPolicyValue: FConfigurationValue = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE);
+				const filterLabelPolicyStr = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE).asString as EgressModel.FilterLabelPolicy;
+				switch (filterLabelPolicyStr) {
+					case EgressModel.FilterLabelPolicy.IGNORE:
+					case EgressModel.FilterLabelPolicy.LAX:
+					case EgressModel.FilterLabelPolicy.SKIP:
+					case EgressModel.FilterLabelPolicy.STRICT:
+						return filterLabelPolicyStr;
+					default:
+						{
+							const unsupportedFilterLabelPolicy: never = filterLabelPolicyStr;
+							throw new FExceptionInvalidOperation(`Unsupported value '${unsupportedFilterLabelPolicy}' for '${filterLabelPolicyValue.key}' configuration key.`);
+						}
+				}
+			})();
+			const filterLabels: ReadonlyArray<string> = (() => {
+				if (subscriberConfiguration.has("filter_labels")) {
+					const labels: string = subscriberConfiguration.get("filter_labels").asString;
+					return Object.freeze(labels.split(" ").filter(w => w !== ""));
+				} else {
+					return Object.freeze([]);
+				}
+			})();
+			const baseSubscriberSettings = {
+				egressId,
+				sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== ""),
+				filterLabelPolicy,
+				filterLabels,
+			};
+			let subscriberSettings: Settings.Setup.Egress;
+			switch (type) {
+				case EgressModel.Kind.Webhook:
+					subscriberSettings = {
+						...baseSubscriberSettings,
+						kind: type,
+						method: subscriberConfiguration.get("method", null).asStringNullable,
+						url: subscriberConfiguration.get("url").asUrl,
+						ssl: subscriberConfiguration.hasNamespace("ssl") ? parseSsl(subscriberConfiguration.getNamespace("ssl")) : null
+					};
+					break;
+				case EgressModel.Kind.WebSocketHost:
+					subscriberSettings = {
+						...baseSubscriberSettings,
+						kind: type,
+					};
+					break;
+				default:
+					throw new FExceptionInvalidOperation(`Unsupported ${subscriberConfiguration.configurationNamespace}.type '${type}'.`);
+			}
+			egresses.push(Object.freeze(subscriberSettings));
+		}
+	}
 
 	const ingressConfigurationKey: string = "ingress";
 	if (setupConfiguration.hasNamespace(ingressConfigurationKey)) {
@@ -445,114 +505,54 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 			}
 			ingresses.push(Object.freeze(ingressSettings));
 		}
+	}
 
-		const egressKey: string = "egress";
-		if (setupConfiguration.hasNamespace(egressKey)) {
-			const subscribersConfiguration = setupConfiguration.getArray(egressKey);
-			for (const subscriberConfiguration of subscribersConfiguration) {
-				const egressId: string = subscriberConfiguration.get("index").asString;
-				const type: string = subscriberConfiguration.get("kind").asString;
-				const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
-				const filterLabelPolicy: EgressModel.FilterLabelPolicy = (function () {
-					const filterLabelPolicyValue: FConfigurationValue = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE);
-					const filterLabelPolicyStr = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE).asString as EgressModel.FilterLabelPolicy;
-					switch (filterLabelPolicyStr) {
-						case EgressModel.FilterLabelPolicy.IGNORE:
-						case EgressModel.FilterLabelPolicy.LAX:
-						case EgressModel.FilterLabelPolicy.SKIP:
-						case EgressModel.FilterLabelPolicy.STRICT:
-							return filterLabelPolicyStr;
+	const topicKey: string = "topic";
+	if (setupConfiguration.hasNamespace(topicKey)) {
+		const topicsConfiguration = setupConfiguration.getArray(topicKey);
+		for (const topicConfiguration of topicsConfiguration) {
+			const topicId: string = topicConfiguration.get("index").asString;
+			const name: string = topicConfiguration.get("name").asString;
+			const description: string = topicConfiguration.get("description").asString;
+			const mediaType: string = topicConfiguration.get("mediaType").asString;
+
+			const labelHandlers: Array<Settings.Setup.LabelHandler> = []
+			const labelHandlerKey: string = "labelHandler";
+			if (topicConfiguration.hasNamespace(labelHandlerKey)) {
+				const labelHandlersConfiguration = topicConfiguration.getArray(labelHandlerKey);
+				for (const labelHandlerConfiguration of labelHandlersConfiguration) {
+					const labelHandlerId: string = labelHandlerConfiguration.get("index").asString;
+					const kind: string = labelHandlerConfiguration.get("kind").asString;
+					switch (kind) {
+						case LabelHandlerModel.Kind.ExternalProcess:
+							const path: string = labelHandlerConfiguration.get("path").asString;
+							labelHandlers.push(Object.freeze({
+								labelHandlerId,
+								kind,
+								path,
+							}));
+							break;
 						default:
-							{
-								const unsupportedFilterLabelPolicy: never = filterLabelPolicyStr;
-								throw new FExceptionInvalidOperation(`Unsupported value '${unsupportedFilterLabelPolicy}' for '${filterLabelPolicyValue.key}' configuration key.`);
-							}
+							throw new FExceptionInvalidOperation(`Unsupported ${labelHandlerConfiguration.configurationNamespace}.type '${kind}'.`);
 					}
-				})();
-				const filterLabels: ReadonlyArray<string> = (() => {
-					if (subscriberConfiguration.has("filter_labels")) {
-						const labels: string = subscriberConfiguration.get("filter_labels").asString;
-						return Object.freeze(labels.split(" ").filter(w => w !== ""));
-					} else {
-						return Object.freeze([]);
-					}
-				})();
-				const baseSubscriberSettings = {
-					egressId,
-					sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== ""),
-					filterLabelPolicy,
-					filterLabels,
-				};
-				let subscriberSettings: Settings.Setup.Egress;
-				switch (type) {
-					case EgressModel.Kind.Webhook:
-						subscriberSettings = {
-							...baseSubscriberSettings,
-							kind: type,
-							method: subscriberConfiguration.get("method", null).asStringNullable,
-							url: subscriberConfiguration.get("url").asUrl,
-							ssl: subscriberConfiguration.hasNamespace("ssl") ? parseSsl(subscriberConfiguration.getNamespace("ssl")) : null
-						};
-						break;
-					case EgressModel.Kind.WebSocketHost:
-						subscriberSettings = {
-							...baseSubscriberSettings,
-							kind: type,
-						};
-						break;
-					default:
-						throw new FExceptionInvalidOperation(`Unsupported ${subscriberConfiguration.configurationNamespace}.type '${type}'.`);
-				}
-				egresses.push(Object.freeze(subscriberSettings));
-			}
-		}
-
-		const topicKey: string = "topic";
-		if (setupConfiguration.hasNamespace(topicKey)) {
-			const topicsConfiguration = setupConfiguration.getArray(topicKey);
-			for (const topicConfiguration of topicsConfiguration) {
-				const topicId: string = topicConfiguration.get("index").asString;
-				const name: string = topicConfiguration.get("name").asString;
-				const description: string = topicConfiguration.get("description").asString;
-				const mediaType: string = topicConfiguration.get("mediaType").asString;
-
-				const labelHandlers: Array<Settings.Setup.LabelHandler> = []
-				const labelHandlerKey: string = "labelHandler";
-				if (topicConfiguration.hasNamespace(labelHandlerKey)) {
-					const labelHandlersConfiguration = topicConfiguration.getArray(labelHandlerKey);
-					for (const labelHandlerConfiguration of labelHandlersConfiguration) {
-						const labelHandlerId: string = labelHandlerConfiguration.get("index").asString;
-						const kind: string = labelHandlerConfiguration.get("kind").asString;
-						switch (kind) {
-							case LabelHandlerModel.Kind.ExternalProcess:
-								const path: string = labelHandlerConfiguration.get("path").asString;
-								labelHandlers.push(Object.freeze({
-									labelHandlerId,
-									kind,
-									path,
-								}));
-								break;
-							default:
-								throw new FExceptionInvalidOperation(`Unsupported ${labelHandlerConfiguration.configurationNamespace}.type '${kind}'.`);
-						}
-					}
-
 				}
 
-				const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers) };
-				topics.push(Object.freeze(topicSettings));
 			}
-		}
 
+			const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers) };
+			topics.push(Object.freeze(topicSettings));
+		}
+	}
+
+	if (egresses.length > 0 || ingresses.length > 0 || topics.length > 0) {
 		return Object.freeze({
-			ingresses: Object.freeze(ingresses),
 			egresses: Object.freeze(egresses),
+			ingresses: Object.freeze(ingresses),
 			topics: Object.freeze(topics)
 		});
 	}
-	else {
-		return null;
-	}
+
+	return null;
 }
 
 class UnreachableNotSupportedEndpointError extends Error {
