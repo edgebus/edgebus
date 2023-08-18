@@ -2,7 +2,7 @@ import { FException, FExceptionAggregate, FExecutionContext, FInitable, FInitabl
 import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 
-import appInfo from "../../utils/app_info";
+import packageInfo from "../../utils/package_info";
 
 import { Database } from "../database";
 import { DatabaseFactory } from "../database_factory";
@@ -20,7 +20,7 @@ export class PostgresDatabaseFactory extends DatabaseFactory implements FInitabl
 		this._sqlConnectionFactory = new FSqlConnectionFactoryPostgres({
 			url: this._sqlConnectionUrl,
 			log: FLogger.create(`${PostgresDatabase.name}.PostgreSQL`),
-			applicationName: `${appInfo.title} v${appInfo.version}`
+			applicationName: `${packageInfo.title} v${packageInfo.version}`
 		});
 	}
 
