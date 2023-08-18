@@ -104,7 +104,6 @@ class LoggerConsoleJsonImpl extends LoggerConsole {
 			name: this.name,
 			date: new Date().toISOString(),
 			level: level.toString(),
-
 		};
 
 		for (const [labelName, labelValue] of Object.entries(labels)) {

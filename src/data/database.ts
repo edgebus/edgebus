@@ -88,7 +88,11 @@ export abstract class Database extends FInitableBase {
 
 	public abstract listTopics(
 		executionContext: FExecutionContext,
-	): Promise<Array<Topic>>;
+	): Promise<Array<Topic>>
+
+	public abstract listVersions(
+		executionContext: FExecutionContext,
+	): Promise<Array<string>>;
 
 	public abstract lockEgressMessageQueue(executionContext: FExecutionContext, opts: Topic.Id & Egress.Id & Message.Id): Promise<void>;
 

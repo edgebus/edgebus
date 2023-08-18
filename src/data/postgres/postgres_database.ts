@@ -897,6 +897,15 @@ export class PostgresDatabase extends SqlDatabase {
 		return topicModels;
 	}
 
+	public async listVersions(
+		executionContext: FExecutionContext
+	): Promise<Array<string>> {
+		const versionRows: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement('SELECT "version" FROM "public"."__migration" ORDER BY "version" DESC')
+			.executeQuery(executionContext);
+		return versionRows.map(versionRow => versionRow.get("version").asString);
+	}
+
 	public async lockEgressMessageQueue(
 		executionContext: FExecutionContext,
 		opts: Topic.Id & Egress.Id & Message.Id

@@ -9,6 +9,7 @@ import { DatabaseFactory } from "../database_factory";
 
 import { PostgresDatabase } from "./postgres_database";
 import { Bind } from "../../utils/bind";
+import { MaskService } from "../../misc/mask_service";
 
 export class PostgresDatabaseFactory extends DatabaseFactory implements FInitable {
 	public constructor(sqlConnectionUrl: URL) {
@@ -50,7 +51,17 @@ export class PostgresDatabaseFactory extends DatabaseFactory implements FInitabl
 	}
 
 	protected async onInit(): Promise<void> {
-		await this._sqlConnectionFactory.init(this.initExecutionContext)
+		const executionContext: FExecutionContext = this.initExecutionContext;
+
+		const maskedConnectionString: string = MaskService.DEFAULT.maskUri(this._sqlConnectionUrl).toString();
+		this._log.info(executionContext, `Initializing Postgres connection ${maskedConnectionString}`);
+		try {
+			await this._sqlConnectionFactory.init(executionContext);
+		} catch (e) {
+			const err: FException = FException.wrapIfNeeded(e);
+			this._log.error(executionContext, `Failure initialize Postgres connection ${maskedConnectionString}. Inner message: ${err.message}`);
+			throw err; // re-throw
+		}
 	}
 
 	protected async onDispose(): Promise<void> {

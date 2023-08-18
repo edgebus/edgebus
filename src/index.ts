@@ -2,9 +2,9 @@ import {
 	FDisposable, FExecutionContext,
 	FLoggerLabelsExecutionContext, FInitable,
 	FLogger, FExceptionArgument, FDecimal, FDecimalRoundMode,
-	FDecimalBackendNumber, FExceptionInvalidOperation, FException
+	FDecimalBackendNumber, FExceptionInvalidOperation
 } from "@freemework/common";
-import { FLauncherRuntime, FLauncherException, FLauncherInitializeRuntimeException, FLauncherRestartRequiredException } from "@freemework/hosting";
+import { FLauncherRuntime, FLauncherRestartRequiredException } from "@freemework/hosting";
 
 import * as _ from "lodash";
 
@@ -13,14 +13,14 @@ import { SettingsProvider, SettingsProviderImpl } from "./provider/settings_prov
 import { StorageProvider } from "./provider/storage_provider";
 import { EndpointsProvider } from "./provider/endpoints_provider";
 import { HostingProvider } from "./provider/hosting_provider";
-import { MessageBusProvider, MessageBusProviderImpl } from "./provider/message_bus_provider";
+import { MessageBusProvider } from "./provider/message_bus_provider";
 import { HttpHostIngress } from "./ingress/http_host.ingress";
 import { WebSocketHostEgress, WebhookEgress } from "./egress";
 import { MessageBus } from "./messaging/message_bus";
 import { Container } from "typescript-ioc";
 import { Settings } from "./settings";
 import { EgressIdentifier, IngressIdentifier, TopicIdentifier } from "./model";
-import appInfo from "./utils/app_info";
+import packageInfo from "./utils/package_info";
 import { ProviderLocator } from "./provider_locator";
 import { SetupServiceProvider } from "./provider/setup_service_provider";
 import { ApiProvider } from "./provider/api_provider";
@@ -36,11 +36,7 @@ export { PublisherApi } from "./api/publisher_api";
 export { EgressApi } from "./api/egress_api";
 export { ApiProvider } from "./provider/api_provider";
 export { Settings } from "./settings";
-// export { ConfigurationProvider } from "./provider/ConfigurationProvider";
-//export { EndpointsProvider } from "./provider/EndpointsProvider";
 export { HostingProvider } from "./provider/hosting_provider";
-//export { MessageBusProvider } from "./provider/MessageBusProvider";
-//export { StorageProvider } from "./provider/StorageProvider";
 
 export * from "./misc";
 
@@ -48,7 +44,10 @@ export class RestartRequireException extends FLauncherRestartRequiredException {
 
 
 export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FLauncherRuntime> {
-	executionContext = new FLoggerLabelsExecutionContext(executionContext, { ...appInfo });
+	executionContext = new FLoggerLabelsExecutionContext(executionContext, { 
+		service: packageInfo.name,
+		version: packageInfo.version
+	 });
 
 	FDecimal.configure(new FDecimalBackendNumber(8, FDecimalRoundMode.Trunc));
 
@@ -70,9 +69,11 @@ export default async function (executionContext: FExecutionContext, settings: Se
 		}
 	}
 
+	const storageProvider: StorageProvider = Container.get(StorageProvider);
+
 	log.info(executionContext, "Initializing DI runtime...");
 	await FInitable.initAll(executionContext,
-		ProviderLocator.default.get(StorageProvider),
+		storageProvider,
 		ProviderLocator.default.get(MessageBusProvider),
 		ProviderLocator.default.get(ApiProvider),
 		ProviderLocator.default.get(EndpointsProvider),
@@ -81,6 +82,14 @@ export default async function (executionContext: FExecutionContext, settings: Se
 
 	const itemsToDispose: Array<FDisposable> = [];
 	try {
+		{ // local scope
+			log.trace(executionContext, "Reading database versions...");
+			const versions: Array<string> = await storageProvider.databaseFactory
+				.using(executionContext, db =>  db.listVersions(executionContext));
+			const versionChain: string = versions.join(" -> ");
+			log.info(executionContext, `Database versions chain: ${versionChain}`);
+		}
+
 		{
 			// Setup Management
 			const setupSettings: Settings.Setup | null = ProviderLocator.default.get(SettingsProvider).setup;
