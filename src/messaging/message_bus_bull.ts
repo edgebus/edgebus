@@ -50,7 +50,7 @@ export class MessageBusBull extends MessageBusBase {
 
 		const redisOpts: RedisOptions = { host, port, db };
 		if (redisUrl.password.length > 0) {
-			redisOpts.password = redisUrl.password;
+			redisOpts.password =  decodeURIComponent(redisUrl.password);
 		}
 		this._redisOpts = Object.freeze(redisOpts);
 		this._redisUrl = redisUrl;
