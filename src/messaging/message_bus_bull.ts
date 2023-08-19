@@ -204,7 +204,7 @@ export class MessageBusBull extends MessageBusBase {
 			return topicQueueItem;
 		});
 
-		const queue: Queue = new Bull(`EGRESS:${egress.egressId.value}`, {
+		const queue: Queue = new Bull(egress.egressId.value, {
 			redis: this._redisOpts,
 		});
 

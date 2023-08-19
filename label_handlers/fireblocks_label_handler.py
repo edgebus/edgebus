@@ -7,7 +7,6 @@ import re
 body = json.load(sys.stdin)
 
 #
-# (production)
 # (test)
 # (presentation)
 # (evolution)
@@ -48,9 +47,9 @@ if "type" in body:
 					sourceNameLabel = sourceNameMatch.group(1)
 					if sourceNameLabel not in result:
 						result.append(sourceNameLabel)
-						print("Detect label '%s' according by type == 'TRANSACTION_CREATED/TRANSACTION_STATUS_UPDATED'" % sourceNameLabel, file=sys.stderr)
+						print("Detect label '%s' according by type == '%s'" % (sourceNameLabel, messageType), file=sys.stderr)
 
-	elif body["type"] == "VAULT_ACCOUNT_ASSET_ADDED":
+	elif messageType == "VAULT_ACCOUNT_ASSET_ADDED":
 		accountName = body.get("data",{}).get("accountName")
 		print("accountName '%s'" % accountName, file=sys.stderr)
 		if accountName is not None:
@@ -60,6 +59,18 @@ if "type" in body:
 				if accountNameLabel not in result:
 					result.append(accountNameLabel)
 					print("Detect label '%s' according by type == 'VAULT_ACCOUNT_ASSET_ADDED'" % accountNameLabel, file=sys.stderr)
+
+	elif messageType == "VAULT_ACCOUNT_ADDED" :
+		name = body.get("data",{}).get("name")
+		print("name '%s'" % name, file=sys.stderr)
+		if name is not None:
+			accountNameMatch = re.search('^\\((.+)\\):[0-9]{14} .+$', name)
+			if accountNameMatch is not None:
+				accountNameLabel = accountNameMatch.group(1)
+				if accountNameLabel not in result:
+					result.append(accountNameLabel)
+					print("Detect label '%s' according by type == 'VAULT_ACCOUNT_ADDED'" % accountNameLabel, file=sys.stderr)
+
 	else:
 		print("No any fields to detect labels", file=sys.stderr)
 
