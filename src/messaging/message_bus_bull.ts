@@ -21,6 +21,7 @@ import { Egress } from "../model/egress";
 import { Bind } from "../utils/bind";
 import { unpromise } from "../utils/unpromise";
 import { Delivery } from "../model";
+import { MaskService } from "../misc/mask_service";
 
 /**
  * Implementation of Message Bus top on bull library
@@ -52,6 +53,7 @@ export class MessageBusBull extends MessageBusBase {
 			redisOpts.password = redisUrl.password;
 		}
 		this._redisOpts = Object.freeze(redisOpts);
+		this._redisUrl = redisUrl;
 
 		this._channels = new Map();
 		this._bullEgressQueues = new Map<EgressIdentifier["value"], Queue>();
@@ -135,10 +137,14 @@ export class MessageBusBull extends MessageBusBase {
 	}
 
 	protected async onInit(): Promise<void> {
+		const executionContext: FExecutionContext = this.initExecutionContext;
+
+		const maskedRedisUrlString: string = MaskService.DEFAULT.maskUri(this._redisUrl).toString();
+		this.log.info(executionContext, `Initializing MessageBusBull with Redis connection ${maskedRedisUrlString}`);
+
 		await super.onInit();
 		//
 		try {
-			const executionContext: FExecutionContext = this.initExecutionContext;
 			await this.storage.using(
 				executionContext,
 				async (db: Database) => {
@@ -414,6 +420,7 @@ export class MessageBusBull extends MessageBusBase {
 	private readonly _serverAdapter: ExpressAdapter;
 	private readonly _bullJobOpts: JobOptions;
 	private readonly _redisOpts: RedisOptions;
+	private readonly _redisUrl: URL;
 	private readonly _bullBoardController: ReturnType<typeof createBullBoard>;
 }
 
