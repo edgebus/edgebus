@@ -72,7 +72,7 @@ export class WebSocketClientIngress extends BaseIngress {
 	}
 
 	protected async onInit(): Promise<void> {
-		let executionContext = new FLoggerLabelsExecutionContext(this.initExecutionContext, {
+		const executionContext = new FLoggerLabelsExecutionContext(this.initExecutionContext, {
 			url: this._url.toString(),
 			ingressId: this.ingressId.value
 		});
@@ -82,12 +82,12 @@ export class WebSocketClientIngress extends BaseIngress {
 		} catch (e) {
 			const err: FException = FException.wrapIfNeeded(e);
 			if (this._ignoreStartupFailedConnection) {
-				const msg = "Check connection with Aggregator failed. The situation is treated just as warning according to 'ignoreStartupFailedConnection = true'";
-				this._log.warn(this.initExecutionContext, () => `${msg} ${err.message}`);
-				this._log.debug(this.initExecutionContext, msg, err);
+				const msg = "Check connection failed. The situation is treated just as warning according to 'ignoreStartupFailedConnection = true'";
+				this._log.warn(executionContext, () => `${msg} ${err.message}`);
+				this._log.debug(executionContext, msg, err);
 			} else {
 				if (this._log.isWarnEnabled) {
-					this._log.warn(this.initExecutionContext, () => `Failure establish connection with ${this._url}. ${err.message}`);
+					this._log.warn(executionContext, () => `Failure establish connection with ${this._url}. ${err.message}`);
 				}
 				throw e;
 			}

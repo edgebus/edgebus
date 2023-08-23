@@ -11,7 +11,7 @@ body = json.load(sys.stdin)
 # (presentation)
 # (evolution)
 # (sandbox:ex1234)
-# (local:user@hostname)
+# (local:some-prefix)
 #
 
 result = []

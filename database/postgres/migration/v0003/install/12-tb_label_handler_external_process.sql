@@ -5,9 +5,6 @@ CREATE TABLE "{{database.schema.runtime.name}}"."tb_label_handler_external_proce
 	CONSTRAINT "pk__tb_label_handler_external_process"
 	PRIMARY KEY ("id"),
 
-	CONSTRAINT "uq__tb_label_handler_external_process__path"
-	UNIQUE ("path"),
-
 	CONSTRAINT "uq__tb_label_handler_external_process__tb_label_handler"
 	FOREIGN KEY ("id")
 	REFERENCES "{{database.schema.runtime.name}}"."tb_label_handler" ("id")

@@ -1,6 +1,6 @@
 {
 	"name": "@edgebus/service",
-	"version": "0.4.16",
+	"version": "0.4.17",
 	"title": "EdgeBus Service",
 	"description": "EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.",
 	"author": "ZXTeam <pub@zxteam.org> (http://www.zxteam.org)",
@@ -26,7 +26,7 @@
 	"dependencies": {
 		"@bull-board/express": "^5.2.1",
 		"@freemework/common": "^0.10.6",
-		"@freemework/hosting": "^0.10.10",
+		"@freemework/hosting": "^0.10.11",
 		"@freemework/sql.postgres": "^0.10.7",
 		"@types/content-type": "^1.1.5",
 		"bull": "^4.10.4",
