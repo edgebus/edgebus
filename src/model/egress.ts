@@ -60,6 +60,11 @@ export namespace Egress {
 		readonly egressKind: Kind;
 
 		/**
+		 * Name of Egress
+		 */
+		readonly egressName: string;
+
+		/**
 		 * Filter policy
 		 */
 		readonly egressFilterLabelPolicy: FilterLabelPolicy;

@@ -210,6 +210,8 @@ export namespace Settings {
 
 				readonly kind: EgressModel.Kind;
 
+				readonly name: string;
+
 				/**
 				 * API Identifiers of source topics
 				 */
@@ -386,6 +388,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 		for (const subscriberConfiguration of subscribersConfiguration) {
 			const egressId: string = subscriberConfiguration.get("index").asString;
 			const type: string = subscriberConfiguration.get("kind").asString;
+			const name: string = subscriberConfiguration.get("name").asString;
 			const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
 			const filterLabelPolicy: EgressModel.FilterLabelPolicy = (function () {
 				const filterLabelPolicyValue: FConfigurationValue = subscriberConfiguration.get("filter_label_policy", EgressModel.FilterLabelPolicy.IGNORE);
@@ -412,6 +415,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				}
 			})();
 			const baseSubscriberSettings = {
+				name,
 				egressId,
 				sourceTopicIds: sourceTopicIds.split(" ").filter(w => w !== ""),
 				filterLabelPolicy,

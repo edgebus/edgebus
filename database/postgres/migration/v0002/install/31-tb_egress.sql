@@ -1,6 +1,7 @@
 CREATE TABLE "{{database.schema.runtime.name}}"."tb_egress" (
 	"id" SERIAL NOT NULL,
 	"kind" "{{database.schema.runtime.name}}"."EGRESS_KIND" NOT NULL,
+	"name" VARCHAR(256) NOT NULL,
 	"api_uuid" UUID NOT NULL,
 	"filter_label_policy" VARCHAR(6) NOT NULL,
 	"utc_created_date" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
