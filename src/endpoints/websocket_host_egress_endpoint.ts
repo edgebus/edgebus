@@ -1,4 +1,4 @@
-import { FDisposableBase, FException, FExceptionAggregate, FExecutionContext } from "@freemework/common";
+import { FDisposableBase, FException, FExceptionAggregate, FExecutionContext, FLogger } from "@freemework/common";
 import { FHostingConfiguration, FWebServer, FWebSocketChannelFactoryEndpoint } from "@freemework/hosting";
 
 import { EventEmitter } from "events";
@@ -9,78 +9,129 @@ import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 import { EventChannelBase } from "../utils/event_channel_base";
 import { Bind } from "../utils/bind";
+import { EgressIdentifier } from "../model";
 
 export class WebSocketHostEgressEndpoint extends FWebSocketChannelFactoryEndpoint {
+	private readonly _logger: FLogger;
+	private readonly _egressId: EgressIdentifier;
 	private readonly _emitter: EventEmitter;
-	private readonly _textChannels: Array<TextChannel> = [];
+	private readonly _egressClientChannels: Array<TextChannel> = [];
 	private readonly _channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
+	private _topicMessageChannels: ReadonlyArray<MessageBus.Channel> | null;
 
 	public constructor(
 		servers: ReadonlyArray<FWebServer>,
-		opts: WebSocketHostSubscriberEndpoint.Opts,
+		egressId: EgressIdentifier,
+		channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>,
+		opts: FHostingConfiguration.WebSocketEndpoint,
 	) {
 		super(servers, opts, { text: true });
-		this._channelsFactories = opts.channelsFactories;
+		this._channelsFactories = channelsFactories;
 		this._emitter = new EventEmitter();
+		this._logger = FLogger.create(this.constructor.name);
+		this._egressId = egressId;
+		this._topicMessageChannels = null;
 	}
 
 	public get consumersCount(): number {
-		return this._textChannels.length/* + this._binaryChannels.length*/;
+		return this._egressClientChannels.length/* + this._binaryChannels.length*/;
 	}
 
-	public on(event: "firstConsumerAdded", listener: () => void): this;
-	public on(event: "lastConsumerRemoved", listener: () => void): this;
-	public on(event: "consumersCountChanged", listener: () => void): this;
-	public on(event: string, listener: () => void): this {
-		this._emitter.on(event, listener);
-		return this;
-	}
+	// public on(event: "firstConsumerAdded", listener: () => void): this;
+	// public on(event: "lastConsumerRemoved", listener: () => void): this;
+	// public on(event: "consumersCountChanged", listener: () => void): this;
+	// public on(event: string, listener: () => void): this {
+	// 	this._emitter.on(event, listener);
+	// 	return this;
+	// }
 
 	protected override async createTextChannel(
 		executionContext: FExecutionContext, webSocket: WebSocket, subProtocol: string
 	): Promise<FWebSocketChannelFactoryEndpoint.TextChannel> {
-		const channel: TextChannel = new TextChannel(this._channelsFactories, () => {
-			const indexToDelete = this._textChannels.indexOf(channel);
-			if (indexToDelete !== -1) {
-				this._textChannels.splice(indexToDelete, 1);
-				this._emitter.emit("consumersCountChanged");
-			}
-			if (this._textChannels.length === 0) {
-				this._emitter.emit("lastConsumerRemoved");
-			}
-		});
+		const channel: TextChannel = new TextChannel(
+			// this._channelsFactories,
+			async () => {
+				// disposer
+				const indexToDelete = this._egressClientChannels.indexOf(channel);
+				if (indexToDelete !== -1) {
+					this._egressClientChannels.splice(indexToDelete, 1);
+					this._emitter.emit("consumersCountChanged");
+				}
+				if (this._egressClientChannels.length === 0) {
+					this._emitter.emit("lastConsumerRemoved");
+					await this._onLastConsumerRemoved();
+				}
+			},
+			// this._logger
+		);
 		await channel.init(executionContext);
 
-		this._textChannels.push(channel);
+		this._egressClientChannels.push(channel);
 		this._emitter.emit("consumersCountChanged");
-		if (this._textChannels.length === 1) {
+		if (this._egressClientChannels.length === 1) {
 			this._emitter.emit("firstConsumerAdded");
+			await this._onFirstConsumerAdded();
 		}
 		return channel;
+	}
+
+	private async _onFirstConsumerAdded(): Promise<void> {
+		const channels: Array<MessageBus.Channel> = [];
+		try {
+			for (const channelFactory of this._channelsFactories) {
+				const channel: MessageBus.Channel = await channelFactory();
+				channels.push(channel);
+				channel.addHandler(this._onMessage);
+			}
+		} catch (e) {
+			await FDisposableBase.disposeAll(...channels);
+			throw e;
+		}
+		this._topicMessageChannels = Object.freeze(channels);
+	}
+	private async _onLastConsumerRemoved(): Promise<void> {
+		if (this._topicMessageChannels !== null) {
+			for (const channel of this._topicMessageChannels) {
+				await channel.dispose();
+				channel.removeHandler(this._onMessage); // Prevent memory leaks
+			}
+			this._topicMessageChannels = null;
+		}
+	}
+
+	@Bind
+	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
+		const topicName: Topic["topicName"] = event.source.topicName;
+		this._logger.debug(executionContext, () => `Got message from topic '${topicName}'`);
+		const message: Message = event.data;
+		const errors: Array<FException> = [];
+		for (const egressClientChannel of this._egressClientChannels) {
+			try {
+				await egressClientChannel.delivery(
+					// this.initExecutionContext, // TODO: Why do we using this.initExecutionContext instead executionContext?
+					executionContext,
+					topicName,
+					message
+				);
+			} catch (e) {
+				errors.push(FException.wrapIfNeeded(e));
+			}
+		}
+		FExceptionAggregate.throwIfNeeded(errors);
 	}
 }
 
 export namespace WebSocketHostSubscriberEndpoint {
-	export interface Opts extends FHostingConfiguration.WebSocketEndpoint {
-		readonly channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
-	}
 }
 
 class TextChannel extends EventChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
-	private readonly _channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>;
-	private _channels: ReadonlyArray<MessageBus.Channel> | null;
 	private readonly _disposer: () => void | Promise<void>;
-	private readonly _onMessageBound: MessageBus.Channel.Callback;
 
 	public constructor(
-		channelsFactories: ReadonlyArray<MessageBus.ChannelFactory>,
 		disposer: () => void | Promise<void>,
 	) {
 		super();
-		this._channelsFactories = channelsFactories;
-		this._channels = null;
 		this._disposer = disposer;
-		this._onMessageBound = this._onMessage;
 	}
 
 	public async send(executionContext: FExecutionContext, data: string): Promise<void> {
@@ -88,45 +139,15 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		return this.notify(executionContext, { data });
 	}
 
-	protected async onInit(): Promise<void> {
-		const channels: Array<MessageBus.Channel> = [];
-		try {
-			for (const channelFactory of this._channelsFactories) {
-				const channel: MessageBus.Channel = await channelFactory();
-				channels.push(channel);
-				channel.addHandler(this._onMessageBound);
-			}
-		} catch (e) {
-			await FDisposableBase.disposeAll(...channels);
-			throw e;
-		}
-		this._channels = Object.freeze(channels);
+	protected onInit(): void {
+		// NOP
 	}
 
 	protected async onDispose(): Promise<void> {
-		if (this._channels !== null) {
-			for (const channel of this._channels) {
-				await channel.dispose();
-				channel.removeHandler(this._onMessageBound); // Prevent memory leaks
-			}
-			this._channels = null;
-		}
-
-		return this._disposer();
+		return await this._disposer();
 	}
 
-	@Bind
-	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
-		const topicName: Topic["topicName"] = event.source.topicName;
-		const message: Message = event.data;
-		await this._delivery(
-			this.initExecutionContext, // TODO: Why do we using this.initExecutionContext instead executionContext?
-			topicName,
-			message
-		);
-	}
-
-	private async _delivery(
+	public async delivery(
 		executionContext: FExecutionContext,
 		topicName: Topic["topicName"],
 		message: Message

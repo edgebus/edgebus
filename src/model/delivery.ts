@@ -27,7 +27,7 @@ export namespace Delivery {
 		}
 		export interface Failure extends Base {
 			readonly status: Status.Failure;
-			readonly failure_evidence: any;
+			readonly failureEvidence: any;
 		}
 		export interface Skip extends Base {
 			readonly status: Status.Skip;

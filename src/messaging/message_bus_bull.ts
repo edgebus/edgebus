@@ -50,7 +50,7 @@ export class MessageBusBull extends MessageBusBase {
 
 		const redisOpts: RedisOptions = { host, port, db };
 		if (redisUrl.password.length > 0) {
-			redisOpts.password =  decodeURIComponent(redisUrl.password);
+			redisOpts.password = decodeURIComponent(redisUrl.password);
 		}
 		this._redisOpts = Object.freeze(redisOpts);
 		this._redisUrl = redisUrl;
@@ -122,15 +122,19 @@ export class MessageBusBull extends MessageBusBase {
 		topic: Topic,
 		egress: Egress
 	): Promise<MessageBus.Channel> {
-		// const queue: Queue = this.getOrRegisterEgressQueue(egress);
+		if (!this._channels.has(egress.egressId.value)) {
+			this._channels.set(egress.egressId.value, new Map());
+		}
+
+		const existingChannel: MessageBusBullEventChannel | undefined = this._channels.get(egress.egressId.value)!.get(topic.topicId.value);
+		if (existingChannel !== undefined) {
+			throw new FExceptionInvalidOperation(`Unable to retain channel for ${egress.egressId.value} due it already used.`);
+		}
 
 		const channel: MessageBusBullEventChannel = new MessageBusBullEventChannel(topic.topicName, () => {
 			this._channels.get(egress.egressId.value)!.delete(topic.topicId.value);
 		});
 
-		if (!this._channels.has(egress.egressId.value)) {
-			this._channels.set(egress.egressId.value, new Map());
-		}
 		this._channels.get(egress.egressId.value)!.set(topic.topicId.value, channel);
 
 		return channel;
@@ -320,7 +324,7 @@ export class MessageBusBull extends MessageBusBase {
 									egressId,
 									topicId, messageId,
 									status: Delivery.Status.Failure,
-									failure_evidence: `${e}`
+									failureEvidence: `${e}`
 								});
 								await db.transactionCommit(executionContext);
 							} catch (e2) {

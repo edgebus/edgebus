@@ -18,11 +18,12 @@ export class WebSocketHostEgress extends FInitableBase {
 		const bindPath = `${baseBindPath}/websocket_host/${opts.egressId.value}`;
 		this._webSocketHostSubscriberEndpoint = new WebSocketHostEgressEndpoint(
 			opts.bindServers,
+			this._egressId,
+			opts.channelFactories,
 			{
 				allowedProtocols: ["jsonrpc"],
 				defaultProtocol: "jsonrpc",
 				bindPath,
-				channelsFactories: opts.channelFactories
 			}
 		);
 	}
