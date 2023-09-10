@@ -118,17 +118,41 @@ export class SetupServiceImpl implements SetupService {
 						if (ingress.ingressHttpHostPath !== setupIngress.path) {
 							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different path '${ingress.ingressHttpHostPath}'. Setup process expected path '${setupIngress.path}'.`);
 						}
-						if (!_.isEqual(ingress.ingressHttpHostResponseBody, setupIngress.responseBody)) {
-							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response body.`);
+						if (ingress.httpResponseKind !== setupIngress.httpResponseKind) {
+							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different httpResponseKind '${ingress.httpResponseKind}'. Setup process expected path '${setupIngress.httpResponseKind}'.`);
 						}
-						if (!_.isEqual(ingress.ingressHttpHostResponseHeaders, setupIngress.responseHeaders)) {
-							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response headers.`);
-						}
-						if (ingress.ingressHttpHostResponseStatusCode !== setupIngress.responseStatusCode) {
-							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response status code '${ingress.ingressHttpHostResponseStatusCode}'. Setup process expected response status code '${setupIngress.responseStatusCode}'.`);
-						}
-						if (ingress.ingressHttpHostResponseStatusMessage !== setupIngress.responseStatusMessage) {
-							throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response status message '${ingress.ingressHttpHostResponseStatusMessage}'. Setup process expected response status message '${setupIngress.responseStatusMessage}'.`);
+						
+						switch (setupIngress.httpResponseKind) {
+							case Ingress.HttpResponseKind.DYNAMIC: {
+								if (ingress.httpResponseKind !== Ingress.HttpResponseKind.DYNAMIC) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different kind '${ingress.ingressKind}'. Setup process expected type '${Ingress.Kind.HttpHost}'.`);
+								}
+								if (!_.isEqual(ingress.responseHandlerKind, setupIngress.responseHandlerKind)) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response handler kind '${ingress.responseHandlerKind}'. Setup process expected type '${setupIngress.responseHandlerKind}'.`);
+								}
+								if (!_.isEqual(ingress.responseHandlerPath, setupIngress.responseHandlerPath)) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response handler path '${ingress.responseHandlerPath}'. Setup process expected type '${setupIngress.responseHandlerPath}'.`);
+								}
+								break;
+							}
+							case Ingress.HttpResponseKind.STATIC: {
+								if (ingress.httpResponseKind !== Ingress.HttpResponseKind.STATIC) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different kind '${ingress.ingressKind}'. Setup process expected type '${Ingress.Kind.HttpHost}'.`);
+								}
+								if (!_.isEqual(ingress.ingressHttpHostResponseBody, setupIngress.responseBody)) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response body.`);
+								}
+								if (!_.isEqual(ingress.ingressHttpHostResponseHeaders, setupIngress.responseHeaders)) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response headers.`);
+								}
+								if (ingress.ingressHttpHostResponseStatusCode !== setupIngress.responseStatusCode) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response status code '${ingress.ingressHttpHostResponseStatusCode}'. Setup process expected response status code '${setupIngress.responseStatusCode}'.`);
+								}
+								if (ingress.ingressHttpHostResponseStatusMessage !== setupIngress.responseStatusMessage) {
+									throw new SetupServiceException(`Unable to setup ingresses. A ingress '${ingressId}' already presented with different response status message '${ingress.ingressHttpHostResponseStatusMessage}'. Setup process expected response status message '${setupIngress.responseStatusMessage}'.`);
+								}
+								break;
+							}
 						}
 						break;
 					case Ingress.Kind.WebSocketClient:
@@ -150,18 +174,35 @@ export class SetupServiceImpl implements SetupService {
 				let ingressData: Ingress.Data;
 				switch (setupIngress.kind) {
 					case Ingress.Kind.HttpHost:
-						ingressData = {
-							ingressKind: setupIngress.kind,
-							ingressTopicId: ingressTopicId,
-							// ingressHttpHostClientSslCommonName: null,
-							// ingressHttpHostClientSslTrustedCaCertificates: null,
-							// ingressHttpHostMandatoryHeaders: null,
-							ingressHttpHostPath: setupIngress.path,
-							ingressHttpHostResponseBody: setupIngress.responseBody,
-							ingressHttpHostResponseHeaders: setupIngress.responseHeaders,
-							ingressHttpHostResponseStatusCode: setupIngress.responseStatusCode,
-							ingressHttpHostResponseStatusMessage: setupIngress.responseStatusMessage,
-						};
+						switch (setupIngress.httpResponseKind) {
+							case Ingress.HttpResponseKind.DYNAMIC: {
+								ingressData = {
+									ingressKind: setupIngress.kind,
+									ingressTopicId: ingressTopicId,
+									ingressHttpHostPath: setupIngress.path,
+									responseHandlerKind: setupIngress.responseHandlerKind,
+									responseHandlerPath: setupIngress.responseHandlerPath,
+									httpResponseKind: Ingress.HttpResponseKind.DYNAMIC
+								};
+								break;
+							}
+							case Ingress.HttpResponseKind.STATIC: {
+								ingressData = {
+									ingressKind: setupIngress.kind,
+									ingressTopicId: ingressTopicId,
+									// ingressHttpHostClientSslCommonName: null,
+									// ingressHttpHostClientSslTrustedCaCertificates: null,
+									// ingressHttpHostMandatoryHeaders: null,
+									ingressHttpHostPath: setupIngress.path,
+									ingressHttpHostResponseBody: setupIngress.responseBody,
+									ingressHttpHostResponseHeaders: setupIngress.responseHeaders,
+									ingressHttpHostResponseStatusCode: setupIngress.responseStatusCode,
+									ingressHttpHostResponseStatusMessage: setupIngress.responseStatusMessage,
+									httpResponseKind: Ingress.HttpResponseKind.STATIC
+								};
+								break;
+							}
+						}
 						break;
 					case Ingress.Kind.WebSocketClient:
 						ingressData = {

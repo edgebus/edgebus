@@ -136,7 +136,7 @@ export class HttpHostIngress extends BaseIngress {
 
 			res.header("EDGEBUS-MESSAGE-ID", message.messageId.value)
 			if (this._successResponseGenerator !== null) {
-				const successData = this._successResponseGenerator();
+				const successData = await this._successResponseGenerator(message);
 				if (successData.headers !== null) {
 					for (const [header, value] of _.entries(successData.headers)) {
 						if (value !== null) {
@@ -177,12 +177,12 @@ export class HttpHostIngress extends BaseIngress {
 export namespace HttpHostIngress {
 	export interface Opts {
 		readonly bindPath?: string;
-		readonly successResponseGenerator?: () => {
+		readonly successResponseGenerator?: (message?: Message.Id & Message.Data) => Promise<{
 			readonly headers: Readonly<Record<string, string | null>> | null;
 			readonly body: Uint8Array | null;
 			readonly statusCode: number;
 			readonly statusDescription: string | null;
-		};
+		}>;
 		readonly ssl?: {
 			readonly clientTrustedCA: string;
 			readonly clientCommonName?: string;

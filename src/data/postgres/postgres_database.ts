@@ -245,22 +245,26 @@ export class PostgresDatabase extends SqlDatabase {
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
 						INSERT INTO "tb_ingress_httphost"(
-							"id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
+							"id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body", "response_kind", "response_handler_kind", "response_handler_path"
 						)
 						VALUES (
-							$1, $2, $3, $4, $5, $6, $7
+							$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 						)
-						RETURNING "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
+						RETURNING "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body", "response_kind", "response_handler_kind", "response_handler_path"
 					`)
 					.executeSingle(
 						executionContext,
 						/* 1 */sqlMainRecord.get("id").asNumber,
 						/* 2 */ingressData.ingressKind,
 						/* 3 */ingressData.ingressHttpHostPath,
-						/* 4 */ingressData.ingressHttpHostResponseStatusCode,
-						/* 5 */ingressData.ingressHttpHostResponseStatusMessage,
-						/* 6 */JSON.stringify(ingressData.ingressHttpHostResponseHeaders),
-						/* 7 */ingressData.ingressHttpHostResponseBody,
+						/* 4 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStatusCode : null,
+						/* 5 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStatusMessage : null,
+						/* 6 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? JSON.stringify(ingressData.ingressHttpHostResponseHeaders) : null,
+						/* 7 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseBody : null,
+						/* 8 */ingressData.httpResponseKind,
+						/* 9 */ingressData.httpResponseKind === Ingress.HttpResponseKind.DYNAMIC ? ingressData.responseHandlerKind : null,
+						/* 10*/ingressData.httpResponseKind === Ingress.HttpResponseKind.DYNAMIC ? ingressData.responseHandlerPath : null,
+
 					);
 				break;
 			case Ingress.Kind.WebSocketClient:
@@ -599,7 +603,8 @@ export class PostgresDatabase extends SqlDatabase {
 			case Ingress.Kind.HttpHost:
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
-						SELECT "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body"
+						SELECT "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body",
+						"response_kind", "response_handler_kind", "response_handler_path"
 						FROM "tb_ingress_httphost"
 						WHERE "id" = $1
 					`)
@@ -1176,15 +1181,32 @@ export class PostgresDatabase extends SqlDatabase {
 
 		switch (ingressKind) {
 			case Ingress.Kind.HttpHost:
-				return Object.freeze<Ingress>({
-					...ingressBase,
-					ingressKind,
-					ingressHttpHostPath: sqlExtendedRecord.get("path").asString,
-					ingressHttpHostResponseStatusCode: sqlExtendedRecord.get("response_status_code").asNumber,
-					ingressHttpHostResponseStatusMessage: sqlExtendedRecord.get("response_status_message").asStringNullable,
-					ingressHttpHostResponseHeaders: sqlExtendedRecord.get("response_headers").asObjectNullable,
-					ingressHttpHostResponseBody: sqlExtendedRecord.get("response_body").asBinaryNullable,
-				});
+				const responseKind = sqlExtendedRecord.get("response_kind").asString as Ingress.HttpResponseKind;
+				switch (responseKind) {
+					case Ingress.HttpResponseKind.STATIC: {
+						return Object.freeze<Ingress>({
+							...ingressBase,
+							ingressKind,
+							ingressHttpHostPath: sqlExtendedRecord.get("path").asString,
+							ingressHttpHostResponseStatusCode: sqlExtendedRecord.get("response_status_code").asNumber,
+							ingressHttpHostResponseStatusMessage: sqlExtendedRecord.get("response_status_message").asStringNullable,
+							ingressHttpHostResponseHeaders: sqlExtendedRecord.get("response_headers").asObjectNullable,
+							ingressHttpHostResponseBody: sqlExtendedRecord.get("response_body").asBinaryNullable,
+							httpResponseKind: Ingress.HttpResponseKind.STATIC
+						});
+					}
+					case Ingress.HttpResponseKind.DYNAMIC: {
+						return Object.freeze<Ingress>({
+							...ingressBase,
+							ingressKind,
+							ingressHttpHostPath: sqlExtendedRecord.get("path").asString,
+							httpResponseKind: Ingress.HttpResponseKind.DYNAMIC,
+							responseHandlerPath: sqlExtendedRecord.get("response_handler_path").asString,
+							responseHandlerKind: sqlExtendedRecord.get("response_handler_kind").asString as LabelHandler.Kind.ExternalProcess
+						});
+					}
+				}
+
 			case Ingress.Kind.WebSocketClient:
 				return Object.freeze<Ingress>({
 					...ingressBase,

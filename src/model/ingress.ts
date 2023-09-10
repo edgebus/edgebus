@@ -1,5 +1,6 @@
 import { FException } from "@freemework/common";
 import { IngressIdentifier, TopicIdentifier } from "./identifiers";
+import { LabelHandler } from "./label_handler";
 
 export namespace Ingress {
 	export const enum Kind {
@@ -18,6 +19,11 @@ export namespace Ingress {
 		 * Allows to ingress messages via WebSocket. `EdgeBus` will listen for client's connections.
 		 */
 		WebSocketHost = "WEB_SOCKET_HOST"
+	}
+
+	export const enum HttpResponseKind {
+		STATIC = "STATIC",
+		DYNAMIC = "DYNAMIC"
 	}
 
 	/**
@@ -41,10 +47,14 @@ export namespace Ingress {
 		// readonly ingressConverters: ReadonlyArray<Converter>;
 	}
 
-	export interface HttpHost extends DataBase {
+	export interface HttpHostBase extends DataBase {
 		readonly ingressKind: Kind.HttpHost;
-
 		readonly ingressHttpHostPath: string;
+		readonly httpResponseKind: HttpResponseKind;
+	}
+
+	export interface HttpHostResponseStatic extends HttpHostBase {
+		readonly httpResponseKind: HttpResponseKind.STATIC;
 		readonly ingressHttpHostResponseStatusCode: number;
 		readonly ingressHttpHostResponseStatusMessage: string | null;
 		readonly ingressHttpHostResponseHeaders: Readonly<Record<string, string | null>> | null;
@@ -65,6 +75,15 @@ export namespace Ingress {
 		//  */
 		// readonly ingressHttpHostMandatoryHeaders: Readonly<Record<string, string | null>> | null;
 	}
+
+	export interface HttpHostResponseDynamic extends HttpHostBase {
+		readonly httpResponseKind: HttpResponseKind.DYNAMIC;
+		readonly responseHandlerKind: LabelHandler.Kind.ExternalProcess;
+		readonly responseHandlerPath: string;
+	}
+
+
+	export type HttpHost = HttpHostResponseStatic | HttpHostResponseDynamic;
 
 	export interface WebSocketHost extends DataBase {
 		readonly ingressKind: Kind.WebSocketHost;

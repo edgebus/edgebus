@@ -9,15 +9,15 @@
 
 
 # # Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-# [[edgebus.setup.topic]]
-# 	index = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-# 	name = "sumsub"
-# 	description = "Sumsub's callbacks"
-# 	mediaType = "application/json"
-# 	# [[edgebus.setup.topic.labelHandler]]
-# 	# 	index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
-# 	# 	kind = "EXTERNAL_PROCESS"
-# 	# 	path="label_handlers/ext_handler.sh"
+[[edgebus.setup.topic]]
+	index = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+	name = "sumsub"
+	description = "Sumsub's callbacks"
+	mediaType = "application/json"
+	# [[edgebus.setup.topic.labelHandler]]
+	# 	index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
+	# 	kind = "EXTERNAL_PROCESS"
+	# 	path="label_handlers/ext_handler.sh"
 # # /Setup topic "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 
 # Setup topic "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
@@ -34,25 +34,23 @@
 
 
 # Setup HTTP-host ingress "IGRS2647fd452e5646d9b504e472447e399d"
-[[edgebus.setup.ingress]]
-	index = "IGRS2647fd452e5646d9b504e472447e399d"
-	kind = "WEB_SOCKET_CLIENT"
-	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+# [[edgebus.setup.ingress]]
+# 	index = "IGRS2647fd452e5646d9b504e472447e399d"
+# 	kind = "WEB_SOCKET_CLIENT"
+# 	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 # /Setup HTTP-host ingress "IGRS2647fd452e5646d9b504e472447e399d"
 
 # # Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
-# [[edgebus.setup.ingress]]
-# 	index = "IGRS9028c57498b641988fc71355e9ac622e"
-# 	kind = "HTTP_HOST"
-# 	path = "/v2/callback/sumsub"
-# 	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
-# 	[edgebus.setup.ingress.response]
-# 		status_code = 201
-# 		status_message = "Accepted"
-# 		body = '{ "success": true }'
-# 	[edgebus.setup.ingress.response.header]
-# 		"Content-Type" = "application/json"
-# 		"X-EdgeBus-Token" = "abc"
+[[edgebus.setup.ingress]]
+	index = "IGRS9028c57498b641988fc71355e9ac622e"
+	kind = "HTTP_HOST"
+	path = "/v2/callback/sumsub"
+	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+	[edgebus.setup.ingress.response]
+		kind = "dynamic"
+		[edgebus.setup.ingress.response.dynamic.handler]
+			kind = "EXTERNAL_PROCESS"
+			path="response_handlers/ext_handler.sh"
 # # /Setup HTTP-host ingress "IGRS9028c57498b641988fc71355e9ac622e"
 
 # # Setup HTTP-host ingress "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
