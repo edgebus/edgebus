@@ -1,9 +1,17 @@
-import { FConfiguration, FConfigurationValue, FException, FExceptionInvalidOperation, FUtilUnreadonly } from "@freemework/common";
+import { FConfiguration, FConfigurationValue, FException, FExceptionInvalidOperation } from "@freemework/common";
 import { FHostingConfiguration } from "@freemework/hosting";
 
 import { Router } from "express-serve-static-core";
-import { Ingress as IngressModel, Egress as EgressModel, LabelHandler as LabelHandlerModel, Label } from "./model";
 import { existsSync, readFileSync } from "fs";
+
+import {
+	Ingress as IngressModel,
+	Egress as EgressModel,
+	LabelHandler as LabelHandlerModel,
+	Label as LabelModel,
+	ensureIngressHttpHostResponseDynamicKind,
+	ensureLabelHandlerKind,
+} from "./model";
 
 export class Settings {
 	private constructor(
@@ -158,9 +166,14 @@ export namespace Settings {
 	export namespace Setup {
 
 		export type Ingress =
-			| Ingress.HttpHost
+			| HttpHost
 			| Ingress.WebSocketClient
 			| Ingress.WebSocketHost;
+
+		export type HttpHost =
+			| Ingress.HttpHostResponseStatic
+			| Ingress.HttpHostResponseDynamic;
+
 		export namespace Ingress {
 			export interface Base {
 				/**
@@ -179,15 +192,24 @@ export namespace Settings {
 			export interface HttpHost extends Base {
 				readonly kind: IngressModel.Kind.HttpHost;
 				readonly path: string;
+				readonly httpResponseKind: IngressModel.HttpResponseKind
+			}
+
+			export interface HttpHostResponseStatic extends HttpHost {
+				readonly httpResponseKind: IngressModel.HttpResponseKind.STATIC;
 				readonly responseStatusCode: number;
 				readonly responseStatusMessage: string | null;
 				readonly responseHeaders: Readonly<Record<string, string | null>> | null;
 				readonly responseBody: Uint8Array | null;
 			}
 
+			export interface HttpHostResponseDynamic extends HttpHost {
+				readonly httpResponseKind: IngressModel.HttpResponseKind.DYNAMIC;
+				readonly responseHandlerKind: IngressModel.HttpHostResponseDynamic.Kind.ExternalProcess;
+				readonly responseHandlerPath: string;
+			}
 			export interface WebSocketClient extends Base {
 				readonly kind: IngressModel.Kind.WebSocketClient;
-
 				readonly url: URL;
 			}
 
@@ -217,7 +239,7 @@ export namespace Settings {
 
 				readonly filterLabelPolicy: EgressModel.FilterLabelPolicy;
 
-				readonly filterLabels: ReadonlyArray<Label.Data["labelValue"]>
+				readonly filterLabels: ReadonlyArray<LabelModel.Data["labelValue"]>
 			}
 
 			export interface Webhook extends Base {
@@ -454,39 +476,69 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				case IngressModel.Kind.HttpHost:
 					{
 						const responseConfiguration: FConfiguration | null = ingressConfiguration.findNamespace("response");
-						const responseHeadersConfiguration: FConfiguration | null = responseConfiguration === null
-							? null
-							: responseConfiguration.findNamespace("header");
+						if (responseConfiguration === null) {
+							throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured`);
+						}
 
-						const responseStatusCode: number = responseConfiguration === null
-							? 200
-							: responseConfiguration.get("status_code", "200").asIntegerPositive;
-						const responseStatusMessage: string | null = responseConfiguration === null
-							? null
-							: responseConfiguration.get("status_message", null).asStringNullable;
-						const responseBodyStr: string | null = responseConfiguration === null
-							? null
-							: responseConfiguration.get("body", null).asStringNullable;
-						const responseBody: Uint8Array | null = responseBodyStr === null
-							? null
-							: Buffer.from(responseBodyStr, "utf-8");
+						const responseKind: string = responseConfiguration.get("kind").asString;
+						switch (responseKind) {
+							case "dynamic": {
+								const responseConfigDynamic = responseConfiguration.getNamespace("dynamic");
+								if (responseConfigDynamic === null) {
+									throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured as dynamic`);
+								}
 
-						const responseHeaders: Record<string, string | null> | null = responseHeadersConfiguration === null ?
-							null
-							: responseHeadersConfiguration.keys.reduce((acc, key) => {
-								acc[key] = responseHeadersConfiguration.get(key).asString;
-								return acc;
-							}, {} as Record<string, string | null>);
+								const responseHandlerKind: string = responseConfigDynamic.get("kind").asString;
+								const responseHandlerPath: string = responseConfigDynamic.get("path").asString;
 
-						ingressSettings = {
-							...ingressBaseSettings,
-							kind: type,
-							path: ingressConfiguration.get("path").asString,
-							responseStatusCode,
-							responseStatusMessage,
-							responseHeaders: Object.freeze(responseHeaders),
-							responseBody
-						};
+								ensureIngressHttpHostResponseDynamicKind(responseHandlerKind);
+
+								ingressSettings = {
+									...ingressBaseSettings,
+									kind: type,
+									path: ingressConfiguration.get("path").asString,
+									httpResponseKind: IngressModel.HttpResponseKind.DYNAMIC,
+									responseHandlerKind,
+									responseHandlerPath,
+								};
+								break;
+							}
+							case "static": {
+								const responseConfigStatic = responseConfiguration.getNamespace("static");
+								if (responseConfigStatic === null) {
+									throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured as static`);
+								}
+
+								const responseHeadersConfiguration: FConfiguration | null = responseConfigStatic.findNamespace("header");
+								const responseStatusCode: number = responseConfigStatic.get("status_code", "200").asIntegerPositive;
+								const responseStatusMessage: string | null = responseConfigStatic.get("status_message", null).asStringNullable;
+								const responseBodyStr: string | null = responseConfigStatic.get("body", null).asStringNullable;
+								const responseBody: Uint8Array | null = responseBodyStr === null
+									? null
+									: Buffer.from(responseBodyStr, "utf-8");
+								const responseHeaders: Record<string, string | null> | null = responseHeadersConfiguration === null ?
+									null
+									: responseHeadersConfiguration.keys.reduce((acc, key) => {
+										acc[key] = responseHeadersConfiguration.get(key).asString;
+										return acc;
+									}, {} as Record<string, string | null>);
+
+								ingressSettings = {
+									...ingressBaseSettings,
+									kind: type,
+									httpResponseKind: IngressModel.HttpResponseKind.STATIC,
+									path: ingressConfiguration.get("path").asString,
+									responseStatusCode,
+									responseStatusMessage,
+									responseHeaders: Object.freeze(responseHeaders),
+									responseBody
+								};
+								break;
+							}
+							default: {
+								throw new FExceptionInvalidOperation(`Unexpected response kind ${responseKind}`);
+							}
+						}
 					}
 					break;
 				case IngressModel.Kind.WebSocketClient:
@@ -523,6 +575,9 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				for (const labelHandlerConfiguration of labelHandlersConfiguration) {
 					const labelHandlerId: string = labelHandlerConfiguration.get("index").asString;
 					const kind: string = labelHandlerConfiguration.get("kind").asString;
+
+					ensureLabelHandlerKind(kind);
+
 					switch (kind) {
 						case LabelHandlerModel.Kind.ExternalProcess:
 							const path: string = labelHandlerConfiguration.get("path").asString;

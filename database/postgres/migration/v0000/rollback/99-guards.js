@@ -1,7 +1,7 @@
 async function migration(cancellationToken, sqlConnection, log) {
 	const dbName = (await sqlConnection.statement("SELECT current_database()").executeScalar()).asString;
-	if (dbName !== "{{database.name}}") {
-		throw new Error(`Wrong database! Current database '${dbName}' is not equals to expected database '{{database.name}}'`);
+	if (dbName !== "devdb") {
+		throw new Error(`Wrong database! Current database '${dbName}' is not equals to expected database 'devdb'`);
 	}
 
 	const dbUser = (await sqlConnection.statement("SELECT current_user").executeScalar()).asString;

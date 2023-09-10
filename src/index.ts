@@ -19,7 +19,7 @@ import { WebSocketHostEgress, WebhookEgress } from "./egress";
 import { MessageBus } from "./messaging/message_bus";
 import { Container } from "typescript-ioc";
 import { Settings } from "./settings";
-import { EgressIdentifier, IngressIdentifier, TopicIdentifier } from "./model";
+import { EgressIdentifier, IngressIdentifier, Message, TopicIdentifier } from "./model";
 import packageInfo from "./utils/package_info";
 import { ProviderLocator } from "./provider_locator";
 import { SetupServiceProvider } from "./provider/setup_service_provider";
@@ -28,6 +28,8 @@ import { Egress } from "./model/egress";
 import { Ingress } from "./model/ingress";
 import { MessageBusBull } from "./messaging/message_bus_bull";
 import { WebSocketClientIngress } from "./ingress/web_socket_client.ingress";
+import { ResponseHandlerDynamicExternalProcess } from "./ingress/response_handler/response_handler_dynamic_external_process";
+import { ResponseHandlerStatic } from "./ingress/response_handler/response_handler_static";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
@@ -206,15 +208,26 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							{
 								transformers: [],
 								bindPath: ingressConfiguration.path,
-								successResponseGenerator: () => ({
-									headers: ingressConfiguration.responseHeaders,
-									body: ingressConfiguration.responseBody,
-									statusCode: ingressConfiguration.responseStatusCode,
-									statusDescription: ingressConfiguration.responseStatusMessage,
-								})
+								successResponseHandler: (function () {
+									switch (ingressConfiguration.httpResponseKind) {
+										case Ingress.HttpResponseKind.DYNAMIC: {
+											return new ResponseHandlerDynamicExternalProcess(
+												ingressConfiguration.responseHandlerPath
+											);
+										}
+										case Ingress.HttpResponseKind.STATIC: {
+											return new ResponseHandlerStatic(
+												ingressConfiguration.responseStatusCode,
+												ingressConfiguration.responseStatusMessage,
+												ingressConfiguration.responseHeaders,
+												ingressConfiguration.responseBody,
+											);
+										}
+									}
+								})(),
 							}
 						);
-						//harcodedItemsToDispose.push(httpPublisherInstance);
+						//hardcodedItemsToDispose.push(httpPublisherInstance);
 						for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
 							publisherApiRestEndpoint.addHttpPublisher(executionContext, httpPublisherInstance);
 						}

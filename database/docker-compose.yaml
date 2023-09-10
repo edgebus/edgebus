@@ -13,8 +13,10 @@ services:
     image: theanurin/http-dump
     restart: always
     environment:
-      - DUMP_FILE=false
+      - DUMP_FILE=true
       - DUMP_STDOUT=true
+    volumes:
+      - ../.http-dump.local:/data
     ports:
       - 127.0.0.1:52003:8080
 
@@ -31,7 +33,7 @@ services:
       - postgres
     networks:
       - default
-    image: dpage/pgadmin4:7.3
+    image: dpage/pgadmin4:7.6
     restart: always
     environment:
       - PGADMIN_DEFAULT_EMAIL=dev@edgebus.io

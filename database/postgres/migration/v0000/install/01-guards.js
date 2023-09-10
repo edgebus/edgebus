@@ -3,8 +3,8 @@ const EXPECTED_PREVIOUS_VERSION = "vXXXX"; // change by you own
 async function migration(cancellationToken, sqlConnection, logger) {
 	{ // Database name guard
 		const dbName = (await sqlConnection.statement("SELECT current_database()").executeScalar()).asString;
-		if (dbName !== "{{database.name}}") {
-			throw new Error(`Wrong database! Current database '${dbName}' is not equals to expected database '{{database.name}}'`);
+		if (dbName !== "devdb") {
+			throw new Error(`Wrong database! Current database '${dbName}' is not equals to expected database 'devdb'`);
 		}
 	}
 
