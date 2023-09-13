@@ -1,65 +1,71 @@
-import { FException, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
+import { FException, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { Message } from "../model";
+import * as path from "path";
 
 export class ExternalProcessException extends FException {
-}
-export class ExternalProcessExecuteException extends ExternalProcessException {
-	public constructor(message: string, public readonly stderr: string | null, ex?: FException) {
+	public readonly stdErr: string | null;
+	public constructor(message: string, stdErr?: string | null, ex?: FException) {
 		super(message, ex);
+		this.stdErr = stdErr !== undefined ? stdErr : null;
 	}
 }
 
-export class ExternalProcessExceptionCannotSpawn extends ExternalProcessExecuteException {
+export class ExternalProcessExceptionCannotSpawn extends ExternalProcessException {
 	public constructor(message: string, ex?: FException) {
 		super(message, null);
 	}
 }
 
-export class ExternalProcessExceptionTimeout extends ExternalProcessExecuteException {
-	public constructor(stderr: string | null) {
-		super("External process was killed by timeout", stderr);
+export class ExternalProcessExceptionTimeout extends ExternalProcessException {
+	public constructor(stdErr: string | null) {
+		super("External process was killed by timeout", stdErr);
 	}
 }
 
-export class ExternalProcessExceptionUnexpectedExitCode extends ExternalProcessExecuteException {
-	public constructor({ executablePath, stderr }: { readonly executablePath: string; readonly stderr: string; }) {
-		super(`External process ${executablePath} exit with unexpected code. ${stderr}`, stderr);
+export class ExternalProcessExceptionUnexpectedExitCode extends ExternalProcessException {
+	public constructor({ executablePath, stdErr }: { readonly executablePath: string; readonly stdErr: string; }) {
+		super(`External process ${executablePath} exit with unexpected code. ${stdErr}`, stdErr);
 	}
 
 }
 
-export class ExternalProcessExceptionParse extends ExternalProcessExecuteException {
-	public constructor(message: string, ex: FException) {
-		super(message, null, ex);
+export class ExternalProcessExceptionKilled extends ExternalProcessException {
+	public constructor(stdErr: string | null) {
+		super("External process was killed outside", stdErr);
 	}
 }
 
-export class ExternalProcessExceptionKilled extends ExternalProcessExecuteException {
-	public constructor(stderr: string | null) {
-		super("External process was killed outside", stderr);
-	}
-}
-
-
-export abstract class AbstractExternalProcess {
+export class ExternalProcess {
 	private readonly executablePath: string;
 	private readonly timeoutMs: number;
-	private timeout: NodeJS.Timeout | null = null;
 	private readonly log: FLogger;
 
-	constructor(executablePath: string, timeoutMs: number) {
-		this.executablePath = executablePath;
-		this.timeoutMs = timeoutMs;
-		this.log = FLogger.create(AbstractExternalProcess.name);
+	public static create(executablePath: string, timeoutMs: number) {
+		return new ExternalProcess(executablePath, timeoutMs);
 	}
 
-	protected executeRaw(
+	private constructor(executablePath: string, timeoutMs: number) {
+		this.executablePath = ExternalProcess.resolveScriptAbsolutePath(executablePath);
+		this.timeoutMs = timeoutMs;
+		this.log = FLogger.create(this.constructor.name);
+	}
+
+	/**
+	 * Execute external application
+	 * @param stdinData data that passed to external process (deserialized by utf-8)
+	 * @returns grab stdOut data of external process
+	 * @throws ExternalProcessException in cause of failure. The exception include `stdErr` field.
+	 */
+	public run(
 		executionContext: FExecutionContext,
-		message: Message.Id & Message.Data
+		stdinData: string
 	): Promise<string> {
 		return new Promise(async (resolve, reject) => {
 			executionContext = new FLoggerLabelsExecutionContext(executionContext, { externalProcess: this.executablePath });
+
+			this.log.debug(executionContext, () => `Run external process with stdin data: '${stdinData}'`);
+
+			let timeout: NodeJS.Timeout | null = null;
 
 			const cmd: ChildProcessWithoutNullStreams | ExternalProcessExceptionCannotSpawn = await runSpawn(this.executablePath, this.timeoutMs);
 			if (cmd instanceof ExternalProcessExceptionCannotSpawn) {
@@ -82,15 +88,15 @@ export abstract class AbstractExternalProcess {
 			cmd.once("close", (code: number | null) => {
 				const errorStr = Buffer.concat(errorBuffer).toString();
 
-				if (this.timeout) {
-					clearTimeout(this.timeout);
+				if (timeout !== null) {
+					clearTimeout(timeout);
 				}
 
 				executionContext = new FLoggerLabelsExecutionContext(executionContext, { exitCode: code !== null ? code.toString() : "null" });
 
 				if (this.log.isDebugEnabled) {
-					const stderrExecutionContext = new FLoggerLabelsExecutionContext(executionContext, { stream: "stderr" });
-					this.log.debug(stderrExecutionContext, errorStr);
+					const stdErrExecutionContext = new FLoggerLabelsExecutionContext(executionContext, { stream: "stdErr" });
+					this.log.debug(stdErrExecutionContext, errorStr);
 				}
 
 				if (code === 0) {
@@ -110,24 +116,32 @@ export abstract class AbstractExternalProcess {
 
 						const errMsg = `External process ${this.executablePath} exit with unexpected code.`;
 						this.log.info(executionContext, errMsg);
-						reject(new ExternalProcessExceptionUnexpectedExitCode({ executablePath: this.executablePath, stderr: errorStr }));
+						reject(new ExternalProcessExceptionUnexpectedExitCode({ executablePath: this.executablePath, stdErr: errorStr }));
 					}
 				}
 			});
 
-			const msgBodyStr = message.messageBody.toString();
+			timeout = setTimeout(
+				() => {
+					cmd.kill();
+					const errMsg = `External process ${this.executablePath} timeout.`;
 
-			this.timeout = setTimeout(() => {
-				cmd.kill();
-				const errMsg = `External process ${this.executablePath} timeout.`;
+					this.log.info(executionContext, errMsg);
+					reject(new ExternalProcessExceptionTimeout(errMsg));
+				},
+				this.timeoutMs
+			);
 
-				this.log.info(executionContext, errMsg);
-				reject(new ExternalProcessExceptionTimeout(errMsg));
-			}, this.timeoutMs);
-
-			cmd.stdin.write(msgBodyStr);
+			cmd.stdin.write(stdinData);
 			cmd.stdin.end();
 		});
+	}
+
+	private static resolveScriptAbsolutePath(scriptPath: string): string {
+		const fullPath = path.isAbsolute(scriptPath)
+			? scriptPath
+			: path.join(process.cwd(), scriptPath);
+		return fullPath;
 	}
 }
 

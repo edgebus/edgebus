@@ -28,7 +28,8 @@ import { Egress } from "./model/egress";
 import { Ingress } from "./model/ingress";
 import { MessageBusBull } from "./messaging/message_bus_bull";
 import { WebSocketClientIngress } from "./ingress/web_socket_client.ingress";
-import { ExternalResponseHandler } from "./ingress/response_handler/external_process_response_handler";
+import { ResponseHandlerDynamicExternalProcess } from "./ingress/response_handler/response_handler_dynamic_external_process";
+import { ResponseHandlerStatic } from "./ingress/response_handler/response_handler_static";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
@@ -207,32 +208,23 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							{
 								transformers: [],
 								bindPath: ingressConfiguration.path,
-								successResponseGenerator: async (message?: Message.Id & Message.Data) => {
+								successResponseHandler: (function () {
 									switch (ingressConfiguration.httpResponseKind) {
 										case Ingress.HttpResponseKind.DYNAMIC: {
-											if (!message) {
-												throw new FExceptionInvalidOperation(`Unexpected message is undefined for dynamic http response`)
-											}
-											const externalResponseHandler = new ExternalResponseHandler(ingressConfiguration.responseHandlerPath);
-											const dynamicResponse = await externalResponseHandler.execute(executionContext, message);
-											return {
-												headers: dynamicResponse.headers,
-												body: dynamicResponse.body,
-												statusCode: dynamicResponse.statusCode,
-												statusDescription: dynamicResponse.statusDescription,
-											}
+											return new ResponseHandlerDynamicExternalProcess(
+												ingressConfiguration.responseHandlerPath
+											);
 										}
 										case Ingress.HttpResponseKind.STATIC: {
-											return {
-												headers: ingressConfiguration.responseHeaders,
-												body: ingressConfiguration.responseBody,
-												statusCode: ingressConfiguration.responseStatusCode,
-												statusDescription: ingressConfiguration.responseStatusMessage,
-											}
+											return new ResponseHandlerStatic(
+												ingressConfiguration.responseStatusCode,
+												ingressConfiguration.responseStatusMessage,
+												ingressConfiguration.responseHeaders,
+												ingressConfiguration.responseBody,
+											);
 										}
 									}
-
-								}
+								})(),
 							}
 						);
 						//hardcodedItemsToDispose.push(httpPublisherInstance);

@@ -36,7 +36,7 @@ export namespace Egress {
 		SKIP = "skip",
 
 		/**
-		 * Deliver a message always (ignore filter at all)
+		 * Deliver a message always (ignore label filter at all)
 		 */
 		IGNORE = "ignore"
 	}

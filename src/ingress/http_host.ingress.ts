@@ -12,12 +12,13 @@ import { BaseIngress } from "./base.ingress";
 import { HttpBadRequestException } from "../endpoints/exceptions";
 import { MIME_APPLICATION_JSON } from "../utils/mime";
 import { Bind } from "../utils/bind";
+import { ResponseHandlerBase } from "./response_handler/response_handler_base";
 
 export class HttpHostIngress extends BaseIngress {
 
 	public readonly router: Router; // TODO: temporary public
 	public readonly bindPath: string | null;
-	private readonly _successResponseGenerator: Exclude<HttpHostIngress.Opts["successResponseGenerator"], undefined> | null;
+	private readonly _successResponseHandler: Exclude<HttpHostIngress.Opts["successResponseHandler"], undefined> | null;
 	private readonly _transformers: HttpHostIngress.Opts["transformers"] | null;
 
 	public constructor(
@@ -28,12 +29,12 @@ export class HttpHostIngress extends BaseIngress {
 	) {
 		super(topic, ingressId);
 		this.bindPath = null;
-		this._successResponseGenerator = null;
+		this._successResponseHandler = null;
 		this._transformers = null;
 		if (opts !== undefined) {
 			this._transformers = opts.transformers;
 			if (opts.bindPath !== undefined) { this.bindPath = opts.bindPath; }
-			if (opts.successResponseGenerator !== undefined) { this._successResponseGenerator = opts.successResponseGenerator; }
+			if (opts.successResponseHandler !== undefined) { this._successResponseHandler = opts.successResponseHandler; }
 		}
 		this.router = Router({ strict: true });
 		this.router.use(function rawBody(req, res, next) {
@@ -135,8 +136,8 @@ export class HttpHostIngress extends BaseIngress {
 			await this._messageBus.publish(executionContext, ingressId, message);
 
 			res.header("EDGEBUS-MESSAGE-ID", message.messageId.value)
-			if (this._successResponseGenerator !== null) {
-				const successData = await this._successResponseGenerator(message);
+			if (this._successResponseHandler !== null) {
+				const successData = await this._successResponseHandler.execute(executionContext, message);
 				if (successData.headers !== null) {
 					for (const [header, value] of _.entries(successData.headers)) {
 						if (value !== null) {
@@ -177,12 +178,7 @@ export class HttpHostIngress extends BaseIngress {
 export namespace HttpHostIngress {
 	export interface Opts {
 		readonly bindPath?: string;
-		readonly successResponseGenerator?: (message?: Message.Id & Message.Data) => Promise<{
-			readonly headers: Readonly<Record<string, string | null>> | null;
-			readonly body: Uint8Array | null;
-			readonly statusCode: number;
-			readonly statusDescription: string | null;
-		}>;
+		readonly successResponseHandler?: ResponseHandlerBase;
 		readonly ssl?: {
 			readonly clientTrustedCA: string;
 			readonly clientCommonName?: string;

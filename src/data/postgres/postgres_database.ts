@@ -10,13 +10,15 @@ import {
 	LabelIdentifier,
 	LabelHandlerIdentifier,
 	MessageIdentifier,
-	TopicIdentifier
+	TopicIdentifier,
+	ensureIngressHttpResponseKind,
+	ensureIngressHttpHostResponseDynamicKind
 } from "../../model";
 import { Delivery, Egress, Ingress, Message, Topic, ensureEgressKind, ensureIngressKind } from "../../model";
 import { SqlDatabase } from "../sql_database";
 import { Database } from "../database";
 import { Label } from "../../model/label";
-import { LabelHandler } from "../../model/label_handler";
+import { LabelHandler, ensureLabelHandlerKind } from "../../model/label_handler";
 import { ensureEgressFilterLabelPolicy } from "../../model/egress";
 
 export class PostgresDatabase extends SqlDatabase {
@@ -245,25 +247,37 @@ export class PostgresDatabase extends SqlDatabase {
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
 						INSERT INTO "tb_ingress_httphost"(
-							"id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body", "response_kind", "response_handler_kind", "response_handler_path"
+							"id", "kind", "path", "response_kind",
+							"response_static_status_code",
+							"response_static_status_message",
+							"response_static_headers",
+							"response_static_body",
+							"response_dynamic_handler_kind",
+							"response_dynamic_handler_external_script_path"
 						)
 						VALUES (
 							$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 						)
-						RETURNING "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body", "response_kind", "response_handler_kind", "response_handler_path"
+						RETURNING "id", "kind", "path", "response_kind",
+							"response_static_status_code",
+							"response_static_status_message",
+							"response_static_headers",
+							"response_static_body",
+							"response_dynamic_handler_kind",
+							"response_dynamic_handler_external_script_path"
 					`)
 					.executeSingle(
 						executionContext,
 						/* 1 */sqlMainRecord.get("id").asNumber,
 						/* 2 */ingressData.ingressKind,
 						/* 3 */ingressData.ingressHttpHostPath,
-						/* 4 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStatusCode : null,
-						/* 5 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStatusMessage : null,
-						/* 6 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? JSON.stringify(ingressData.ingressHttpHostResponseHeaders) : null,
-						/* 7 */ingressData.httpResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseBody : null,
-						/* 8 */ingressData.httpResponseKind,
-						/* 9 */ingressData.httpResponseKind === Ingress.HttpResponseKind.DYNAMIC ? ingressData.responseHandlerKind : null,
-						/* 10*/ingressData.httpResponseKind === Ingress.HttpResponseKind.DYNAMIC ? ingressData.responseHandlerPath : null,
+						/* 4 */ingressData.ingressHttpHostResponseKind,
+						/* 5 */ingressData.ingressHttpHostResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStaticStatusCode : null,
+						/* 6 */ingressData.ingressHttpHostResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStaticStatusMessage : null,
+						/* 7 */ingressData.ingressHttpHostResponseKind === Ingress.HttpResponseKind.STATIC ? JSON.stringify(ingressData.ingressHttpHostResponseStaticHeaders) : null,
+						/* 8 */ingressData.ingressHttpHostResponseKind === Ingress.HttpResponseKind.STATIC ? ingressData.ingressHttpHostResponseStaticBody : null,
+						/* 9 */ingressData.ingressHttpHostResponseKind === Ingress.HttpResponseKind.DYNAMIC ? ingressData.ingressHttpHostResponseDynamicHandlerKind : null,
+						/* 10*/ingressData.ingressHttpHostResponseKind === Ingress.HttpResponseKind.DYNAMIC ? ingressData.ingressHttpHostResponseDynamicHandlerExternalScriptPath : null,
 
 					);
 				break;
@@ -317,7 +331,7 @@ export class PostgresDatabase extends SqlDatabase {
 					SUB."id" AS "ingress_id",
 					SUB."topic_id"
 				FROM (SELECT
-					$1::UUID as "api_uuid",
+					$1::UUID AS "api_uuid",
 					$2::JSONB AS "headers",
 					$3::TEXT AS "media_type",
 					$4::BYTEA AS "body",
@@ -603,8 +617,17 @@ export class PostgresDatabase extends SqlDatabase {
 			case Ingress.Kind.HttpHost:
 				sqlExtendedRecord = await this.sqlConnection
 					.statement(`
-						SELECT "id", "kind", "path", "response_status_code", "response_status_message", "response_headers", "response_body",
-						"response_kind", "response_handler_kind", "response_handler_path"
+						SELECT
+							"id",
+							"kind",
+							"path",
+							"response_kind",
+							"response_static_status_code", 
+							"response_static_status_message",
+							"response_static_headers", 
+							"response_static_body",
+							"response_dynamic_handler_kind",
+							"response_dynamic_handler_external_script_path"
 						FROM "tb_ingress_httphost"
 						WHERE "id" = $1
 					`)
@@ -1181,30 +1204,36 @@ export class PostgresDatabase extends SqlDatabase {
 
 		switch (ingressKind) {
 			case Ingress.Kind.HttpHost:
-				const responseKind = sqlExtendedRecord.get("response_kind").asString as Ingress.HttpResponseKind;
-				switch (responseKind) {
+				const ingressHttpHostPath: string = sqlExtendedRecord.get("path").asString;
+				const ingressHttpHostResponseKind: string = sqlExtendedRecord.get("response_kind").asString;
+				ensureIngressHttpResponseKind(ingressHttpHostResponseKind);
+				switch (ingressHttpHostResponseKind) {
 					case Ingress.HttpResponseKind.STATIC: {
 						return Object.freeze<Ingress>({
 							...ingressBase,
 							ingressKind,
-							ingressHttpHostPath: sqlExtendedRecord.get("path").asString,
-							ingressHttpHostResponseStatusCode: sqlExtendedRecord.get("response_status_code").asNumber,
-							ingressHttpHostResponseStatusMessage: sqlExtendedRecord.get("response_status_message").asStringNullable,
-							ingressHttpHostResponseHeaders: sqlExtendedRecord.get("response_headers").asObjectNullable,
-							ingressHttpHostResponseBody: sqlExtendedRecord.get("response_body").asBinaryNullable,
-							httpResponseKind: Ingress.HttpResponseKind.STATIC
+							ingressHttpHostPath,
+							ingressHttpHostResponseKind,
+							ingressHttpHostResponseStaticStatusCode: sqlExtendedRecord.get("response_static_status_code").asNumber,
+							ingressHttpHostResponseStaticStatusMessage: sqlExtendedRecord.get("response_static_status_message").asStringNullable,
+							ingressHttpHostResponseStaticHeaders: sqlExtendedRecord.get("response_static_headers").asObjectNullable,
+							ingressHttpHostResponseStaticBody: sqlExtendedRecord.get("response_static_body").asBinaryNullable,
 						});
 					}
 					case Ingress.HttpResponseKind.DYNAMIC: {
+						const responseHandlerKind: string = sqlExtendedRecord.get("response_dynamic_handler_kind").asString;
+						ensureIngressHttpHostResponseDynamicKind(responseHandlerKind);
 						return Object.freeze<Ingress>({
 							...ingressBase,
 							ingressKind,
-							ingressHttpHostPath: sqlExtendedRecord.get("path").asString,
-							httpResponseKind: Ingress.HttpResponseKind.DYNAMIC,
-							responseHandlerPath: sqlExtendedRecord.get("response_handler_path").asString,
-							responseHandlerKind: sqlExtendedRecord.get("response_handler_kind").asString as LabelHandler.Kind.ExternalProcess
+							ingressHttpHostPath,
+							ingressHttpHostResponseKind,
+							ingressHttpHostResponseDynamicHandlerKind: responseHandlerKind,
+							ingressHttpHostResponseDynamicHandlerExternalScriptPath: sqlExtendedRecord.get("response_dynamic_handler_external_script_path").asString,
 						});
 					}
+					default:
+						throw new FExceptionInvalidOperation(`Unsupported ingress http host response kind: '${ingressHttpHostResponseKind}'`);
 				}
 
 			case Ingress.Kind.WebSocketClient:
@@ -1268,6 +1297,8 @@ export class PostgresDatabase extends SqlDatabase {
 		const labelHandlerDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
 		const labelHandlerId: LabelHandlerIdentifier = LabelHandlerIdentifier.fromUuid(labelHandlerUuid);
 		const topicId: TopicIdentifier = TopicIdentifier.fromUuid(topicUuid);
+
+		ensureLabelHandlerKind(labelHandlerKind);
 
 		switch (labelHandlerKind) {
 			case LabelHandler.Kind.ExternalProcess:

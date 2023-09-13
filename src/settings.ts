@@ -1,10 +1,17 @@
-import { FConfiguration, FConfigurationValue, FException, FExceptionInvalidOperation, FUtilUnreadonly } from "@freemework/common";
+import { FConfiguration, FConfigurationValue, FException, FExceptionInvalidOperation } from "@freemework/common";
 import { FHostingConfiguration } from "@freemework/hosting";
 
 import { Router } from "express-serve-static-core";
-import { Ingress as IngressModel, Egress as EgressModel, LabelHandler as LabelHandlerModel, Label, Ingress, LabelHandler } from "./model";
 import { existsSync, readFileSync } from "fs";
-import { HttpHostIngress } from "./ingress/http_host.ingress";
+
+import {
+	Ingress as IngressModel,
+	Egress as EgressModel,
+	LabelHandler as LabelHandlerModel,
+	Label as LabelModel,
+	ensureIngressHttpHostResponseDynamicKind,
+	ensureLabelHandlerKind,
+} from "./model";
 
 export class Settings {
 	private constructor(
@@ -198,7 +205,7 @@ export namespace Settings {
 
 			export interface HttpHostResponseDynamic extends HttpHost {
 				readonly httpResponseKind: IngressModel.HttpResponseKind.DYNAMIC;
-				readonly responseHandlerKind: LabelHandlerModel.Kind.ExternalProcess;
+				readonly responseHandlerKind: IngressModel.HttpHostResponseDynamic.Kind.ExternalProcess;
 				readonly responseHandlerPath: string;
 			}
 			export interface WebSocketClient extends Base {
@@ -232,7 +239,7 @@ export namespace Settings {
 
 				readonly filterLabelPolicy: EgressModel.FilterLabelPolicy;
 
-				readonly filterLabels: ReadonlyArray<Label.Data["labelValue"]>
+				readonly filterLabels: ReadonlyArray<LabelModel.Data["labelValue"]>
 			}
 
 			export interface Webhook extends Base {
@@ -473,8 +480,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 							throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured`);
 						}
 
-						const responseKind = responseConfiguration.get("kind").asString;
-
+						const responseKind: string = responseConfiguration.get("kind").asString;
 						switch (responseKind) {
 							case "dynamic": {
 								const responseConfigDynamic = responseConfiguration.getNamespace("dynamic");
@@ -487,14 +493,16 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 									throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured as dynamic handler`);
 								}
 
-								const responseHandlerKind = responseConfigDynamicHandler.get("kind").asString as LabelHandler.Kind;
-								const responseHandlerPath = responseConfigDynamicHandler.get("path").asString;
+								const responseHandlerKind: string = responseConfigDynamicHandler.get("kind").asString;
+								const responseHandlerPath: string = responseConfigDynamicHandler.get("path").asString;
+
+								ensureIngressHttpHostResponseDynamicKind(responseHandlerKind);
 
 								ingressSettings = {
 									...ingressBaseSettings,
 									kind: type,
 									path: ingressConfiguration.get("path").asString,
-									httpResponseKind: Ingress.HttpResponseKind.DYNAMIC,
+									httpResponseKind: IngressModel.HttpResponseKind.DYNAMIC,
 									responseHandlerKind,
 									responseHandlerPath,
 								};
@@ -523,7 +531,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 								ingressSettings = {
 									...ingressBaseSettings,
 									kind: type,
-									httpResponseKind: Ingress.HttpResponseKind.STATIC,
+									httpResponseKind: IngressModel.HttpResponseKind.STATIC,
 									path: ingressConfiguration.get("path").asString,
 									responseStatusCode,
 									responseStatusMessage,
@@ -572,6 +580,9 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 				for (const labelHandlerConfiguration of labelHandlersConfiguration) {
 					const labelHandlerId: string = labelHandlerConfiguration.get("index").asString;
 					const kind: string = labelHandlerConfiguration.get("kind").asString;
+
+					ensureLabelHandlerKind(kind);
+
 					switch (kind) {
 						case LabelHandlerModel.Kind.ExternalProcess:
 							const path: string = labelHandlerConfiguration.get("path").asString;
