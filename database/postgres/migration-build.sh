@@ -16,5 +16,6 @@ fi
 docker run --interactive --tty --rm \
   --mount type=bind,source="${DIR}",target=/data \
   --env ENV=${ZONE} \
+  --env "database.name=devdb" \
   --env SOURCE_PATH=migration \
   theanurin/sqlmigrationbuilder:1.0.1

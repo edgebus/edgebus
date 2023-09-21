@@ -488,13 +488,8 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 									throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured as dynamic`);
 								}
 
-								const responseConfigDynamicHandler = responseConfigDynamic.getNamespace("handler");
-								if (responseConfigDynamic === null) {
-									throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured as dynamic handler`);
-								}
-
-								const responseHandlerKind: string = responseConfigDynamicHandler.get("kind").asString;
-								const responseHandlerPath: string = responseConfigDynamicHandler.get("path").asString;
+								const responseHandlerKind: string = responseConfigDynamic.get("kind").asString;
+								const responseHandlerPath: string = responseConfigDynamic.get("path").asString;
 
 								ensureIngressHttpHostResponseDynamicKind(responseHandlerKind);
 

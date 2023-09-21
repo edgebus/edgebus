@@ -50,7 +50,7 @@
 	target_topic_id = "TOPC23c8ec29beb1420b8010a721c0ae0d85"
 	[edgebus.setup.ingress.response]
 		kind = "dynamic"
-		[edgebus.setup.ingress.response.dynamic.handler]
+		[edgebus.setup.ingress.response.dynamic]
 			kind = "EXTERNAL_PROCESS"
 			path="misc/response_handlers/clear-junction-response-handler.py"
 
@@ -70,11 +70,11 @@
 	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
 	[edgebus.setup.ingress.response]
 		kind = "static"
-		[edgebus.setup.ingress.response.static.handler]
+		[edgebus.setup.ingress.response.static]
 			status_code = 200
 			status_message = "OK"
 			body = '{ "ok": "ok" }'
-			[edgebus.setup.ingress.response.static.handler.header]
+			[edgebus.setup.ingress.response.static.header]
 				"Content-Type" = "application/json"
 				"X-EdgeBus-Token" = "abc"
 
@@ -94,11 +94,11 @@
 	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
 	[edgebus.setup.ingress.response]
 		kind = "static"
-		[edgebus.setup.ingress.response.static.handler]
+		[edgebus.setup.ingress.response.static]
 			status_code = 201
 			status_message = "Accepted"
 			body = '{ "success": true }'
-			[edgebus.setup.ingress.response.static.handler.header]
+			[edgebus.setup.ingress.response.static.header]
 				"Content-Type" = "application/json"
 
 
