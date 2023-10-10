@@ -5,6 +5,10 @@
 			"path": "docs"
 		},
 		{
+			"name": "EdgeBus Deployment Local",
+			"path": "deployment-local"
+		},
+		{
 			"name": "EdgeBus Dart Console",
 			"path": "src-dart-console"
 		},
@@ -29,7 +33,8 @@
 		"recommendations": [
 			"mhutchie.git-graph",
 			"streetsidesoftware.code-spell-checker",
-			"bierner.markdown-mermaid"
+			"bierner.markdown-mermaid",
+			"davidanson.vscode-markdownlint"
 		]
 	}
 }

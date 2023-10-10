@@ -25,6 +25,12 @@
 	"editor.guides.indentation": true,
 	"cSpell.words": [
 		"auditability",
+		"edgebus",
 		"worktree"
-	]
+	],
+	"markdownlint.config": {
+		"default": true,
+		"blanks-around-fences": false,
+		"no-hard-tabs": false,
+	}
 }

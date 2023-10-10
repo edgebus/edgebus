@@ -11,8 +11,8 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 | Branch                                                                     | Description                                                               |
 |----------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [docs](../../tree/docs)                                                    | Sources of [EdgeBus documentation](https://docs.edgebus.io).              |
-| [src-dart-console](../../tree/src-dart-console-master)              | Dart sources of an Administrator Console Web Application.                 |
-| [src-typescript-service](../../tree/src-typescript-service-master)  | TypeScript sources of a Service Application.                              |
+| [src-dart-console](../../tree/src-dart-console-master)                     | Dart sources of an Administrator Console Web Application.                 |
+| [src-typescript-service](../../tree/src-typescript-service-master)         | TypeScript sources of a Service Application.                              |
 
 ## Get Started
 
@@ -37,8 +37,11 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 Add new orphan branch
 
 ```shell
-NEW_ORPHAN_BRANCH=mybranch
-git switch --orphan  "${NEW_ORPHAN_BRANCH}"
+NEW_BRANCH=...
+git worktree add --detach "./${NEW_BRANCH}"
+cd "./${NEW_BRANCH}"
+git checkout --orphan "${NEW_BRANCH}"
+git reset --hard
 git commit --allow-empty -m "Initial Commit"
-git push origin "${NEW_ORPHAN_BRANCH}"
+git push origin "${NEW_BRANCH}"
 ```
