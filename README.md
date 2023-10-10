@@ -23,6 +23,8 @@ The branch contains [VSCode's workspace](https://code.visualstudio.com/docs/edit
 	```
 1. Initialize [worktree](https://git-scm.com/docs/git-worktree) by execute following commands
 	```shell
+	git worktree add database database
+	git worktree add deployment-local deployment-local
 	git worktree add docs docs
 	git worktree add src-dart-console src-dart-console-master
 	git worktree add src-typescript-service src-typescript-service-master

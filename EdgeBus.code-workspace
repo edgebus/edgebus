@@ -5,6 +5,10 @@
 			"path": "docs"
 		},
 		{
+			"name": "EdgeBus Database",
+			"path": "database"
+		},
+		{
 			"name": "EdgeBus Deployment Local",
 			"path": "deployment-local"
 		},

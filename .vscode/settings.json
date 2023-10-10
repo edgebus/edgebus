@@ -18,7 +18,9 @@
 	"files.encoding": "utf8",
 	"files.eol": "\n",
 	"files.exclude": {
+		"database": true,
 		"docs": true,
+		"deployment-local": true,
 		"src-*": true,
 	},
 	"git.rebaseWhenSync": true,
