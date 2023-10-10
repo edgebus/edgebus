@@ -1,0 +1,6 @@
+*.local*
+*.shared*
+
+.DS_Store
+docker-compose.yaml
+docker-compose.yaml.tmp
