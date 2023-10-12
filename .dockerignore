@@ -1,0 +1,8 @@
+./*
+
+!./docker/app.logo
+!./docker/Dockerfile
+!./docker/docker-entrypoint.sh
+!./docker/nginx-http.conf
+!./docker/nginx-https.conf
+!./docker/nginx-include.conf
