@@ -1,6 +1,7 @@
 # EdgeBus console
 
 The EdgeBus console helps you deploy, scale, and diagnose production issues in a simple web-based interface.
+Includes `Dockerfile` for easy containerization.
 
 ## Get Started
 
