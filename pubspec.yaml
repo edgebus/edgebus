@@ -1,4 +1,4 @@
-name: edgebus
+name: web_admin
 description: edgebus console
 
 # The following line prevents the package from being accidentally published to

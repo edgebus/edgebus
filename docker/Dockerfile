@@ -5,14 +5,16 @@ ARG IMAGE_TAG_NGINX=1.19.8-alpine
 
 # FROM mikefarah/yq AS yq
 
-# FROM dart:3.1.0-262.1.beta-sdk AS builder
+# FROM fischerscode/flutter:flutter-3.13-candidate.0 AS console-builder
 # ARG BUILD_TAG_VERSION
-# COPY --from=yq /usr/bin/yq /usr/bin/yq
-# WORKDIR /build
+# ARG BUILD_CONFIGURATION
+# # USER root
+# COPY --from=yq /usr/bin/yq /home/flutter/yq
+# WORKDIR /home/flutter/work
 # COPY pubspec.yaml pubspec.yaml
 # RUN \
 #     set -e; \
-#     PROJ_VERSION="$(yq -r '.version' pubspec.yaml)"; \
+#     PROJ_VERSION="$(/home/flutter/yq -r '.version' pubspec.yaml)"; \
 #     set +e; \
 #     if [ -n "${BUILD_TAG_VERSION}" ]; then \
 #       if [ "${BUILD_TAG_VERSION}" != "${PROJ_VERSION}" ]; then \
@@ -20,35 +22,34 @@ ARG IMAGE_TAG_NGINX=1.19.8-alpine
 #         exit 1; \
 #       fi; \
 #     fi;
-# RUN mkdir -p /stage/usr/local/edgebus/
-# RUN mkdir -p /stage/usr/local/bin/
-# COPY bin/server.dart /build/bin/server.dart
-# COPY lib /build/lib
-# COPY pubspec.lock /build/pubspec.lock
-# RUN dart pub get
-# RUN dart compile exe --output /stage/usr/local/edgebus/edgebus-service bin/server.dart
-# COPY docker/app.logo /stage/usr/local/edgebus/edgebus-service.logo
-# COPY docker/docker-entrypoint.sh /stage/usr/local/bin/docker-entrypoint-edgebus.sh
+# RUN mkdir -p /home/flutter/stage/usr/local/edgebus/console
+# RUN mkdir -p /home/flutter/stage/usr/local/bin/
+# COPY lib /home/flutter/work/lib
+# COPY web /home/flutter/work/web
+# RUN flutter pub get
+# RUN flutter build web lib/main.dart
+# # RUN flutter pub run build_runner build --config "${BUILD_CONFIGURATION}" --release --output web:build
+# # COPY docker/app.logo /home/flutter/stage/usr/local/edgebus/console/edgebus-service.logo
+# # COPY docker/docker-entrypoint.sh /home/flutter/stage/usr/local/bin/docker-entrypoint-edgebus.sh
 
-FROM alpine AS console-builder
-RUN mkdir -p /stage/usr/local/edgebus/console
-RUN echo "<h1>HELLO, WORLD!!!</h1>" > /stage/usr/local/edgebus/console/index.html
-
+FROM fischerscode/flutter:flutter-3.13-candidate.0 AS console-builder
+RUN mkdir -p /home/flutter/stage/usr/local/edgebus/console
+RUN echo "<h1>HELLO, WORLD!!!</h1>" > /home/flutter/stage/usr/local/edgebus/console/index.html
 
 # https://dev.zxteam.net/2022cexmirror/gitlab/cexpay.dashboard-wznk/-/tree/master/docker
 
 
 # Merge both web application to be able to make final image with single layer
 FROM nginx:${IMAGE_TAG_NGINX} AS compositor
-COPY --from=console-builder /stage /stage
-COPY docker/nginx-http.conf /stage/etc/nginx/nginx-http.conf
-COPY docker/nginx-https.conf /stage/etc/nginx/nginx-https.conf
-COPY docker/nginx-include.conf /stage/etc/nginx/nginx-include.conf
-COPY docker/docker-entrypoint.sh /stage/usr/local/bin/docker-entrypoint.sh
+COPY --from=console-builder /home/flutter/stage /home/flutter/stage
+COPY docker/nginx-http.conf /home/flutter/stage/etc/nginx/nginx-http.conf
+COPY docker/nginx-https.conf /home/flutter/stage/etc/nginx/nginx-https.conf
+COPY docker/nginx-include.conf /home/flutter/stage/etc/nginx/nginx-include.conf
+COPY docker/docker-entrypoint.sh /home/flutter/stage/usr/local/bin/docker-entrypoint.sh
 
 
 FROM nginx:${IMAGE_TAG_NGINX}
-COPY --from=compositor /stage /
+COPY --from=compositor /home/flutter/stage /
 EXPOSE 8080 8443
 VOLUME /etc/edgebus/console/ssl
 ENTRYPOINT [ "/usr/local/bin/docker-entrypoint.sh" ]
