@@ -10,7 +10,7 @@ env:
   # Repo-root relative path to directory with your Dockerfile(s)
   DOCKER_FILES_DIR: docker
   # Comma separated list of Docker platforms
-  DOCKER_PLATFORMS: linux/amd64,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6
+  DOCKER_PLATFORMS: linux/amd64
   # Define one of test report format: dart-json, dotnet-trx, flutter-json, java-junit, jest-junit, mocha-json
   TEST_REPORT_FORMAT: java-junit
   # Set path to GitHub Container Repository
