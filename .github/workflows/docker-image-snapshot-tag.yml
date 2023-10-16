@@ -14,17 +14,14 @@ env:
   # Define one of test report format: dart-json, dotnet-trx, flutter-json, java-junit, jest-junit, mocha-json
   TEST_REPORT_FORMAT: java-junit
   # Set path to GitHub Container Repository
-  REGISTRY_GHCR_REPOSITORY_PATH: "${{ github.repository }}"
-  #REGISTRY_GHCR_REPOSITORY_PATH: "${{ github.repository }}/orphan-branch"
+  REGISTRY_GHCR_REPOSITORY_PATH: "${{ github.repository }}/dart-console"
 
 on:
   push:
     branches:
-      # - '*'
       - 'src-dart-console-*'
     tags:
-      - '*'
-      #- 'orphan-branch-*'
+      - 'dart-console-*'
 
 run-name: Docker Images (${{ format('{0}.{1}', github.ref_name, github.sha) }})
 

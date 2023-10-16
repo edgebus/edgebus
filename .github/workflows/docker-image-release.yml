@@ -23,7 +23,7 @@ env:
 on:
   push:
     tags:
-      - '*'
+      - 'dart-console-*'
 
 run-name: Docker Images (${{ format('{0}.{1}', github.ref_name, github.sha) }})
 
