@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/master_layout_config.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
-import 'package:web_admin/theme/theme_extensions/app_sidebar_theme.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/master_layout_config.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_sidebar_theme.dart';
 
 class SidebarMenuConfig {
   final String uri;
@@ -95,7 +95,8 @@ class _SidebarState extends State<Sidebar> {
             child: Theme(
               data: themeData.copyWith(
                 scrollbarTheme: themeData.scrollbarTheme.copyWith(
-                  thumbColor: MaterialStateProperty.all(sidebarTheme.foregroundColor.withOpacity(0.2)),
+                  thumbColor: MaterialStateProperty.all(
+                      sidebarTheme.foregroundColor.withOpacity(0.2)),
                 ),
               ),
               child: Scrollbar(
@@ -186,13 +187,16 @@ class _SidebarState extends State<Sidebar> {
     bool isSelected,
   ) {
     final sidebarTheme = Theme.of(context).extension<AppSidebarTheme>()!;
-    final textColor = (isSelected ? sidebarTheme.menuSelectedFontColor : sidebarTheme.foregroundColor);
+    final textColor = (isSelected
+        ? sidebarTheme.menuSelectedFontColor
+        : sidebarTheme.foregroundColor);
 
     return Padding(
       padding: padding,
       child: Card(
         color: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sidebarTheme.menuBorderRadius)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(sidebarTheme.menuBorderRadius)),
         elevation: 0.0,
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
@@ -218,7 +222,9 @@ class _SidebarState extends State<Sidebar> {
           onTap: () => GoRouter.of(context).go(uri),
           selected: isSelected,
           selectedTileColor: sidebarTheme.menuSelectedBackgroundColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sidebarTheme.menuBorderRadius)),
+          shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(sidebarTheme.menuBorderRadius)),
           textColor: textColor,
           hoverColor: sidebarTheme.menuHoverColor,
         ),
@@ -237,14 +243,18 @@ class _SidebarState extends State<Sidebar> {
   ) {
     final themeData = Theme.of(context);
     final sidebarTheme = Theme.of(context).extension<AppSidebarTheme>()!;
-    final hasSelectedChild = children.any((e) => currentLocation.startsWith(e.uri));
-    final parentTextColor = (hasSelectedChild ? sidebarTheme.menuSelectedFontColor : sidebarTheme.foregroundColor);
+    final hasSelectedChild =
+        children.any((e) => currentLocation.startsWith(e.uri));
+    final parentTextColor = (hasSelectedChild
+        ? sidebarTheme.menuSelectedFontColor
+        : sidebarTheme.foregroundColor);
 
     return Padding(
       padding: padding,
       child: Card(
         color: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sidebarTheme.menuBorderRadius)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(sidebarTheme.menuBorderRadius)),
         elevation: 0.0,
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
@@ -259,7 +269,9 @@ class _SidebarState extends State<Sidebar> {
             iconColor: parentTextColor,
             collapsedIconColor: parentTextColor,
             backgroundColor: sidebarTheme.menuExpandedBackgroundColor,
-            collapsedBackgroundColor: (hasSelectedChild ? sidebarTheme.menuExpandedBackgroundColor : Colors.transparent),
+            collapsedBackgroundColor: (hasSelectedChild
+                ? sidebarTheme.menuExpandedBackgroundColor
+                : Colors.transparent),
             initiallyExpanded: hasSelectedChild,
             childrenPadding: EdgeInsets.only(
               top: sidebarTheme.menuExpandedChildTopPadding,
@@ -355,7 +367,12 @@ class SidebarHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _textButton(themeData, sidebarTheme, Icons.manage_accounts_rounded, lang.account, onAccountButtonPressed),
+                _textButton(
+                    themeData,
+                    sidebarTheme,
+                    Icons.manage_accounts_rounded,
+                    lang.account,
+                    onAccountButtonPressed),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: VerticalDivider(
@@ -366,7 +383,8 @@ class SidebarHeader extends StatelessWidget {
                     endIndent: kTextPadding,
                   ),
                 ),
-                _textButton(themeData, sidebarTheme, Icons.login_rounded, lang.logout, onLogoutButtonPressed),
+                _textButton(themeData, sidebarTheme, Icons.login_rounded,
+                    lang.logout, onLogoutButtonPressed),
               ],
             ),
           ),
@@ -375,7 +393,8 @@ class SidebarHeader extends StatelessWidget {
     );
   }
 
-  Widget _textButton(ThemeData themeData, AppSidebarTheme sidebarTheme, IconData icon, String text, void Function() onPressed) {
+  Widget _textButton(ThemeData themeData, AppSidebarTheme sidebarTheme,
+      IconData icon, String text, void Function() onPressed) {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(

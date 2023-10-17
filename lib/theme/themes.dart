@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/theme/theme_extensions/app_data_table_theme.dart';
-import 'package:web_admin/theme/theme_extensions/app_sidebar_theme.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_data_table_theme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_sidebar_theme.dart';
 
 const Color kPrimaryColor = Color(0xFF347BDE);
 const Color kSecondaryColor = Color(0xFF6C757D);

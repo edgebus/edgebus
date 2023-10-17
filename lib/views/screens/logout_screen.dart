@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
 
 class LogoutScreen extends StatefulWidget {
   const LogoutScreen({Key? key}) : super(key: key);

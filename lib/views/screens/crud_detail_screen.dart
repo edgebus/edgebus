@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/utils/app_focus_helper.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/utils/app_focus_helper.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 
 class CrudDetailScreen extends StatefulWidget {
   final String id;
@@ -110,7 +110,8 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
     final lang = Lang.of(context);
     final themeData = Theme.of(context);
 
-    final pageTitle = 'CRUD - ${widget.id.isEmpty ? lang.crudNew : lang.crudDetail}';
+    final pageTitle =
+        'CRUD - ${widget.id.isEmpty ? lang.crudNew : lang.crudDetail}';
 
     return PortalMasterLayout(
       selectedMenuUri: RouteUri.crud,
@@ -136,7 +137,8 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
                       initialData: null,
                       future: (_future ??= _getDataAsync()),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           if (snapshot.hasData && snapshot.data!) {
                             return _content(context);
                           }
@@ -146,12 +148,14 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
 
                         return Container(
                           alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(vertical: kDefaultPadding),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: kDefaultPadding),
                           child: SizedBox(
                             height: 40.0,
                             width: 40.0,
                             child: CircularProgressIndicator(
-                              backgroundColor: themeData.scaffoldBackgroundColor,
+                              backgroundColor:
+                                  themeData.scaffoldBackgroundColor,
                             ),
                           ),
                         );
@@ -203,7 +207,8 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
                 floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
               initialValue: _formData.price,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: FormBuilderValidators.required(),
               onSaved: (value) => (_formData.price = value ?? ''),
             ),
@@ -214,17 +219,20 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
               SizedBox(
                 height: 40.0,
                 child: ElevatedButton(
-                  style: themeData.extension<AppButtonTheme>()!.secondaryElevated,
+                  style:
+                      themeData.extension<AppButtonTheme>()!.secondaryElevated,
                   onPressed: () => GoRouter.of(context).go(RouteUri.crud),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(right: kDefaultPadding * 0.5),
+                        padding:
+                            const EdgeInsets.only(right: kDefaultPadding * 0.5),
                         child: Icon(
                           Icons.arrow_circle_left_outlined,
-                          size: (themeData.textTheme.labelLarge!.fontSize! + 4.0),
+                          size:
+                              (themeData.textTheme.labelLarge!.fontSize! + 4.0),
                         ),
                       ),
                       Text(lang.crudBack),
@@ -240,17 +248,20 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
                   child: SizedBox(
                     height: 40.0,
                     child: ElevatedButton(
-                      style: themeData.extension<AppButtonTheme>()!.errorElevated,
+                      style:
+                          themeData.extension<AppButtonTheme>()!.errorElevated,
                       onPressed: () => _doDelete(context),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(right: kDefaultPadding * 0.5),
+                            padding: const EdgeInsets.only(
+                                right: kDefaultPadding * 0.5),
                             child: Icon(
                               Icons.delete_rounded,
-                              size: (themeData.textTheme.labelLarge!.fontSize! + 4.0),
+                              size: (themeData.textTheme.labelLarge!.fontSize! +
+                                  4.0),
                             ),
                           ),
                           Text(lang.crudDelete),
@@ -270,10 +281,12 @@ class _CrudDetailScreenState extends State<CrudDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(right: kDefaultPadding * 0.5),
+                        padding:
+                            const EdgeInsets.only(right: kDefaultPadding * 0.5),
                         child: Icon(
                           Icons.check_circle_outline_rounded,
-                          size: (themeData.textTheme.labelLarge!.fontSize! + 4.0),
+                          size:
+                              (themeData.textTheme.labelLarge!.fontSize! + 4.0),
                         ),
                       ),
                       Text(lang.submit),

@@ -1,20 +1,20 @@
 import 'package:go_router/go_router.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
-import 'package:web_admin/views/screens/buttons_screen.dart';
-import 'package:web_admin/views/screens/colors_screen.dart';
-import 'package:web_admin/views/screens/crud_detail_screen.dart';
-import 'package:web_admin/views/screens/crud_screen.dart';
-import 'package:web_admin/views/screens/dashboard_screen.dart';
-import 'package:web_admin/views/screens/dialogs_screen.dart';
-import 'package:web_admin/views/screens/error_screen.dart';
-import 'package:web_admin/views/screens/form_screen.dart';
-import 'package:web_admin/views/screens/general_ui_screen.dart';
-import 'package:web_admin/views/screens/iframe_demo_screen.dart';
-import 'package:web_admin/views/screens/login_screen.dart';
-import 'package:web_admin/views/screens/logout_screen.dart';
-import 'package:web_admin/views/screens/my_profile_screen.dart';
-import 'package:web_admin/views/screens/register_screen.dart';
-import 'package:web_admin/views/screens/text_screen.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
+import 'package:edgebus_console/views/screens/buttons_screen.dart';
+import 'package:edgebus_console/views/screens/colors_screen.dart';
+import 'package:edgebus_console/views/screens/crud_detail_screen.dart';
+import 'package:edgebus_console/views/screens/crud_screen.dart';
+import 'package:edgebus_console/views/screens/dashboard_screen.dart';
+import 'package:edgebus_console/views/screens/dialogs_screen.dart';
+import 'package:edgebus_console/views/screens/error_screen.dart';
+import 'package:edgebus_console/views/screens/form_screen.dart';
+import 'package:edgebus_console/views/screens/general_ui_screen.dart';
+import 'package:edgebus_console/views/screens/iframe_demo_screen.dart';
+import 'package:edgebus_console/views/screens/login_screen.dart';
+import 'package:edgebus_console/views/screens/logout_screen.dart';
+import 'package:edgebus_console/views/screens/my_profile_screen.dart';
+import 'package:edgebus_console/views/screens/register_screen.dart';
+import 'package:edgebus_console/views/screens/text_screen.dart';
 
 class RouteUri {
   static const String home = '/';

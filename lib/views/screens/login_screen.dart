@@ -4,14 +4,14 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/utils/app_focus_helper.dart';
-import 'package:web_admin/views/widgets/public_master_layout/public_master_layout.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/utils/app_focus_helper.dart';
+import 'package:edgebus_console/views/widgets/public_master_layout/public_master_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -106,7 +106,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                      padding:
+                          const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
                       child: Text(
                         lang.adminPortalLogin,
                         style: themeData.textTheme.titleMedium,
@@ -118,7 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 1.5),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 1.5),
                             child: FormBuilderTextField(
                               name: 'username',
                               decoration: InputDecoration(
@@ -126,15 +128,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 hintText: lang.username,
                                 helperText: '* Demo username: admin',
                                 border: const OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               enableSuggestions: false,
                               validator: FormBuilderValidators.required(),
-                              onSaved: (value) => (_formData.username = value ?? ''),
+                              onSaved: (value) =>
+                                  (_formData.username = value ?? ''),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderTextField(
                               name: 'password',
                               decoration: InputDecoration(
@@ -142,27 +147,35 @@ class _LoginScreenState extends State<LoginScreen> {
                                 hintText: lang.password,
                                 helperText: '* Demo password: admin',
                                 border: const OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               enableSuggestions: false,
                               obscureText: true,
                               validator: FormBuilderValidators.required(),
-                              onSaved: (value) => (_formData.password = value ?? ''),
+                              onSaved: (value) =>
+                                  (_formData.password = value ?? ''),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding),
+                            padding:
+                                const EdgeInsets.only(bottom: kDefaultPadding),
                             child: SizedBox(
                               height: 40.0,
                               width: double.infinity,
                               child: ElevatedButton(
-                                style: themeData.extension<AppButtonTheme>()!.primaryElevated,
+                                style: themeData
+                                    .extension<AppButtonTheme>()!
+                                    .primaryElevated,
                                 onPressed: (_isFormLoading
                                     ? null
                                     : () => _doLoginAsync(
-                                          userDataProvider: context.read<UserDataProvider>(),
-                                          onSuccess: () => _onLoginSuccess(context),
-                                          onError: (message) => _onLoginError(context, message),
+                                          userDataProvider:
+                                              context.read<UserDataProvider>(),
+                                          onSuccess: () =>
+                                              _onLoginSuccess(context),
+                                          onError: (message) =>
+                                              _onLoginError(context, message),
                                         )),
                                 child: Text(lang.login),
                               ),
@@ -172,8 +185,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 40.0,
                             width: double.infinity,
                             child: TextButton(
-                              style: themeData.extension<AppButtonTheme>()!.secondaryText,
-                              onPressed: () => GoRouter.of(context).go(RouteUri.register),
+                              style: themeData
+                                  .extension<AppButtonTheme>()!
+                                  .secondaryText,
+                              onPressed: () =>
+                                  GoRouter.of(context).go(RouteUri.register),
                               child: RichText(
                                 text: TextSpan(
                                   text: '${lang.dontHaveAnAccount} ',
@@ -184,7 +200,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     TextSpan(
                                       text: lang.registerNow,
                                       style: TextStyle(
-                                        color: themeData.extension<AppColorScheme>()!.hyperlink,
+                                        color: themeData
+                                            .extension<AppColorScheme>()!
+                                            .hyperlink,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),

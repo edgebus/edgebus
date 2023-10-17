@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
-import 'package:web_admin/views/widgets/public_master_layout/public_master_layout.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/widgets/public_master_layout/public_master_layout.dart';
 
 class ErrorScreen extends StatelessWidget {
   const ErrorScreen({Key? key}) : super(key: key);
@@ -58,7 +58,8 @@ class ErrorScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(bottom: kDefaultPadding * 0.5),
+                      padding:
+                          const EdgeInsets.only(bottom: kDefaultPadding * 0.5),
                       child: Text(
                         lang.error404Title,
                         style: themeData.textTheme.titleLarge!.copyWith(
@@ -67,7 +68,8 @@ class ErrorScreen extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: kDefaultPadding * 1.5),
+                      padding:
+                          const EdgeInsets.only(bottom: kDefaultPadding * 1.5),
                       child: Text(lang.error404Message),
                     ),
                     SizedBox(

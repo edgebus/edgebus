@@ -3,12 +3,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:form_builder_validators/localization/l10n.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/providers/app_preferences_provider.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
-import 'package:web_admin/theme/themes.dart';
-import 'package:web_admin/utils/app_focus_helper.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/providers/app_preferences_provider.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
+import 'package:edgebus_console/theme/themes.dart';
+import 'package:edgebus_console/utils/app_focus_helper.dart';
 
 class RootApp extends StatefulWidget {
   const RootApp({Key? key}) : super(key: key);
@@ -22,7 +22,9 @@ class _RootAppState extends State<RootApp> {
 
   Future<bool>? _future;
 
-  Future<bool> _getScreenDataAsync(AppPreferencesProvider appPreferencesProvider, UserDataProvider userDataProvider) async {
+  Future<bool> _getScreenDataAsync(
+      AppPreferencesProvider appPreferencesProvider,
+      UserDataProvider userDataProvider) async {
     await appPreferencesProvider.loadAsync();
     await userDataProvider.loadAsync();
 
@@ -45,17 +47,22 @@ class _RootAppState extends State<RootApp> {
             },
             child: FutureBuilder<bool>(
               initialData: null,
-              future: (_future ??= _getScreenDataAsync(context.read<AppPreferencesProvider>(), context.read<UserDataProvider>())),
+              future: (_future ??= _getScreenDataAsync(
+                  context.read<AppPreferencesProvider>(),
+                  context.read<UserDataProvider>())),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data!) {
                   return Consumer<AppPreferencesProvider>(
                     builder: (context, provider, child) {
-                      _appRouter ??= appRouter(context.read<UserDataProvider>());
+                      _appRouter ??=
+                          appRouter(context.read<UserDataProvider>());
 
                       return MaterialApp.router(
                         debugShowCheckedModeBanner: false,
-                        routeInformationProvider: _appRouter!.routeInformationProvider,
-                        routeInformationParser: _appRouter!.routeInformationParser,
+                        routeInformationProvider:
+                            _appRouter!.routeInformationProvider,
+                        routeInformationParser:
+                            _appRouter!.routeInformationParser,
                         routerDelegate: _appRouter!.routerDelegate,
                         supportedLocales: Lang.delegate.supportedLocales,
                         localizationsDelegates: const [

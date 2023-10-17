@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web_admin/constants/values.dart';
+import 'package:edgebus_console/constants/values.dart';
 
 class UserDataProvider extends ChangeNotifier {
   var _userProfileImageUrl = '';
@@ -14,7 +14,8 @@ class UserDataProvider extends ChangeNotifier {
     final sharedPref = await SharedPreferences.getInstance();
 
     _username = sharedPref.getString(StorageKeys.username) ?? '';
-    _userProfileImageUrl = sharedPref.getString(StorageKeys.userProfileImageUrl) ?? '';
+    _userProfileImageUrl =
+        sharedPref.getString(StorageKeys.userProfileImageUrl) ?? '';
 
     notifyListeners();
   }
@@ -26,10 +27,12 @@ class UserDataProvider extends ChangeNotifier {
     final sharedPref = await SharedPreferences.getInstance();
     var shouldNotify = false;
 
-    if (userProfileImageUrl != null && userProfileImageUrl != _userProfileImageUrl) {
+    if (userProfileImageUrl != null &&
+        userProfileImageUrl != _userProfileImageUrl) {
       _userProfileImageUrl = userProfileImageUrl;
 
-      await sharedPref.setString(StorageKeys.userProfileImageUrl, _userProfileImageUrl);
+      await sharedPref.setString(
+          StorageKeys.userProfileImageUrl, _userProfileImageUrl);
 
       shouldNotify = true;
     }

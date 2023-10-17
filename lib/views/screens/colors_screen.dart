@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/hover_container.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
-import 'package:web_admin/views/widgets/text_with_copy_button.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/hover_container.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/widgets/text_with_copy_button.dart';
 
 class ColorsScreen extends StatelessWidget {
   const ColorsScreen({Key? key}) : super(key: key);
@@ -47,7 +47,8 @@ class ColorsScreen extends StatelessWidget {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: kDefaultPadding),
+                          padding:
+                              const EdgeInsets.only(bottom: kDefaultPadding),
                           child: TextWithCopyButton(
                             textWidget: Text(
                               'Theme.of(context).colorScheme',
@@ -60,7 +61,8 @@ class ColorsScreen extends StatelessWidget {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: kDefaultPadding * 3.0),
+                          padding: const EdgeInsets.only(
+                              bottom: kDefaultPadding * 3.0),
                           child: SizedBox(
                             width: double.infinity,
                             child: Wrap(
@@ -68,32 +70,62 @@ class ColorsScreen extends StatelessWidget {
                               spacing: kDefaultPadding * 2.0,
                               runSpacing: kDefaultPadding,
                               children: [
-                                _colorPaletteItem(context, 'primary', themeData.colorScheme.primary),
-                                _colorPaletteItem(context, 'onPrimary', themeData.colorScheme.onPrimary),
-                                _colorPaletteItem(context, 'primaryContainer', themeData.colorScheme.primaryContainer),
-                                _colorPaletteItem(context, 'onPrimaryContainer', themeData.colorScheme.onPrimaryContainer),
-                                _colorPaletteItem(context, 'secondary', themeData.colorScheme.secondary),
-                                _colorPaletteItem(context, 'onSecondary', themeData.colorScheme.onSecondary),
-                                _colorPaletteItem(context, 'secondaryContainer', themeData.colorScheme.secondaryContainer),
-                                _colorPaletteItem(context, 'onSecondaryContainer', themeData.colorScheme.onSecondaryContainer),
-                                _colorPaletteItem(context, 'tertiary', themeData.colorScheme.tertiary),
-                                _colorPaletteItem(context, 'onTertiary', themeData.colorScheme.onTertiary),
-                                _colorPaletteItem(context, 'tertiaryContainer', themeData.colorScheme.tertiaryContainer),
-                                _colorPaletteItem(context, 'onTertiaryContainer', themeData.colorScheme.onTertiaryContainer),
-                                _colorPaletteItem(context, 'error', themeData.colorScheme.error),
-                                _colorPaletteItem(context, 'onError', themeData.colorScheme.onError),
-                                _colorPaletteItem(context, 'errorContainer', themeData.colorScheme.errorContainer),
-                                _colorPaletteItem(context, 'onErrorContainer', themeData.colorScheme.onErrorContainer),
-                                _colorPaletteItem(context, 'background', themeData.colorScheme.background),
-                                _colorPaletteItem(context, 'onBackground', themeData.colorScheme.onBackground),
-                                _colorPaletteItem(context, 'surface', themeData.colorScheme.surface),
-                                _colorPaletteItem(context, 'onSurface', themeData.colorScheme.onSurface),
-                                _colorPaletteItem(context, 'surfaceVariant', themeData.colorScheme.surfaceVariant),
-                                _colorPaletteItem(context, 'outline', themeData.colorScheme.outline),
-                                _colorPaletteItem(context, 'shadow', themeData.colorScheme.shadow),
-                                _colorPaletteItem(context, 'inverseSurface', themeData.colorScheme.inverseSurface),
-                                _colorPaletteItem(context, 'inversePrimary', themeData.colorScheme.inversePrimary),
-                                _colorPaletteItem(context, 'surfaceTint', themeData.colorScheme.surfaceTint),
+                                _colorPaletteItem(context, 'primary',
+                                    themeData.colorScheme.primary),
+                                _colorPaletteItem(context, 'onPrimary',
+                                    themeData.colorScheme.onPrimary),
+                                _colorPaletteItem(context, 'primaryContainer',
+                                    themeData.colorScheme.primaryContainer),
+                                _colorPaletteItem(context, 'onPrimaryContainer',
+                                    themeData.colorScheme.onPrimaryContainer),
+                                _colorPaletteItem(context, 'secondary',
+                                    themeData.colorScheme.secondary),
+                                _colorPaletteItem(context, 'onSecondary',
+                                    themeData.colorScheme.onSecondary),
+                                _colorPaletteItem(context, 'secondaryContainer',
+                                    themeData.colorScheme.secondaryContainer),
+                                _colorPaletteItem(
+                                    context,
+                                    'onSecondaryContainer',
+                                    themeData.colorScheme.onSecondaryContainer),
+                                _colorPaletteItem(context, 'tertiary',
+                                    themeData.colorScheme.tertiary),
+                                _colorPaletteItem(context, 'onTertiary',
+                                    themeData.colorScheme.onTertiary),
+                                _colorPaletteItem(context, 'tertiaryContainer',
+                                    themeData.colorScheme.tertiaryContainer),
+                                _colorPaletteItem(
+                                    context,
+                                    'onTertiaryContainer',
+                                    themeData.colorScheme.onTertiaryContainer),
+                                _colorPaletteItem(context, 'error',
+                                    themeData.colorScheme.error),
+                                _colorPaletteItem(context, 'onError',
+                                    themeData.colorScheme.onError),
+                                _colorPaletteItem(context, 'errorContainer',
+                                    themeData.colorScheme.errorContainer),
+                                _colorPaletteItem(context, 'onErrorContainer',
+                                    themeData.colorScheme.onErrorContainer),
+                                _colorPaletteItem(context, 'background',
+                                    themeData.colorScheme.background),
+                                _colorPaletteItem(context, 'onBackground',
+                                    themeData.colorScheme.onBackground),
+                                _colorPaletteItem(context, 'surface',
+                                    themeData.colorScheme.surface),
+                                _colorPaletteItem(context, 'onSurface',
+                                    themeData.colorScheme.onSurface),
+                                _colorPaletteItem(context, 'surfaceVariant',
+                                    themeData.colorScheme.surfaceVariant),
+                                _colorPaletteItem(context, 'outline',
+                                    themeData.colorScheme.outline),
+                                _colorPaletteItem(context, 'shadow',
+                                    themeData.colorScheme.shadow),
+                                _colorPaletteItem(context, 'inverseSurface',
+                                    themeData.colorScheme.inverseSurface),
+                                _colorPaletteItem(context, 'inversePrimary',
+                                    themeData.colorScheme.inversePrimary),
+                                _colorPaletteItem(context, 'surfaceTint',
+                                    themeData.colorScheme.surfaceTint),
                               ],
                             ),
                           ),
@@ -106,7 +138,8 @@ class ColorsScreen extends StatelessWidget {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: kDefaultPadding),
+                          padding:
+                              const EdgeInsets.only(bottom: kDefaultPadding),
                           child: TextWithCopyButton(
                             textWidget: Text(
                               'Theme.of(context).extension<AppColorScheme>()',
@@ -114,7 +147,8 @@ class ColorsScreen extends StatelessWidget {
                                 fontSize: 12.0,
                               ),
                             ),
-                            textToCopy: 'Theme.of(context).extension<AppColorScheme>()',
+                            textToCopy:
+                                'Theme.of(context).extension<AppColorScheme>()',
                             copyIconSize: 13.0,
                           ),
                         ),
@@ -125,15 +159,24 @@ class ColorsScreen extends StatelessWidget {
                             spacing: kDefaultPadding * 2.0,
                             runSpacing: kDefaultPadding,
                             children: [
-                              _colorPaletteItem(context, 'primary', appColorScheme.primary),
-                              _colorPaletteItem(context, 'secondary', appColorScheme.secondary),
-                              _colorPaletteItem(context, 'error', appColorScheme.error),
-                              _colorPaletteItem(context, 'success', appColorScheme.success),
-                              _colorPaletteItem(context, 'info', appColorScheme.info),
-                              _colorPaletteItem(context, 'warning', appColorScheme.warning),
-                              _colorPaletteItem(context, 'hyperlink', appColorScheme.hyperlink),
-                              _colorPaletteItem(context, 'buttonTextBlack', appColorScheme.buttonTextBlack),
-                              _colorPaletteItem(context, 'buttonTextDisabled', appColorScheme.buttonTextDisabled),
+                              _colorPaletteItem(
+                                  context, 'primary', appColorScheme.primary),
+                              _colorPaletteItem(context, 'secondary',
+                                  appColorScheme.secondary),
+                              _colorPaletteItem(
+                                  context, 'error', appColorScheme.error),
+                              _colorPaletteItem(
+                                  context, 'success', appColorScheme.success),
+                              _colorPaletteItem(
+                                  context, 'info', appColorScheme.info),
+                              _colorPaletteItem(
+                                  context, 'warning', appColorScheme.warning),
+                              _colorPaletteItem(context, 'hyperlink',
+                                  appColorScheme.hyperlink),
+                              _colorPaletteItem(context, 'buttonTextBlack',
+                                  appColorScheme.buttonTextBlack),
+                              _colorPaletteItem(context, 'buttonTextDisabled',
+                                  appColorScheme.buttonTextDisabled),
                             ],
                           ),
                         ),

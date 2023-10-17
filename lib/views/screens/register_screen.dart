@@ -4,13 +4,13 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/providers/user_data_provider.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/utils/app_focus_helper.dart';
-import 'package:web_admin/views/widgets/public_master_layout/public_master_layout.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/providers/user_data_provider.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/utils/app_focus_helper.dart';
+import 'package:edgebus_console/views/widgets/public_master_layout/public_master_layout.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -122,7 +122,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                      padding:
+                          const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
                       child: Text(
                         lang.registerANewAccount,
                         style: themeData.textTheme.titleMedium,
@@ -134,38 +135,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 1.5),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 1.5),
                             child: FormBuilderTextField(
                               name: 'username',
                               decoration: InputDecoration(
                                 labelText: lang.username,
                                 hintText: lang.username,
-                                helperText: '* To test registration fail: admin',
+                                helperText:
+                                    '* To test registration fail: admin',
                                 border: const OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               enableSuggestions: false,
                               validator: FormBuilderValidators.required(),
-                              onSaved: (value) => (_formData.username = value ?? ''),
+                              onSaved: (value) =>
+                                  (_formData.username = value ?? ''),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 1.5),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 1.5),
                             child: FormBuilderTextField(
                               name: 'email',
                               decoration: InputDecoration(
                                 labelText: lang.email,
                                 hintText: lang.email,
                                 border: const OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               keyboardType: TextInputType.emailAddress,
                               validator: FormBuilderValidators.required(),
-                              onSaved: (value) => (_formData.email = value ?? ''),
+                              onSaved: (value) =>
+                                  (_formData.email = value ?? ''),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 1.5),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 1.5),
                             child: FormBuilderTextField(
                               name: 'password',
                               decoration: InputDecoration(
@@ -173,7 +182,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 hintText: lang.password,
                                 helperText: lang.passwordHelperText,
                                 border: const OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               enableSuggestions: false,
                               obscureText: true,
@@ -183,25 +193,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 FormBuilderValidators.minLength(6),
                                 FormBuilderValidators.maxLength(18),
                               ]),
-                              onSaved: (value) => (_formData.password = value ?? ''),
+                              onSaved: (value) =>
+                                  (_formData.password = value ?? ''),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderTextField(
                               name: 'retypePassword',
                               decoration: InputDecoration(
                                 labelText: lang.retypePassword,
                                 hintText: lang.retypePassword,
                                 border: const OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               enableSuggestions: false,
                               obscureText: true,
                               validator: FormBuilderValidators.compose([
                                 FormBuilderValidators.required(),
                                 (value) {
-                                  if (_formKey.currentState?.fields['password']?.value != value) {
+                                  if (_formKey.currentState?.fields['password']
+                                          ?.value !=
+                                      value) {
                                     return lang.passwordNotMatch;
                                   }
 
@@ -211,18 +226,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding),
+                            padding:
+                                const EdgeInsets.only(bottom: kDefaultPadding),
                             child: SizedBox(
                               height: 40.0,
                               width: double.infinity,
                               child: ElevatedButton(
-                                style: themeData.extension<AppButtonTheme>()!.primaryElevated,
+                                style: themeData
+                                    .extension<AppButtonTheme>()!
+                                    .primaryElevated,
                                 onPressed: (_isFormLoading
                                     ? null
                                     : () => _doRegisterAsync(
-                                          userDataProvider: context.read<UserDataProvider>(),
-                                          onSuccess: (message) => _onRegisterSuccess(context, message),
-                                          onError: (message) => _onRegisterError(context, message),
+                                          userDataProvider:
+                                              context.read<UserDataProvider>(),
+                                          onSuccess: (message) =>
+                                              _onRegisterSuccess(
+                                                  context, message),
+                                          onError: (message) =>
+                                              _onRegisterError(
+                                                  context, message),
                                         )),
                                 child: Text(lang.register),
                               ),
@@ -232,8 +255,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             height: 40.0,
                             width: double.infinity,
                             child: OutlinedButton(
-                              style: themeData.extension<AppButtonTheme>()!.secondaryOutlined,
-                              onPressed: () => GoRouter.of(context).go(RouteUri.login),
+                              style: themeData
+                                  .extension<AppButtonTheme>()!
+                                  .secondaryOutlined,
+                              onPressed: () =>
+                                  GoRouter.of(context).go(RouteUri.login),
                               child: Text(lang.backToLogin),
                             ),
                           ),

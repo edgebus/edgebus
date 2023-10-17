@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/master_layout_config.dart';
-import 'package:web_admin/providers/app_preferences_provider.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/master_layout_config.dart';
+import 'package:edgebus_console/providers/app_preferences_provider.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
 
 class PublicMasterLayout extends StatelessWidget {
   final Widget body;
@@ -54,7 +54,8 @@ class PublicMasterLayout extends StatelessWidget {
   Widget _toggleThemeButton(BuildContext context) {
     final lang = Lang.of(context);
     final themeData = Theme.of(context);
-    final isFullWidthButton = (MediaQuery.of(context).size.width > kScreenWidthMd);
+    final isFullWidthButton =
+        (MediaQuery.of(context).size.width > kScreenWidthMd);
 
     return SizedBox(
       height: kToolbarHeight,
@@ -63,13 +64,16 @@ class PublicMasterLayout extends StatelessWidget {
         onPressed: () async {
           final provider = context.read<AppPreferencesProvider>();
           final currentThemeMode = provider.themeMode;
-          final themeMode = (currentThemeMode != ThemeMode.dark ? ThemeMode.dark : ThemeMode.light);
+          final themeMode = (currentThemeMode != ThemeMode.dark
+              ? ThemeMode.dark
+              : ThemeMode.light);
 
           provider.setThemeModeAsync(themeMode: themeMode);
         },
         style: TextButton.styleFrom(
           foregroundColor: themeData.colorScheme.onSurface,
-          disabledForegroundColor: themeData.extension<AppColorScheme>()!.primary.withOpacity(0.38),
+          disabledForegroundColor:
+              themeData.extension<AppColorScheme>()!.primary.withOpacity(0.38),
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         child: Selector<AppPreferencesProvider, ThemeMode>(
@@ -116,7 +120,9 @@ class PublicMasterLayout extends StatelessWidget {
             onTap: () async {
               final provider = context.read<AppPreferencesProvider>();
 
-              await provider.setLocaleAsync(locale: Locale.fromSubtags(languageCode: e.languageCode, scriptCode: e.scriptCode));
+              await provider.setLocaleAsync(
+                  locale: Locale.fromSubtags(
+                      languageCode: e.languageCode, scriptCode: e.scriptCode));
             },
             child: Text(e.name),
           );

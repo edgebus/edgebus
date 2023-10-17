@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/sidebar.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/sidebar.dart';
 
 final sidebarMenuConfigs = [
   SidebarMenuConfig(

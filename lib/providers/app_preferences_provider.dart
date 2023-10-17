@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web_admin/constants/values.dart';
-import 'package:web_admin/environment.dart';
+import 'package:edgebus_console/constants/values.dart';
+import 'package:edgebus_console/environment.dart';
 
 class AppPreferencesProvider extends ChangeNotifier {
   var _locale = Locale(env.defaultAppLanguageCode);
@@ -14,17 +14,21 @@ class AppPreferencesProvider extends ChangeNotifier {
   Future<void> loadAsync() async {
     final sharedPref = await SharedPreferences.getInstance();
 
-    final langCode = (sharedPref.getString(StorageKeys.appLanguageCode) ?? env.defaultAppLanguageCode);
+    final langCode = (sharedPref.getString(StorageKeys.appLanguageCode) ??
+        env.defaultAppLanguageCode);
 
     if (langCode.contains('_')) {
       final values = langCode.split('_');
 
-      _locale = Locale.fromSubtags(languageCode: values[0], scriptCode: values[1]);
+      _locale =
+          Locale.fromSubtags(languageCode: values[0], scriptCode: values[1]);
     } else {
       _locale = Locale(langCode);
     }
 
-    _themeMode = ThemeMode.values.byName(sharedPref.getString(StorageKeys.appThemeMode) ?? ThemeMode.system.name);
+    _themeMode = ThemeMode.values.byName(
+        sharedPref.getString(StorageKeys.appThemeMode) ??
+            ThemeMode.system.name);
 
     notifyListeners();
   }

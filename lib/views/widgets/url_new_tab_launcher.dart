@@ -2,9 +2,9 @@
 import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
 
 class UrlNewTabLauncher extends StatelessWidget {
   final String displayText;
@@ -44,7 +44,8 @@ class UrlNewTabLauncher extends StatelessWidget {
                     child: Text(
                       displayText,
                       style: TextStyle(
-                        color: (fontColor ?? themeData.extension<AppColorScheme>()!.hyperlink),
+                        color: (fontColor ??
+                            themeData.extension<AppColorScheme>()!.hyperlink),
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -52,7 +53,8 @@ class UrlNewTabLauncher extends StatelessWidget {
                   Icon(
                     Icons.exit_to_app_rounded,
                     size: (fontSize + 2.0),
-                    color: (fontColor ?? themeData.extension<AppColorScheme>()!.hyperlink),
+                    color: (fontColor ??
+                        themeData.extension<AppColorScheme>()!.hyperlink),
                   ),
                 ],
               ),

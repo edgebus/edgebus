@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/hover_container.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
-import 'package:web_admin/views/widgets/text_with_copy_button.dart';
-import 'package:web_admin/views/widgets/url_new_tab_launcher.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/hover_container.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/widgets/text_with_copy_button.dart';
+import 'package:edgebus_console/views/widgets/url_new_tab_launcher.dart';
 
 class TextScreen extends StatelessWidget {
   const TextScreen({Key? key}) : super(key: key);
@@ -43,12 +43,20 @@ class TextScreen extends StatelessWidget {
                       spacing: kDefaultPadding * 2.0,
                       runSpacing: kDefaultPadding * 2.0,
                       children: [
-                        _textEmphasisItem(context, 'Text to emphasize primary.', appColorScheme.primary),
-                        _textEmphasisItem(context, 'Text to emphasize secondary.', appColorScheme.secondary),
-                        _textEmphasisItem(context, 'Text to emphasize error.', appColorScheme.error),
-                        _textEmphasisItem(context, 'Text to emphasize success.', appColorScheme.success),
-                        _textEmphasisItem(context, 'Text to emphasize info.', appColorScheme.info),
-                        _textEmphasisItem(context, 'Text to emphasize warning.', appColorScheme.warning),
+                        _textEmphasisItem(context, 'Text to emphasize primary.',
+                            appColorScheme.primary),
+                        _textEmphasisItem(
+                            context,
+                            'Text to emphasize secondary.',
+                            appColorScheme.secondary),
+                        _textEmphasisItem(context, 'Text to emphasize error.',
+                            appColorScheme.error),
+                        _textEmphasisItem(context, 'Text to emphasize success.',
+                            appColorScheme.success),
+                        _textEmphasisItem(context, 'Text to emphasize info.',
+                            appColorScheme.info),
+                        _textEmphasisItem(context, 'Text to emphasize warning.',
+                            appColorScheme.warning),
                       ],
                     ),
                   ),
@@ -78,7 +86,8 @@ class TextScreen extends StatelessWidget {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: kDefaultPadding),
+                          padding:
+                              const EdgeInsets.only(bottom: kDefaultPadding),
                           child: TextWithCopyButton(
                             textWidget: Text(
                               'Theme.of(context).textTheme',
@@ -90,21 +99,36 @@ class TextScreen extends StatelessWidget {
                             copyIconSize: 13.0,
                           ),
                         ),
-                        _typographyItem(context, 'bodyLarge', textTheme.bodyLarge!, true),
-                        _typographyItem(context, 'bodyMedium', textTheme.bodyMedium!, true),
-                        _typographyItem(context, 'bodySmall', textTheme.bodySmall!, true),
-                        _typographyItem(context, 'displayLarge', textTheme.displayLarge!, true),
-                        _typographyItem(context, 'displayMedium', textTheme.displayMedium!, true),
-                        _typographyItem(context, 'displaySmall', textTheme.displaySmall!, true),
-                        _typographyItem(context, 'headlineLarge', textTheme.headlineLarge!, true),
-                        _typographyItem(context, 'headlineMedium', textTheme.headlineMedium!, true),
-                        _typographyItem(context, 'headlineSmall', textTheme.headlineSmall!, true),
-                        _typographyItem(context, 'labelLarge', textTheme.labelLarge!, true),
-                        _typographyItem(context, 'labelMedium', textTheme.labelMedium!, true),
-                        _typographyItem(context, 'labelSmall', textTheme.labelSmall!, true),
-                        _typographyItem(context, 'titleLarge', textTheme.titleLarge!, true),
-                        _typographyItem(context, 'titleMedium', textTheme.titleMedium!, true),
-                        _typographyItem(context, 'titleSmall', textTheme.titleSmall!, false),
+                        _typographyItem(
+                            context, 'bodyLarge', textTheme.bodyLarge!, true),
+                        _typographyItem(
+                            context, 'bodyMedium', textTheme.bodyMedium!, true),
+                        _typographyItem(
+                            context, 'bodySmall', textTheme.bodySmall!, true),
+                        _typographyItem(context, 'displayLarge',
+                            textTheme.displayLarge!, true),
+                        _typographyItem(context, 'displayMedium',
+                            textTheme.displayMedium!, true),
+                        _typographyItem(context, 'displaySmall',
+                            textTheme.displaySmall!, true),
+                        _typographyItem(context, 'headlineLarge',
+                            textTheme.headlineLarge!, true),
+                        _typographyItem(context, 'headlineMedium',
+                            textTheme.headlineMedium!, true),
+                        _typographyItem(context, 'headlineSmall',
+                            textTheme.headlineSmall!, true),
+                        _typographyItem(
+                            context, 'labelLarge', textTheme.labelLarge!, true),
+                        _typographyItem(context, 'labelMedium',
+                            textTheme.labelMedium!, true),
+                        _typographyItem(
+                            context, 'labelSmall', textTheme.labelSmall!, true),
+                        _typographyItem(
+                            context, 'titleLarge', textTheme.titleLarge!, true),
+                        _typographyItem(context, 'titleMedium',
+                            textTheme.titleMedium!, true),
+                        _typographyItem(context, 'titleSmall',
+                            textTheme.titleSmall!, false),
                       ],
                     ),
                   ),
@@ -135,17 +159,22 @@ class TextScreen extends StatelessWidget {
                           ),
                         ),
                         const Padding(
-                          padding: EdgeInsets.only(bottom: kDefaultPadding * 1.5),
+                          padding:
+                              EdgeInsets.only(bottom: kDefaultPadding * 1.5),
                           child: UrlNewTabLauncher(
                             displayText: 'https://fonts.google.com/',
                             url: 'https://fonts.google.com/',
                             fontSize: 13.0,
                           ),
                         ),
-                        _googleFontItem(context, 'Roboto', GoogleFonts.roboto(), true),
-                        _googleFontItem(context, 'Josefin Sans', GoogleFonts.josefinSans(), true),
-                        _googleFontItem(context, 'Oswald', GoogleFonts.oswald(), true),
-                        _googleFontItem(context, 'Fascinate', GoogleFonts.fascinate(), false),
+                        _googleFontItem(
+                            context, 'Roboto', GoogleFonts.roboto(), true),
+                        _googleFontItem(context, 'Josefin Sans',
+                            GoogleFonts.josefinSans(), true),
+                        _googleFontItem(
+                            context, 'Oswald', GoogleFonts.oswald(), true),
+                        _googleFontItem(context, 'Fascinate',
+                            GoogleFonts.fascinate(), false),
                       ],
                     ),
                   ),
@@ -198,11 +227,13 @@ class TextScreen extends StatelessWidget {
     );
   }
 
-  Widget _typographyItem(BuildContext context, String text, TextStyle textStyle, bool withBottomPadding) {
+  Widget _typographyItem(BuildContext context, String text, TextStyle textStyle,
+      bool withBottomPadding) {
     final lang = Lang.of(context);
 
     return Padding(
-      padding: EdgeInsets.only(bottom: (withBottomPadding ? kDefaultPadding * 1.5 : 0.0)),
+      padding: EdgeInsets.only(
+          bottom: (withBottomPadding ? kDefaultPadding * 1.5 : 0.0)),
       child: HoverContainer(
         hoverColor: Theme.of(context).scaffoldBackgroundColor,
         child: Column(
@@ -249,9 +280,11 @@ class TextScreen extends StatelessWidget {
     );
   }
 
-  Widget _googleFontItem(BuildContext context, String text, TextStyle textStyle, bool withBottomPadding) {
+  Widget _googleFontItem(BuildContext context, String text, TextStyle textStyle,
+      bool withBottomPadding) {
     return Padding(
-      padding: EdgeInsets.only(bottom: (withBottomPadding ? kDefaultPadding : 0.0)),
+      padding:
+          EdgeInsets.only(bottom: (withBottomPadding ? kDefaultPadding : 0.0)),
       child: HoverContainer(
         hoverColor: Theme.of(context).scaffoldBackgroundColor,
         child: Column(

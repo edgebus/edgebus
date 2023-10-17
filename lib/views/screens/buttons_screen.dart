@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 
 class ButtonsScreen extends StatelessWidget {
   const ButtonsScreen({Key? key}) : super(key: key);
@@ -38,12 +38,18 @@ class ButtonsScreen extends StatelessWidget {
                       spacing: kDefaultPadding * 2.0,
                       runSpacing: kDefaultPadding * 2.0,
                       children: [
-                        _elevatedButtonItem(context, 'Primary', appButtonTheme.primaryElevated),
-                        _elevatedButtonItem(context, 'Secondary', appButtonTheme.secondaryElevated),
-                        _elevatedButtonItem(context, 'Error', appButtonTheme.errorElevated),
-                        _elevatedButtonItem(context, 'Success', appButtonTheme.successElevated),
-                        _elevatedButtonItem(context, 'Info', appButtonTheme.infoElevated),
-                        _elevatedButtonItem(context, 'Warning', appButtonTheme.warningElevated),
+                        _elevatedButtonItem(
+                            context, 'Primary', appButtonTheme.primaryElevated),
+                        _elevatedButtonItem(context, 'Secondary',
+                            appButtonTheme.secondaryElevated),
+                        _elevatedButtonItem(
+                            context, 'Error', appButtonTheme.errorElevated),
+                        _elevatedButtonItem(
+                            context, 'Success', appButtonTheme.successElevated),
+                        _elevatedButtonItem(
+                            context, 'Info', appButtonTheme.infoElevated),
+                        _elevatedButtonItem(
+                            context, 'Warning', appButtonTheme.warningElevated),
                       ],
                     ),
                   ),
@@ -67,12 +73,18 @@ class ButtonsScreen extends StatelessWidget {
                       spacing: kDefaultPadding * 2.0,
                       runSpacing: kDefaultPadding * 2.0,
                       children: [
-                        _outlinedButtonItem(context, 'Primary', appButtonTheme.primaryOutlined),
-                        _outlinedButtonItem(context, 'Secondary', appButtonTheme.secondaryOutlined),
-                        _outlinedButtonItem(context, 'Error', appButtonTheme.errorOutlined),
-                        _outlinedButtonItem(context, 'Success', appButtonTheme.successOutlined),
-                        _outlinedButtonItem(context, 'Info', appButtonTheme.infoOutlined),
-                        _outlinedButtonItem(context, 'Warning', appButtonTheme.warningOutlined),
+                        _outlinedButtonItem(
+                            context, 'Primary', appButtonTheme.primaryOutlined),
+                        _outlinedButtonItem(context, 'Secondary',
+                            appButtonTheme.secondaryOutlined),
+                        _outlinedButtonItem(
+                            context, 'Error', appButtonTheme.errorOutlined),
+                        _outlinedButtonItem(
+                            context, 'Success', appButtonTheme.successOutlined),
+                        _outlinedButtonItem(
+                            context, 'Info', appButtonTheme.infoOutlined),
+                        _outlinedButtonItem(
+                            context, 'Warning', appButtonTheme.warningOutlined),
                       ],
                     ),
                   ),
@@ -96,12 +108,18 @@ class ButtonsScreen extends StatelessWidget {
                       spacing: kDefaultPadding * 2.0,
                       runSpacing: kDefaultPadding * 2.0,
                       children: [
-                        _textButtonItem(context, 'Primary', appButtonTheme.primaryText),
-                        _textButtonItem(context, 'Secondary', appButtonTheme.secondaryText),
-                        _textButtonItem(context, 'Error', appButtonTheme.errorText),
-                        _textButtonItem(context, 'Success', appButtonTheme.successText),
-                        _textButtonItem(context, 'Info', appButtonTheme.infoText),
-                        _textButtonItem(context, 'Warning', appButtonTheme.warningText),
+                        _textButtonItem(
+                            context, 'Primary', appButtonTheme.primaryText),
+                        _textButtonItem(
+                            context, 'Secondary', appButtonTheme.secondaryText),
+                        _textButtonItem(
+                            context, 'Error', appButtonTheme.errorText),
+                        _textButtonItem(
+                            context, 'Success', appButtonTheme.successText),
+                        _textButtonItem(
+                            context, 'Info', appButtonTheme.infoText),
+                        _textButtonItem(
+                            context, 'Warning', appButtonTheme.warningText),
                       ],
                     ),
                   ),
@@ -114,7 +132,8 @@ class ButtonsScreen extends StatelessWidget {
     );
   }
 
-  Widget _elevatedButtonItem(BuildContext context, String text, ButtonStyle buttonStyle) {
+  Widget _elevatedButtonItem(
+      BuildContext context, String text, ButtonStyle buttonStyle) {
     return _buttonItemLayout([
       ElevatedButton(
         onPressed: () {},
@@ -170,7 +189,8 @@ class ButtonsScreen extends StatelessWidget {
     ]);
   }
 
-  Widget _outlinedButtonItem(BuildContext context, String text, ButtonStyle buttonStyle) {
+  Widget _outlinedButtonItem(
+      BuildContext context, String text, ButtonStyle buttonStyle) {
     return _buttonItemLayout([
       OutlinedButton(
         onPressed: () {},
@@ -226,7 +246,8 @@ class ButtonsScreen extends StatelessWidget {
     ]);
   }
 
-  Widget _textButtonItem(BuildContext context, String text, ButtonStyle buttonStyle) {
+  Widget _textButtonItem(
+      BuildContext context, String text, ButtonStyle buttonStyle) {
     return _buttonItemLayout([
       TextButton(
         onPressed: () {},

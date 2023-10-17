@@ -3,13 +3,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:go_router/go_router.dart';
-import 'package:web_admin/app_router.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/theme/theme_extensions/app_data_table_theme.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/app_router.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_data_table_theme.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 
 class CrudScreen extends StatefulWidget {
   const CrudScreen({Key? key}) : super(key: key);
@@ -29,7 +29,8 @@ class _CrudScreenState extends State<CrudScreen> {
     super.initState();
 
     _dataSource = DataSource(
-      onDetailButtonPressed: (data) => GoRouter.of(context).go('${RouteUri.crudDetail}?id=${data['id']}'),
+      onDetailButtonPressed: (data) =>
+          GoRouter.of(context).go('${RouteUri.crudDetail}?id=${data['id']}'),
       onDeleteButtonPressed: (data) {},
     );
   }
@@ -70,7 +71,8 @@ class _CrudScreenState extends State<CrudScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                          padding: const EdgeInsets.only(
+                              bottom: kDefaultPadding * 2.0),
                           child: FormBuilder(
                             key: _formKey,
                             autovalidateMode: AutovalidateMode.disabled,
@@ -86,14 +88,16 @@ class _CrudScreenState extends State<CrudScreen> {
                                   SizedBox(
                                     width: 300.0,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(right: kDefaultPadding * 1.5),
+                                      padding: const EdgeInsets.only(
+                                          right: kDefaultPadding * 1.5),
                                       child: FormBuilderTextField(
                                         name: 'search',
                                         decoration: InputDecoration(
                                           labelText: lang.search,
                                           hintText: lang.search,
                                           border: const OutlineInputBorder(),
-                                          floatingLabelBehavior: FloatingLabelBehavior.always,
+                                          floatingLabelBehavior:
+                                              FloatingLabelBehavior.always,
                                           isDense: true,
                                         ),
                                       ),
@@ -103,21 +107,33 @@ class _CrudScreenState extends State<CrudScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.only(right: kDefaultPadding),
+                                        padding: const EdgeInsets.only(
+                                            right: kDefaultPadding),
                                         child: SizedBox(
                                           height: 40.0,
                                           child: ElevatedButton(
-                                            style: themeData.extension<AppButtonTheme>()!.infoElevated,
+                                            style: themeData
+                                                .extension<AppButtonTheme>()!
+                                                .infoElevated,
                                             onPressed: () {},
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: kDefaultPadding * 0.5),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right:
+                                                              kDefaultPadding *
+                                                                  0.5),
                                                   child: Icon(
                                                     Icons.search,
-                                                    size: (themeData.textTheme.labelLarge!.fontSize! + 4.0),
+                                                    size: (themeData
+                                                            .textTheme
+                                                            .labelLarge!
+                                                            .fontSize! +
+                                                        4.0),
                                                   ),
                                                 ),
                                                 Text(lang.search),
@@ -129,17 +145,27 @@ class _CrudScreenState extends State<CrudScreen> {
                                       SizedBox(
                                         height: 40.0,
                                         child: ElevatedButton(
-                                          style: themeData.extension<AppButtonTheme>()!.successElevated,
-                                          onPressed: () => GoRouter.of(context).go(RouteUri.crudDetail),
+                                          style: themeData
+                                              .extension<AppButtonTheme>()!
+                                              .successElevated,
+                                          onPressed: () => GoRouter.of(context)
+                                              .go(RouteUri.crudDetail),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Padding(
-                                                padding: const EdgeInsets.only(right: kDefaultPadding * 0.5),
+                                                padding: const EdgeInsets.only(
+                                                    right:
+                                                        kDefaultPadding * 0.5),
                                                 child: Icon(
                                                   Icons.add,
-                                                  size: (themeData.textTheme.labelLarge!.fontSize! + 4.0),
+                                                  size: (themeData
+                                                          .textTheme
+                                                          .labelLarge!
+                                                          .fontSize! +
+                                                      4.0),
                                                 ),
                                               ),
                                               Text(lang.crudNew),
@@ -158,7 +184,8 @@ class _CrudScreenState extends State<CrudScreen> {
                           width: double.infinity,
                           child: LayoutBuilder(
                             builder: (context, constraints) {
-                              final double dataTableWidth = max(kScreenWidthMd, constraints.maxWidth);
+                              final double dataTableWidth =
+                                  max(kScreenWidthMd, constraints.maxWidth);
 
                               return Scrollbar(
                                 controller: _scrollController,
@@ -172,7 +199,8 @@ class _CrudScreenState extends State<CrudScreen> {
                                     child: Theme(
                                       data: themeData.copyWith(
                                         cardTheme: appDataTableTheme.cardTheme,
-                                        dataTableTheme: appDataTableTheme.dataTableThemeData,
+                                        dataTableTheme: appDataTableTheme
+                                            .dataTableThemeData,
                                       ),
                                       child: PaginatedDataTable(
                                         source: _dataSource,
@@ -180,9 +208,13 @@ class _CrudScreenState extends State<CrudScreen> {
                                         showCheckboxColumn: false,
                                         showFirstLastButtons: true,
                                         columns: const [
-                                          DataColumn(label: Text('No.'), numeric: true),
+                                          DataColumn(
+                                              label: Text('No.'),
+                                              numeric: true),
                                           DataColumn(label: Text('Item')),
-                                          DataColumn(label: Text('Price'), numeric: true),
+                                          DataColumn(
+                                              label: Text('Price'),
+                                              numeric: true),
                                           DataColumn(label: Text('Date')),
                                           DataColumn(label: Text('Actions')),
                                         ],
@@ -244,13 +276,17 @@ class DataSource extends DataTableSource {
                 padding: const EdgeInsets.only(right: kDefaultPadding),
                 child: OutlinedButton(
                   onPressed: () => onDetailButtonPressed.call(data),
-                  style: Theme.of(context).extension<AppButtonTheme>()!.infoOutlined,
+                  style: Theme.of(context)
+                      .extension<AppButtonTheme>()!
+                      .infoOutlined,
                   child: Text(Lang.of(context).crudDetail),
                 ),
               ),
               OutlinedButton(
                 onPressed: () => onDeleteButtonPressed.call(data),
-                style: Theme.of(context).extension<AppButtonTheme>()!.errorOutlined,
+                style: Theme.of(context)
+                    .extension<AppButtonTheme>()!
+                    .errorOutlined,
                 child: Text(Lang.of(context).crudDelete),
               ),
             ],

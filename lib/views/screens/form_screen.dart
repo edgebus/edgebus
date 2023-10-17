@@ -3,13 +3,13 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_asset_picker/form_builder_asset_picker.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/intl.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
-import 'package:web_admin/views/widgets/url_new_tab_launcher.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/widgets/url_new_tab_launcher.dart';
 
 class FormScreen extends StatefulWidget {
   const FormScreen({Key? key}) : super(key: key);
@@ -53,15 +53,18 @@ class _FormScreenState extends State<FormScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Padding(
-                            padding: EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding:
+                                EdgeInsets.only(bottom: kDefaultPadding * 2.0),
                             child: UrlNewTabLauncher(
                               displayText: 'flutter_form_builder - pub.dev',
-                              url: 'https://pub.dev/packages/flutter_form_builder',
+                              url:
+                                  'https://pub.dev/packages/flutter_form_builder',
                               fontSize: 13.0,
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderTextField(
                               name: 'text_field',
                               decoration: const InputDecoration(
@@ -69,52 +72,78 @@ class _FormScreenState extends State<FormScreen> {
                                 hintText: 'Hint text',
                                 helperText: 'Helper text',
                                 border: OutlineInputBorder(),
-                                floatingLabelBehavior: FloatingLabelBehavior.always,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
                               ),
                               validator: FormBuilderValidators.required(),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 return Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SizedBox(
-                                      width: ((constraints.maxWidth * 0.5) - (kDefaultPadding * 0.5)),
+                                      width: ((constraints.maxWidth * 0.5) -
+                                          (kDefaultPadding * 0.5)),
                                       child: FormBuilderCheckboxGroup(
                                         name: 'checkbox_group_vertical',
-                                        orientation: OptionsOrientation.vertical,
+                                        orientation:
+                                            OptionsOrientation.vertical,
                                         decoration: const InputDecoration(
                                           labelText: 'Checkbox Group Vertical',
                                           border: OutlineInputBorder(),
                                         ),
                                         options: const [
-                                          FormBuilderFieldOption(value: 'Item 1', child: Text('Item 1')),
-                                          FormBuilderFieldOption(value: 'Item 2', child: Text('Item 2')),
-                                          FormBuilderFieldOption(value: 'Item 3', child: Text('Item 3')),
-                                          FormBuilderFieldOption(value: 'Item 4', child: Text('Item 4')),
-                                          FormBuilderFieldOption(value: 'Item 5', child: Text('Item 5')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 1',
+                                              child: Text('Item 1')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 2',
+                                              child: Text('Item 2')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 3',
+                                              child: Text('Item 3')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 4',
+                                              child: Text('Item 4')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 5',
+                                              child: Text('Item 5')),
                                         ],
                                       ),
                                     ),
                                     const SizedBox(width: kDefaultPadding),
                                     SizedBox(
-                                      width: ((constraints.maxWidth * 0.5) - (kDefaultPadding * 0.5)),
+                                      width: ((constraints.maxWidth * 0.5) -
+                                          (kDefaultPadding * 0.5)),
                                       child: FormBuilderCheckboxGroup(
                                         name: 'checkbox_group_horizontal',
                                         wrapSpacing: kDefaultPadding,
                                         decoration: const InputDecoration(
-                                          labelText: 'Checkbox Group Horizontal',
+                                          labelText:
+                                              'Checkbox Group Horizontal',
                                           border: OutlineInputBorder(),
                                         ),
                                         options: const [
-                                          FormBuilderFieldOption(value: 'Item 1', child: Text('Item 1')),
-                                          FormBuilderFieldOption(value: 'Item 2', child: Text('Item 2')),
-                                          FormBuilderFieldOption(value: 'Item 3', child: Text('Item 3')),
-                                          FormBuilderFieldOption(value: 'Item 4', child: Text('Item 4')),
-                                          FormBuilderFieldOption(value: 'Item 5', child: Text('Item 5')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 1',
+                                              child: Text('Item 1')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 2',
+                                              child: Text('Item 2')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 3',
+                                              child: Text('Item 3')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 4',
+                                              child: Text('Item 4')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 5',
+                                              child: Text('Item 5')),
                                         ],
                                       ),
                                     ),
@@ -124,46 +153,72 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 return Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SizedBox(
-                                      width: ((constraints.maxWidth * 0.5) - (kDefaultPadding * 0.5)),
+                                      width: ((constraints.maxWidth * 0.5) -
+                                          (kDefaultPadding * 0.5)),
                                       child: FormBuilderRadioGroup(
                                         name: 'radio_button_group_vertical',
-                                        orientation: OptionsOrientation.vertical,
+                                        orientation:
+                                            OptionsOrientation.vertical,
                                         decoration: const InputDecoration(
-                                          labelText: 'Radio Button Group Vertical',
+                                          labelText:
+                                              'Radio Button Group Vertical',
                                           border: OutlineInputBorder(),
                                         ),
                                         options: const [
-                                          FormBuilderFieldOption(value: 'Item 1', child: Text('Item 1')),
-                                          FormBuilderFieldOption(value: 'Item 2', child: Text('Item 2')),
-                                          FormBuilderFieldOption(value: 'Item 3', child: Text('Item 3')),
-                                          FormBuilderFieldOption(value: 'Item 4', child: Text('Item 4')),
-                                          FormBuilderFieldOption(value: 'Item 5', child: Text('Item 5')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 1',
+                                              child: Text('Item 1')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 2',
+                                              child: Text('Item 2')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 3',
+                                              child: Text('Item 3')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 4',
+                                              child: Text('Item 4')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 5',
+                                              child: Text('Item 5')),
                                         ],
                                       ),
                                     ),
                                     const SizedBox(width: kDefaultPadding),
                                     SizedBox(
-                                      width: ((constraints.maxWidth * 0.5) - (kDefaultPadding * 0.5)),
+                                      width: ((constraints.maxWidth * 0.5) -
+                                          (kDefaultPadding * 0.5)),
                                       child: FormBuilderRadioGroup(
                                         name: 'radio_button_group_horizontal',
                                         wrapSpacing: kDefaultPadding,
                                         decoration: const InputDecoration(
-                                          labelText: 'Radio Button Group Horizontal',
+                                          labelText:
+                                              'Radio Button Group Horizontal',
                                           border: OutlineInputBorder(),
                                         ),
                                         options: const [
-                                          FormBuilderFieldOption(value: 'Item 1', child: Text('Item 1')),
-                                          FormBuilderFieldOption(value: 'Item 2', child: Text('Item 2')),
-                                          FormBuilderFieldOption(value: 'Item 3', child: Text('Item 3')),
-                                          FormBuilderFieldOption(value: 'Item 4', child: Text('Item 4')),
-                                          FormBuilderFieldOption(value: 'Item 5', child: Text('Item 5')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 1',
+                                              child: Text('Item 1')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 2',
+                                              child: Text('Item 2')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 3',
+                                              child: Text('Item 3')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 4',
+                                              child: Text('Item 4')),
+                                          FormBuilderFieldOption(
+                                              value: 'Item 5',
+                                              child: Text('Item 5')),
                                         ],
                                       ),
                                     ),
@@ -173,7 +228,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderFilterChip(
                               name: 'filter_chip',
                               spacing: kDefaultPadding * 0.5,
@@ -184,16 +240,22 @@ class _FormScreenState extends State<FormScreen> {
                                 border: OutlineInputBorder(),
                               ),
                               options: const [
-                                FormBuilderChipOption(value: 'Item 1', child: Text('Item 1')),
-                                FormBuilderChipOption(value: 'Item 2', child: Text('Item 2')),
-                                FormBuilderChipOption(value: 'Item 3', child: Text('Item 3')),
-                                FormBuilderChipOption(value: 'Item 4', child: Text('Item 4')),
-                                FormBuilderChipOption(value: 'Item 5', child: Text('Item 5')),
+                                FormBuilderChipOption(
+                                    value: 'Item 1', child: Text('Item 1')),
+                                FormBuilderChipOption(
+                                    value: 'Item 2', child: Text('Item 2')),
+                                FormBuilderChipOption(
+                                    value: 'Item 3', child: Text('Item 3')),
+                                FormBuilderChipOption(
+                                    value: 'Item 4', child: Text('Item 4')),
+                                FormBuilderChipOption(
+                                    value: 'Item 5', child: Text('Item 5')),
                               ],
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderChoiceChip(
                               name: 'choice_chip',
                               spacing: kDefaultPadding * 0.5,
@@ -204,16 +266,22 @@ class _FormScreenState extends State<FormScreen> {
                                 border: OutlineInputBorder(),
                               ),
                               options: const [
-                                FormBuilderChipOption(value: 'Item 1', child: Text('Item 1')),
-                                FormBuilderChipOption(value: 'Item 2', child: Text('Item 2')),
-                                FormBuilderChipOption(value: 'Item 3', child: Text('Item 3')),
-                                FormBuilderChipOption(value: 'Item 4', child: Text('Item 4')),
-                                FormBuilderChipOption(value: 'Item 5', child: Text('Item 5')),
+                                FormBuilderChipOption(
+                                    value: 'Item 1', child: Text('Item 1')),
+                                FormBuilderChipOption(
+                                    value: 'Item 2', child: Text('Item 2')),
+                                FormBuilderChipOption(
+                                    value: 'Item 3', child: Text('Item 3')),
+                                FormBuilderChipOption(
+                                    value: 'Item 4', child: Text('Item 4')),
+                                FormBuilderChipOption(
+                                    value: 'Item 5', child: Text('Item 5')),
                               ],
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderDateTimePicker(
                               name: 'date_picker',
                               onChanged: (value) {},
@@ -227,7 +295,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderDateTimePicker(
                               name: 'time_picker',
                               onChanged: (value) {},
@@ -241,7 +310,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderDateRangePicker(
                               name: 'date_range',
                               firstDate: DateTime(1970),
@@ -256,7 +326,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderSlider(
                               name: 'slider',
                               validator: FormBuilderValidators.compose([
@@ -268,7 +339,8 @@ class _FormScreenState extends State<FormScreen> {
                               initialValue: 7.0,
                               divisions: 20,
                               activeColor: appColorScheme.primary,
-                              inactiveColor: appColorScheme.primary.withOpacity(0.3),
+                              inactiveColor:
+                                  appColorScheme.primary.withOpacity(0.3),
                               decoration: const InputDecoration(
                                 labelText: 'Slider',
                                 border: OutlineInputBorder(),
@@ -276,7 +348,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: Theme(
                               data: themeData.copyWith(
                                 // canvasColor: Colors.amber,
@@ -294,12 +367,22 @@ class _FormScreenState extends State<FormScreen> {
                                 focusColor: Colors.transparent,
                                 hint: const Text('Select'),
                                 validator: FormBuilderValidators.required(),
-                                items: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                                items: [
+                                  'Item 1',
+                                  'Item 2',
+                                  'Item 3',
+                                  'Item 4',
+                                  'Item 5'
+                                ]
+                                    .map((e) => DropdownMenuItem(
+                                        value: e, child: Text(e)))
+                                    .toList(),
                               ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderAssetPicker(
                               name: 'file_picker',
                               allowedExtensions: const ['jpg', 'png', 'pdf'],
@@ -319,7 +402,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderSwitch(
                               name: 'switch',
                               title: const Text('Receive marketing email'),
@@ -332,7 +416,8 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: kDefaultPadding * 2.0),
+                            padding: const EdgeInsets.only(
+                                bottom: kDefaultPadding * 2.0),
                             child: FormBuilderCheckbox(
                               name: 'accept_terms',
                               initialValue: false,
@@ -355,7 +440,8 @@ class _FormScreenState extends State<FormScreen> {
                               ),
                               validator: FormBuilderValidators.equal(
                                 true,
-                                errorText: 'You must accept terms and conditions to continue',
+                                errorText:
+                                    'You must accept terms and conditions to continue',
                               ),
                             ),
                           ),
@@ -365,9 +451,12 @@ class _FormScreenState extends State<FormScreen> {
                               height: 36.0,
                               width: 100.0,
                               child: ElevatedButton(
-                                style: themeData.extension<AppButtonTheme>()!.primaryElevated,
+                                style: themeData
+                                    .extension<AppButtonTheme>()!
+                                    .primaryElevated,
                                 onPressed: () {
-                                  if (_formKey.currentState?.validate() ?? false) {
+                                  if (_formKey.currentState?.validate() ??
+                                      false) {
                                     // Validation passed.
                                     _formKey.currentState!.save();
                                   } else {

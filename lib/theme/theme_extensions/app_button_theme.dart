@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
 
 class AppButtonTheme extends ThemeExtension<AppButtonTheme> {
   final ButtonStyle primaryElevated;
@@ -209,7 +209,8 @@ class AppButtonTheme extends ThemeExtension<AppButtonTheme> {
   }
 
   @override
-  ThemeExtension<AppButtonTheme> lerp(ThemeExtension<AppButtonTheme>? other, double t) {
+  ThemeExtension<AppButtonTheme> lerp(
+      ThemeExtension<AppButtonTheme>? other, double t) {
     if (other is! AppButtonTheme) {
       return this;
     }

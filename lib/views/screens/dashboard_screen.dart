@@ -1,13 +1,13 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
-import 'package:web_admin/theme/theme_extensions/app_button_theme.dart';
-import 'package:web_admin/theme/theme_extensions/app_color_scheme.dart';
-import 'package:web_admin/theme/theme_extensions/app_data_table_theme.dart';
-import 'package:web_admin/views/widgets/card_elements.dart';
-import 'package:web_admin/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_button_theme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
+import 'package:edgebus_console/theme/theme_extensions/app_data_table_theme.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -48,7 +48,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.symmetric(vertical: kDefaultPadding),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final summaryCardWidth = ((constraints.maxWidth - (kDefaultPadding * (summaryCardCrossAxisCount - 1))) / summaryCardCrossAxisCount);
+                final summaryCardWidth = ((constraints.maxWidth -
+                        (kDefaultPadding * (summaryCardCrossAxisCount - 1))) /
+                    summaryCardCrossAxisCount);
 
                 return Wrap(
                   direction: Axis.horizontal,
@@ -111,7 +113,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: double.infinity,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final double dataTableWidth = max(kScreenWidthMd, constraints.maxWidth);
+                        final double dataTableWidth =
+                            max(kScreenWidthMd, constraints.maxWidth);
 
                         return Scrollbar(
                           controller: _dataTableHorizontalScrollController,
@@ -125,16 +128,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: Theme(
                                 data: themeData.copyWith(
                                   cardTheme: appDataTableTheme.cardTheme,
-                                  dataTableTheme: appDataTableTheme.dataTableThemeData,
+                                  dataTableTheme:
+                                      appDataTableTheme.dataTableThemeData,
                                 ),
                                 child: DataTable(
                                   showCheckboxColumn: false,
                                   showBottomBorder: true,
                                   columns: const [
-                                    DataColumn(label: Text('No.'), numeric: true),
+                                    DataColumn(
+                                        label: Text('No.'), numeric: true),
                                     DataColumn(label: Text('Date')),
                                     DataColumn(label: Text('Item')),
-                                    DataColumn(label: Text('Price'), numeric: true),
+                                    DataColumn(
+                                        label: Text('Price'), numeric: true),
                                   ],
                                   rows: List.generate(5, (index) {
                                     return DataRow.byIndex(
@@ -143,7 +149,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         DataCell(Text('#${index + 1}')),
                                         const DataCell(Text('2022-06-30')),
                                         DataCell(Text('Item ${index + 1}')),
-                                        DataCell(Text('${Random().nextInt(10000)}')),
+                                        DataCell(
+                                            Text('${Random().nextInt(10000)}')),
                                       ],
                                     );
                                   }),
@@ -164,16 +171,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 120.0,
                         child: ElevatedButton(
                           onPressed: () {},
-                          style: themeData.extension<AppButtonTheme>()!.infoElevated,
+                          style: themeData
+                              .extension<AppButtonTheme>()!
+                              .infoElevated,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(right: kDefaultPadding * 0.5),
+                                padding: const EdgeInsets.only(
+                                    right: kDefaultPadding * 0.5),
                                 child: Icon(
                                   Icons.visibility_rounded,
-                                  size: (themeData.textTheme.labelLarge!.fontSize! + 4.0),
+                                  size: (themeData
+                                          .textTheme.labelLarge!.fontSize! +
+                                      4.0),
                                 ),
                               ),
                               const Text('View All'),
@@ -240,7 +252,8 @@ class SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(bottom: kDefaultPadding * 0.5),
+                    padding:
+                        const EdgeInsets.only(bottom: kDefaultPadding * 0.5),
                     child: Text(
                       value,
                       style: textTheme.headlineMedium!.copyWith(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:web_admin/constants/dimens.dart';
-import 'package:web_admin/generated/l10n.dart';
+import 'package:edgebus_console/constants/dimens.dart';
+import 'package:edgebus_console/generated/l10n.dart';
 
 class TextWithCopyButton extends StatelessWidget {
   final Widget textWidget;
@@ -38,7 +38,8 @@ class TextWithCopyButton extends StatelessWidget {
               message: lang.copy,
               child: Icon(
                 Icons.copy_rounded,
-                size: copyIconSize ?? (Theme.of(context).textTheme.labelLarge!.fontSize! + 2.0),
+                size: copyIconSize ??
+                    (Theme.of(context).textTheme.labelLarge!.fontSize! + 2.0),
                 color: copyIconColor,
               ),
             ),
