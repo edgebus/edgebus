@@ -29,14 +29,13 @@ class _TopicScreenState extends State<TopicScreen> {
   //   // print(topics);
   // }
 
-  Future<List<String>> getList() async {
-    List<String> data = [];
-    data.add("A");
-    data.add("B");
-    data.add("C");
-    // DEBUG
+  Future<List<Topic>> getList() async {
+    final Future<List<Topic>> topics = this
+        .widget
+        .apiClient
+        .listTopics(FExecutionContext.defaultExecutionContext);
     await Future.delayed(const Duration(seconds: 6), () {});
-    return data;
+    return topics;
   }
 
   // Future<List<Topic>> getList() {
@@ -88,11 +87,16 @@ class _TopicScreenState extends State<TopicScreen> {
                           snapshot.hasData) {
                         return ListView.builder(
                             padding: const EdgeInsets.all(8),
-                            itemCount: 1,
+                            itemCount: topics.length,
                             itemBuilder: (BuildContext context, int index) {
-                              return Text(topics.toString(),
-                                  style: const TextStyle(
-                                      fontSize: 22, color: Colors.red));
+                              return Container(
+                                  height: 50,
+                                  color: Colors.amber,
+                                  child: Center(
+                                    child: Text(topics[index].toString(),
+                                        style: const TextStyle(
+                                            fontSize: 22, color: Colors.red)),
+                                  ));
                             });
                       }
                       return const Center(
