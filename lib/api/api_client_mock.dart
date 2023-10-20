@@ -27,6 +27,8 @@ class ApiClientMock extends ApiClient {
     required String name,
     required String description,
   }) async {
+    await Future.delayed(const Duration(seconds: 3));
+
     final TopicId id = const Uuid().toString();
     final Topic topic = Topic(id, name, description);
 
@@ -41,6 +43,8 @@ class ApiClientMock extends ApiClient {
     FExecutionContext executionContext,
     TopicId topicId,
   ) async {
+    await Future.delayed(const Duration(seconds: 3));
+
     if (this._topics.containsKey(topicId)) {
       this._topics.remove(topicId);
     } else {
@@ -53,6 +57,8 @@ class ApiClientMock extends ApiClient {
   Future<List<Topic>> listTopics(
     FExecutionContext executionContext,
   ) async {
+    await Future.delayed(const Duration(seconds: 3));
+
     return this._topics.values.toList(growable: false);
   }
 
@@ -63,6 +69,8 @@ class ApiClientMock extends ApiClient {
     TopicId topicId,
     String newDescription,
   ) async {
+    await Future.delayed(const Duration(seconds: 3));
+
     if (this._topics.containsKey(topicId)) {
       final Topic oldTopic = this._topics[topicId]!;
       final Topic newTopic = Topic(oldTopic.id, oldTopic.name, newDescription);

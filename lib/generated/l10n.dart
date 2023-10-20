@@ -430,6 +430,16 @@ class Lang {
     );
   }
 
+  /// `Topic`
+  String get topic {
+    return Intl.message(
+      'Topic',
+      name: 'topic',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `This field requires a valid integer.`
   String get integerErrorText {
     return Intl.message(

@@ -37,6 +37,7 @@
   "hi": "Hi",
   "homePage": "Home",
   "iframeDemo": "IFrame Demo",
+  "topic": "Topic",
   "integerErrorText": "This field requires a valid integer.",
   "ipErrorText": "This field requires a valid IP.",
   "language": "Language",

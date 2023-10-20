@@ -1,3 +1,4 @@
+import 'package:edgebus_console/views/screens/topic.dart';
 import 'package:go_router/go_router.dart';
 import 'package:edgebus_console/providers/user_data_provider.dart';
 import 'package:edgebus_console/views/screens/buttons_screen.dart';
@@ -33,6 +34,7 @@ class RouteUri {
   static const String crud = '/crud';
   static const String crudDetail = '/crud-detail';
   static const String iframe = '/iframe';
+  static const String topic = '/topic';
 }
 
 const List<String> unrestrictedRoutes = [
@@ -85,6 +87,13 @@ GoRouter appRouter(UserDataProvider userDataProvider) {
         pageBuilder: (context, state) => NoTransitionPage<void>(
           key: state.pageKey,
           child: const FormScreen(),
+        ),
+      ),
+      GoRoute(
+        path: RouteUri.topic,
+        pageBuilder: (context, state) => NoTransitionPage<void>(
+          key: state.pageKey,
+          child: TopicScreen(),
         ),
       ),
       GoRoute(
