@@ -60,7 +60,6 @@ class _TopicScreenState extends State<TopicScreen> {
 
     return Scaffold(
         body: SizedBox(
-            width: double.infinity,
             child: Center(
                 child: FutureBuilder(
                     future: getList(),
@@ -91,24 +90,32 @@ class _TopicScreenState extends State<TopicScreen> {
                           padding: const EdgeInsets.all(8),
                           itemCount: topics.length,
                           itemBuilder: (BuildContext context, int index) {
-                            return Center(
-                                child: Container(
-                                    width: 250,
-                                    height: 50,
-                                    color: Colors.amber[colorCodes[index]],
-                                    child: Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Text(topics[index].toString(),
-                                          style: const TextStyle(
-                                              fontSize: 22, color: Colors.red)),
-                                    )));
+                            return Row(children: [
+                              Container(
+                                  width: 250,
+                                  height: 50,
+                                  color: Colors.amber[colorCodes[index]],
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                    Text(topics[index].toString(),
+                                        style: const TextStyle(
+                                            fontSize: 22, color: Colors.red)),
+                                  ])),
+                              ElevatedButton(
+                                  child: const Text("Click",
+                                      style: TextStyle(fontSize: 22)),
+                                  onPressed: () {
+                                    print("Clicked!!!");
+                                  }),
+                            ]);
                           },
                           separatorBuilder: (BuildContext context, int index) =>
                               const Divider(
                             height: 20,
                             thickness: 2,
-                            indent: 200,
-                            endIndent: 200,
+                            indent: 0,
+                            endIndent: 1000,
                             color: Colors.black,
                           ),
                         ));
