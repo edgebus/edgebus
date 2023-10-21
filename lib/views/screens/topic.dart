@@ -52,6 +52,7 @@ class _TopicScreenState extends State<TopicScreen> {
     // final lang = Lang.of(context);
     // final themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
+    final List<int> colorCodes = <int>[600, 500, 100];
     const List<String> topics = <String>[
       "my-topic-1",
       "my-topic-2",
@@ -85,19 +86,32 @@ class _TopicScreenState extends State<TopicScreen> {
                       }
                       if (snapshot.connectionState == ConnectionState.done &&
                           snapshot.hasData) {
-                        return ListView.builder(
-                            padding: const EdgeInsets.all(8),
-                            itemCount: topics.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return Container(
-                                  height: 50,
-                                  color: Colors.amber,
-                                  child: Center(
-                                    child: Text(topics[index].toString(),
-                                        style: const TextStyle(
-                                            fontSize: 22, color: Colors.red)),
-                                  ));
-                            });
+                        return Flexible(
+                            child: ListView.separated(
+                          padding: const EdgeInsets.all(8),
+                          itemCount: topics.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Center(
+                                child: Container(
+                                    width: 250,
+                                    height: 50,
+                                    color: Colors.amber[colorCodes[index]],
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(topics[index].toString(),
+                                          style: const TextStyle(
+                                              fontSize: 22, color: Colors.red)),
+                                    )));
+                          },
+                          separatorBuilder: (BuildContext context, int index) =>
+                              const Divider(
+                            height: 20,
+                            thickness: 2,
+                            indent: 200,
+                            endIndent: 200,
+                            color: Colors.black,
+                          ),
+                        ));
                       }
                       return const Center(
                         child: CircularProgressIndicator(
