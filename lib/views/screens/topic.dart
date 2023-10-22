@@ -94,7 +94,7 @@ class _TopicScreenState extends State<TopicScreen> {
                               Container(
                                   width: 250,
                                   height: 50,
-                                  color: Colors.amber[colorCodes[index]],
+                                  color: Colors.grey[colorCodes[index]],
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -102,9 +102,8 @@ class _TopicScreenState extends State<TopicScreen> {
                                         style: const TextStyle(
                                             fontSize: 22, color: Colors.red)),
                                   ])),
-                              ElevatedButton(
-                                  child: const Text("Click",
-                                      style: TextStyle(fontSize: 22)),
+                              IconButton(
+                                  icon: const Icon(Icons.arrow_circle_right_rounded),
                                   onPressed: () {
                                     print("Clicked!!!");
                                   }),
@@ -115,7 +114,7 @@ class _TopicScreenState extends State<TopicScreen> {
                             height: 20,
                             thickness: 2,
                             indent: 0,
-                            endIndent: 1000,
+                            endIndent: 1070,
                             color: Colors.black,
                           ),
                         ));
