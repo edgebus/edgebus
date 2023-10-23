@@ -96,14 +96,17 @@ class _TopicScreenState extends State<TopicScreen> {
                                   height: 50,
                                   color: Colors.grey[colorCodes[index]],
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                    Text(topics[index].toString(),
-                                        style: const TextStyle(
-                                            fontSize: 22, color: Colors.red)),
-                                  ])),
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(topics[index].toString(),
+                                            style: const TextStyle(
+                                                fontSize: 22,
+                                                color: Colors.black)),
+                                      ])),
                               IconButton(
-                                  icon: const Icon(Icons.arrow_circle_right_rounded),
+                                  icon: const Icon(
+                                      Icons.arrow_circle_right_rounded),
                                   onPressed: () {
                                     print("Clicked!!!");
                                   }),
@@ -112,10 +115,10 @@ class _TopicScreenState extends State<TopicScreen> {
                           separatorBuilder: (BuildContext context, int index) =>
                               const Divider(
                             height: 20,
-                            thickness: 2,
+                            thickness: 0,
                             indent: 0,
-                            endIndent: 1070,
-                            color: Colors.black,
+                            endIndent: 0,
+                            color: Colors.white,
                           ),
                         ));
                       }
