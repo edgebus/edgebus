@@ -66,41 +66,46 @@ class _DescriptionScreen extends State<DescriptionScreen> {
     ];
 
     return PortalMasterLayout(
-        body: ListView.separated(
-      padding: const EdgeInsets.only(left: 40, top: 20),
-      itemCount: messages.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Row(children: [
-          Container(
-              width: 400,
-              height: 50,
-              color: Colors.grey[400],
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(messages[index].toString(),
-                    style: const TextStyle(fontSize: 22, color: Colors.black)),
-              )),
-          const SizedBox(
-            width: 20,
-          ),
-          // ElevatedButton(
-          //     style: style,
-          //     child: const Icon(
-          //       Icons.settings_applications_sharp,
-          //     ),
-          //     onPressed: () {
-          //       Navigator.pop(context);
-          //     }),
-        ]);
-      },
-      separatorBuilder: (BuildContext context, int index) => const Divider(
-        height: 20,
-        thickness: 0,
-        indent: 0,
-        endIndent: 1170,
-        color: Colors.black,
+      body: ListView.separated(
+        padding: const EdgeInsets.only(left: 40, top: 20),
+        itemCount: messages.length,
+        itemBuilder: (BuildContext context, int index) {
+          return Row(
+            children: [
+              Container(
+                width: 400,
+                height: 50,
+                color: Colors.grey[400],
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(messages[index].toString(),
+                      style:
+                          const TextStyle(fontSize: 22, color: Colors.black)),
+                ),
+              ),
+              const SizedBox(
+                width: 20,
+              ),
+              ElevatedButton(
+                child: const Icon(
+                  Icons.arrow_back_rounded,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        },
+        separatorBuilder: (BuildContext context, int index) => const Divider(
+          height: 20,
+          thickness: 0,
+          indent: 0,
+          endIndent: 1170,
+          color: Colors.black,
+        ),
       ),
-    ));
+    );
   }
 }
 

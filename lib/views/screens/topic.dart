@@ -82,78 +82,82 @@ class _TopicScreenState extends State<TopicScreen> {
     ];
 
     return PortalMasterLayout(
-        body: FutureBuilder(
-            future: getList(),
-            // initialData: "Code sample",
-            builder: (BuildContext context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'An ${snapshot.error} occurred',
-                      style: const TextStyle(fontSize: 18, color: Colors.red),
-                    ),
-                  );
-                }
-                return const Center(
-                  child: CircularProgressIndicator(
-                    // strokeWidth: 2, // вказує товщину CircularProgressIndicator
-                    backgroundColor: Colors.grey,
-                    valueColor: AlwaysStoppedAnimation(Colors.amber),
-                  ),
-                );
-              }
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasData) {
-                return ListView.separated(
-                  padding: const EdgeInsets.only(left: 40, top: 20),
-                  itemCount: topics.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Row(children: [
-                      Container(
-                          width: 250,
-                          height: 50,
-                          color: Colors.grey[400],
-                          child: Center(
-                            child: Text(topics[index].toString(),
-                                style: const TextStyle(
-                                    fontSize: 22, color: Colors.black)),
-                          )),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      ElevatedButton(
-                          style: style,
-                          child: const Icon(
-                            Icons.settings_applications_sharp,
-                          ),
-                          onPressed: () {
-                              Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => DescriptionScreen()),
-                            );
-                          }),
-                    ]);
-                  },
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const Divider(
-                    height: 20,
-                    thickness: 0,
-                    indent: 0,
-                    endIndent: 1245,
-                    color: Colors.black,
-                  ),
-                );
-              }
-              return const Center(
-                child: CircularProgressIndicator(
-                  // strokeWidth: 2, // вказує товщину CircularProgressIndicator
-                  backgroundColor: Colors.grey,
-                  valueColor: AlwaysStoppedAnimation(Colors.green),
+      body: FutureBuilder(
+        future: getList(),
+        // initialData: "Code sample",
+        builder: (BuildContext context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'An ${snapshot.error} occurred',
+                  style: const TextStyle(fontSize: 18, color: Colors.red),
                 ),
               );
-            }));
+            }
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2, // вказує товщину CircularProgressIndicator
+                backgroundColor: Colors.grey,
+                valueColor: AlwaysStoppedAnimation(Colors.blue),
+              ),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            return ListView.separated(
+              padding: const EdgeInsets.only(left: 40, top: 20),
+              itemCount: topics.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Row(children: [
+                  Container(
+                    width: 250,
+                    height: 50,
+                    color: Colors.grey[400],
+                    child: Center(
+                      child: Text(topics[index].toString(),
+                          style: const TextStyle(
+                              fontSize: 22, color: Colors.black)),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  ElevatedButton(
+                    style: style,
+                    child: const Icon(
+                      Icons.settings_applications_sharp,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DescriptionScreen()),
+                      );
+                    },
+                  ),
+                ]);
+              },
+              separatorBuilder: (BuildContext context, int index) =>
+                  const Divider(
+                height: 20,
+                thickness: 0,
+                indent: 0,
+                endIndent: 1245,
+                color: Colors.black,
+              ),
+            );
+          }
+          return const Center(
+            child: CircularProgressIndicator(
+              // strokeWidth: 2, // вказує товщину CircularProgressIndicator
+              backgroundColor: Colors.grey,
+              valueColor: AlwaysStoppedAnimation(Colors.green),
+            ),
+          );
+        },
+      ),
+    );
 
     // return const PortalMasterLayout(
     //   body: Text(
