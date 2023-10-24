@@ -128,7 +128,7 @@ class _TopicScreenState extends State<TopicScreen> {
                       ElevatedButton(
                           style: style,
                           child: const Icon(
-                            Icons.play_circle,
+                            Icons.settings_applications_sharp,
                           ),
                           onPressed: () {
                             goTo();
