@@ -22,6 +22,7 @@
   "darkTheme": "Dark Theme",
   "dashboard": "Dashboard",
   "dateStringErrorText": "This field requires a valid date string.",
+  "description": "Description",
   "dialogs": "{count, plural, one{Dialog} other{Dialogs}}",
   "dontHaveAnAccount": "Don't have an account?",
   "email": "Email",

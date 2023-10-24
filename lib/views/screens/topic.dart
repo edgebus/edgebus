@@ -7,6 +7,7 @@ import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master
 import 'package:flutter/material.dart';
 import 'package:freemework/execution_context/f_execution_context.dart';
 // import 'package:freemework/freemework.dart';
+import 'package:edgebus_console/views/screens/description.dart';
 
 class TopicScreen extends StatefulWidget {
   final ApiClient apiClient = ApiClientMock();
@@ -39,10 +40,6 @@ class _TopicScreenState extends State<TopicScreen> {
         .listTopics(FExecutionContext.defaultExecutionContext);
     await Future.delayed(const Duration(seconds: 6), () {});
     return topics;
-  }
-
-  void goTo() {
-    print("Go to...");
   }
 
   @override
@@ -131,7 +128,11 @@ class _TopicScreenState extends State<TopicScreen> {
                             Icons.settings_applications_sharp,
                           ),
                           onPressed: () {
-                            goTo();
+                              Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => DescriptionScreen()),
+                            );
                           }),
                     ]);
                   },

@@ -96,6 +96,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "crudNew": MessageLookupByLibrary.simpleMessage("New"),
         "darkTheme": MessageLookupByLibrary.simpleMessage("Dark Theme"),
         "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
+        "description": MessageLookupByLibrary.simpleMessage("Description"),
         "dateStringErrorText": MessageLookupByLibrary.simpleMessage(
             "This field requires a valid date string."),
         "dialogs": m2,
