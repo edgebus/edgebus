@@ -7,6 +7,7 @@ import 'package:edgebus_console/api/api_client_mock.dart';
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 import 'package:flutter/material.dart';
 // import 'package:freemework/execution_context/f_execution_context.dart';
+// import 'package:freemework/execution_context/f_execution_context.dart';
 // import 'package:freemework/freemework.dart';
 
 class DescriptionScreen extends StatefulWidget {
@@ -23,23 +24,21 @@ class _DescriptionScreen extends State<DescriptionScreen> {
 
   // this.widget.apiClient.listTopics(FExecutionContext.defaultExecutionContext);
 
-  Future<String> getDescription() {
-    return Future.delayed(const Duration(seconds: 3), () => "Description-get");
-  }
-
-  // Future<String> getDescription() async {
-  //   final Future<String> description =
+  // Future<String> getTopicDescription() async {
+  //   final Future<String> messages =
   //       this.widget.apiClient.updateTopicDescription(
   //             FExecutionContext.defaultExecutionContext,
   //             topicId,
   //             newDescription,
   //           );
   //   await Future.delayed(const Duration(seconds: 6), () {});
-  //   return description;
+  //   return messages;
   // }
 
-  void printDescription() {
-    print("Description...");
+  Future<String> getTopicDescription() async {
+    const String messages = "Description";
+    await Future.delayed(const Duration(seconds: 6), () {});
+    return messages;
   }
 
   @override
@@ -66,44 +65,75 @@ class _DescriptionScreen extends State<DescriptionScreen> {
     ];
 
     return PortalMasterLayout(
-      body: ListView.separated(
-        padding: const EdgeInsets.only(left: 40, top: 20),
-        itemCount: messages.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Row(
-            children: [
-              Container(
-                width: 400,
-                height: 50,
-                color: Colors.grey[400],
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(messages[index].toString(),
-                      style:
-                          const TextStyle(fontSize: 22, color: Colors.black)),
+      body: FutureBuilder(
+        future: getTopicDescription(),
+        // initialData: "Code sample",
+        builder: (BuildContext context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'An ${snapshot.error} occurred',
+                  style: const TextStyle(fontSize: 18, color: Colors.red),
                 ),
+              );
+            }
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2, // вказує товщину CircularProgressIndicator
+                backgroundColor: Colors.grey,
+                valueColor: AlwaysStoppedAnimation(Colors.blue),
               ),
-              const SizedBox(
-                width: 20,
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            return ListView.separated(
+              padding: const EdgeInsets.only(left: 40, top: 20),
+              itemCount: messages.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Row(children: [
+                  Container(
+                    width: 350,
+                    height: 50,
+                    color: Colors.grey[400],
+                    child: Center(
+                      child: Text(messages[index].toString(),
+                          style: const TextStyle(
+                              fontSize: 22, color: Colors.black)),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  // ElevatedButton(
+                  //   child: const Icon(
+                  //     Icons.arrow_circle_left_sharp,
+                  //   ),
+                  //   onPressed: () {
+                  //     Navigator.pop(context);
+                  //   },
+                  // ),
+                ]);
+              },
+              separatorBuilder: (BuildContext context, int index) =>
+                  const Divider(
+                height: 20,
+                thickness: 0,
+                indent: 0,
+                endIndent: 1245,
+                color: Colors.black,
               ),
-              ElevatedButton(
-                child: const Icon(
-                  Icons.arrow_back_rounded,
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+            );
+          }
+          return const Center(
+            child: CircularProgressIndicator(
+              // strokeWidth: 2, // вказує товщину CircularProgressIndicator
+              backgroundColor: Colors.grey,
+              valueColor: AlwaysStoppedAnimation(Colors.green),
+            ),
           );
         },
-        separatorBuilder: (BuildContext context, int index) => const Divider(
-          height: 20,
-          thickness: 0,
-          indent: 0,
-          endIndent: 1170,
-          color: Colors.black,
-        ),
       ),
     );
   }
