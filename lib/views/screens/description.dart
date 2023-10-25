@@ -80,7 +80,7 @@ class _DescriptionScreen extends State<DescriptionScreen> {
             }
             return const Center(
               child: CircularProgressIndicator(
-                strokeWidth: 2, // вказує товщину CircularProgressIndicator
+                strokeWidth: 6,
                 backgroundColor: Colors.grey,
                 valueColor: AlwaysStoppedAnimation(Colors.blue),
               ),
@@ -88,42 +88,45 @@ class _DescriptionScreen extends State<DescriptionScreen> {
           }
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
-            return ListView.separated(
-              padding: const EdgeInsets.only(left: 40, top: 20),
-              itemCount: messages.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Row(children: [
-                  Container(
-                    width: 350,
-                    height: 50,
-                    color: Colors.grey[400],
-                    child: Center(
-                      child: Text(messages[index].toString(),
-                          style: const TextStyle(
-                              fontSize: 22, color: Colors.black)),
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(left: 40, top: 20),
+                    itemCount: messages.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Row(children: [
+                        Container(
+                          width: 350,
+                          height: 50,
+                          color: Colors.grey[400],
+                          child: Center(
+                            child: Text(messages[index].toString(),
+                                style: const TextStyle(
+                                    fontSize: 22, color: Colors.black)),
+                          ),
+                        ),
+                      ]);
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(
+                      height: 20,
+                      thickness: 0,
+                      indent: 0,
+                      endIndent: 1220,
+                      color: Colors.black,
                     ),
                   ),
-                  const SizedBox(
-                    width: 20,
+                ),
+                ElevatedButton(
+                  child: const Icon(
+                    Icons.arrow_circle_left_sharp,
                   ),
-                  // ElevatedButton(
-                  //   child: const Icon(
-                  //     Icons.arrow_circle_left_sharp,
-                  //   ),
-                  //   onPressed: () {
-                  //     Navigator.pop(context);
-                  //   },
-                  // ),
-                ]);
-              },
-              separatorBuilder: (BuildContext context, int index) =>
-                  const Divider(
-                height: 20,
-                thickness: 0,
-                indent: 0,
-                endIndent: 1245,
-                color: Colors.black,
-              ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
             );
           }
           return const Center(
