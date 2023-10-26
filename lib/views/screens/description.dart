@@ -1,14 +1,9 @@
 // ignore_for_file: unnecessary_this
 
 import 'package:edgebus_console/api/api_client.dart';
-import 'package:edgebus_console/api/api_client_mock.dart';
-// import 'package:edgebus_console/model/topic.dart';
-// import 'package:edgebus_console/model/topic_id.dart';
+import 'package:edgebus_console/api/api_client_mock.dart' show ApiClientMock;
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 import 'package:flutter/material.dart';
-// import 'package:freemework/execution_context/f_execution_context.dart';
-// import 'package:freemework/execution_context/f_execution_context.dart';
-// import 'package:freemework/freemework.dart';
 
 class DescriptionScreen extends StatefulWidget {
   final ApiClient apiClient = ApiClientMock();
@@ -43,21 +38,11 @@ class _DescriptionScreen extends State<DescriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final ButtonStyle style = ButtonStyle(
-    //   backgroundColor: MaterialStateProperty.all(Colors.blue),
-    //   // padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
-    //   // minimumSize: MaterialStateProperty.all(const Size(60, 60)),
-    //   // shape: MaterialStateProperty.all(RoundedRectangleBorder(
-    //   //   borderRadius: BorderRadius.circular(50.0),
-    //   //   side: const BorderSide(color: Colors.black),
-    //   // )),
-    // );
-
     // final String usersStr = topics.toString();
     // final lang = Lang.of(context);
-    // final themeData = Theme.of(context);
+    // final ThemeData themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
-    // final List<int> colorCodes = <int>[600, 400, 200];
+
     const List<String> messages = <String>[
       "Messages in the last hour: 5",
       "Messages in the last 24 hours: 43",
@@ -80,7 +65,7 @@ class _DescriptionScreen extends State<DescriptionScreen> {
             }
             return const Center(
               child: CircularProgressIndicator(
-                strokeWidth: 6,
+                // backgroundColor: themeData.scaffoldBackgroundColor,
                 backgroundColor: Colors.grey,
                 valueColor: AlwaysStoppedAnimation(Colors.blue),
               ),
@@ -89,10 +74,11 @@ class _DescriptionScreen extends State<DescriptionScreen> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.only(left: 40, top: 20),
+                    padding: const EdgeInsets.only(left: 40.0, top: 20.0),
                     itemCount: messages.length,
                     itemBuilder: (BuildContext context, int index) {
                       return Row(children: [
@@ -118,16 +104,27 @@ class _DescriptionScreen extends State<DescriptionScreen> {
                     ),
                   ),
                 ),
-                ElevatedButton(
-                  child: const Icon(
-                    Icons.arrow_circle_left_sharp,
+                Padding(
+                  padding: const EdgeInsets.only(left: 5.0),
+                  child: SizedBox(
+                    width: 70.0,
+                    height: 50.0,
+                    // child: Padding(
+                    //   padding: const EdgeInsets.all(2.0),
+                    child: ElevatedButton(
+                      child: const Icon(
+                        Icons.arrow_circle_left_sharp,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
                 ),
               ],
             );
+            // ],
+            // );
           }
           return const Center(
             child: CircularProgressIndicator(
