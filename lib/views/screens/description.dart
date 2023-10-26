@@ -104,27 +104,8 @@ class _DescriptionScreen extends State<DescriptionScreen> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0),
-                  child: SizedBox(
-                    width: 70.0,
-                    height: 50.0,
-                    // child: Padding(
-                    //   padding: const EdgeInsets.all(2.0),
-                    child: ElevatedButton(
-                      child: const Icon(
-                        Icons.arrow_circle_left_sharp,
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ),
               ],
             );
-            // ],
-            // );
           }
           return const Center(
             child: CircularProgressIndicator(
@@ -138,12 +119,3 @@ class _DescriptionScreen extends State<DescriptionScreen> {
     );
   }
 }
-
-    // return const PortalMasterLayout(
-    //   body: Text(
-    //     "Ololo",
-    //     style: TextStyle(
-    //         fontSize: 16, color: Colors.red, fontWeight: FontWeight.w800),
-    //   ),
-    // );
-
