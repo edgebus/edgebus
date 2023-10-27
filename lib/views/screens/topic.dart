@@ -47,7 +47,7 @@ class _TopicScreenState extends State<TopicScreen> {
     final ButtonStyle style = ButtonStyle(
       backgroundColor: MaterialStateProperty.all(Colors.blue),
       // padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
-      // minimumSize: MaterialStateProperty.all(const Size(60, 60)),
+      minimumSize: MaterialStateProperty.all(const Size(50, 50)),
       // shape: MaterialStateProperty.all(RoundedRectangleBorder(
       //   borderRadius: BorderRadius.circular(50.0),
       //   side: const BorderSide(color: Colors.black),
@@ -81,6 +81,48 @@ class _TopicScreenState extends State<TopicScreen> {
       "my-topic-19",
     ];
 
+    const List<String> messageLastHour = <String>[
+      "In the last hour received message(s): 2",
+      "In the last hour received message(s): 1",
+      "In the last hour received message(s): 11",
+      "In the last hour received message(s): 5",
+      "In the last hour received message(s): 12",
+      "In the last hour received message(s): 0",
+      "In the last hour received message(s): 3",
+      "In the last hour received message(s): 5",
+      "In the last hour received message(s): 1",
+      "In the last hour received message(s): 0",
+      "In the last hour received message(s): 4",
+      "In the last hour received message(s): 5",
+      "In the last hour received message(s): 6",
+      "In the last hour received message(s): 2",
+      "In the last hour received message(s): 1",
+      "In the last hour received message(s): 3",
+      "In the last hour received message(s): 2",
+      "In the last hour received message(s): 3",
+    ];
+
+    const List<String> messageLastDay = <String>[
+      "In the last day received message(s): 21",
+      "In the last day received message(s): 11",
+      "In the last day received message(s): 111",
+      "In the last day received message(s): 51",
+      "In the last day received message(s): 121",
+      "In the last day received message(s): 10",
+      "In the last day received message(s): 31",
+      "In the last day received message(s): 51",
+      "In the last day received message(s): 11",
+      "In the last day received message(s): 10",
+      "In the last day received message(s): 41",
+      "In the last day received message(s): 51",
+      "In the last day received message(s): 61",
+      "In the last day received message(s): 25",
+      "In the last day received message(s): 41",
+      "In the last day received message(s): 31",
+      "In the last day received message(s): 26",
+      "In the last day received message(s): 33",
+    ];
+
     return PortalMasterLayout(
       body: FutureBuilder(
         future: getList(),
@@ -106,12 +148,12 @@ class _TopicScreenState extends State<TopicScreen> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             return ListView.separated(
-              padding: const EdgeInsets.only(left: 40, top: 20),
+              padding: const EdgeInsets.only(left: 10, top: 20),
               itemCount: topics.length,
               itemBuilder: (BuildContext context, int index) {
                 return Row(children: [
                   Container(
-                    width: 250,
+                    width: 200,
                     height: 50,
                     color: Colors.grey[400],
                     child: Center(
@@ -136,15 +178,57 @@ class _TopicScreenState extends State<TopicScreen> {
                       );
                     },
                   ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Container(
+                    width: 300,
+                    height: 50,
+                    color: Colors.grey[400],
+                    child: Center(
+                      child: Text(messageLastHour[index],
+                          style: const TextStyle(
+                              fontSize: 22, color: Colors.black)),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Container(
+                    width: 300,
+                    height: 50,
+                    color: Colors.grey[400],
+                    child: Center(
+                      child: Text(messageLastDay[index],
+                          style: const TextStyle(
+                              fontSize: 22, color: Colors.black)),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  ElevatedButton(
+                    style: style,
+                    child: const Icon(
+                      Icons.arrow_right_sharp,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DescriptionScreen()),
+                      );
+                    },
+                  ),
                 ]);
               },
               separatorBuilder: (BuildContext context, int index) =>
                   const Divider(
                 height: 20,
-                thickness: 0,
+                thickness: 2,
                 indent: 0,
-                endIndent: 1245,
-                color: Colors.black,
+                endIndent: 5,
+                color: Colors.grey,
               ),
             );
           }
@@ -158,13 +242,5 @@ class _TopicScreenState extends State<TopicScreen> {
         },
       ),
     );
-
-    // return const PortalMasterLayout(
-    //   body: Text(
-    //     "Ololo",
-    //     style: TextStyle(
-    //         fontSize: 16, color: Colors.red, fontWeight: FontWeight.w800),
-    //   ),
-    // );
   }
 }

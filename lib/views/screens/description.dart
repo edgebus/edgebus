@@ -44,9 +44,7 @@ class _DescriptionScreen extends State<DescriptionScreen> {
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
 
     const List<String> messages = <String>[
-      "Messages in the last hour: 5",
-      "Messages in the last 24 hours: 43",
-      "Last massege: 2023-23-11 12:00:00",
+      "Description",
     ];
 
     return PortalMasterLayout(
