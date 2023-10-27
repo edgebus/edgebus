@@ -151,7 +151,9 @@ class _TopicScreenState extends State<TopicScreen> {
               padding: const EdgeInsets.only(left: 10, top: 20),
               itemCount: topics.length,
               itemBuilder: (BuildContext context, int index) {
-                return Row(children: [
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
                   Container(
                     width: 200,
                     height: 50,
@@ -178,9 +180,6 @@ class _TopicScreenState extends State<TopicScreen> {
                       );
                     },
                   ),
-                  const SizedBox(
-                    width: 20,
-                  ),
                   Container(
                     width: 300,
                     height: 50,
@@ -191,9 +190,6 @@ class _TopicScreenState extends State<TopicScreen> {
                               fontSize: 22, color: Colors.black)),
                     ),
                   ),
-                  const SizedBox(
-                    width: 20,
-                  ),
                   Container(
                     width: 300,
                     height: 50,
@@ -203,9 +199,6 @@ class _TopicScreenState extends State<TopicScreen> {
                           style: const TextStyle(
                               fontSize: 22, color: Colors.black)),
                     ),
-                  ),
-                  const SizedBox(
-                    width: 20,
                   ),
                   ElevatedButton(
                     style: style,
@@ -227,7 +220,7 @@ class _TopicScreenState extends State<TopicScreen> {
                 height: 20,
                 thickness: 2,
                 indent: 0,
-                endIndent: 5,
+                endIndent: 10,
                 color: Colors.grey,
               ),
             );
