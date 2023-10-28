@@ -3,6 +3,7 @@
 import 'package:edgebus_console/api/api_client.dart';
 import 'package:edgebus_console/api/api_client_mock.dart';
 import 'package:edgebus_console/model/topic.dart';
+import 'package:edgebus_console/views/screens/action.dart';
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:freemework/execution_context/f_execution_context.dart';
@@ -152,68 +153,65 @@ class _TopicScreenState extends State<TopicScreen> {
               itemCount: topics.length,
               itemBuilder: (BuildContext context, int index) {
                 return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                  Container(
-                    width: 200,
-                    height: 50,
-                    color: Colors.grey[400],
-                    child: Center(
-                      child: Text(topics[index].toString(),
-                          style: const TextStyle(
-                              fontSize: 22, color: Colors.black)),
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  ElevatedButton(
-                    style: style,
-                    child: const Icon(
-                      Icons.settings_applications_sharp,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => DescriptionScreen()),
-                      );
-                    },
-                  ),
-                  Container(
-                    width: 300,
-                    height: 50,
-                    color: Colors.grey[400],
-                    child: Center(
-                      child: Text(messageLastHour[index],
-                          style: const TextStyle(
-                              fontSize: 22, color: Colors.black)),
-                    ),
-                  ),
-                  Container(
-                    width: 300,
-                    height: 50,
-                    color: Colors.grey[400],
-                    child: Center(
-                      child: Text(messageLastDay[index],
-                          style: const TextStyle(
-                              fontSize: 22, color: Colors.black)),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: style,
-                    child: const Icon(
-                      Icons.arrow_right_sharp,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => DescriptionScreen()),
-                      );
-                    },
-                  ),
-                ]);
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Container(
+                        width: 200,
+                        height: 50,
+                        color: Colors.grey[400],
+                        child: Center(
+                          child: Text(topics[index].toString(),
+                              style: const TextStyle(
+                                  fontSize: 22, color: Colors.black)),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: style,
+                        child: const Icon(
+                          Icons.settings_applications_sharp,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => DescriptionScreen()),
+                          );
+                        },
+                      ),
+                      Container(
+                        width: 300,
+                        height: 50,
+                        color: Colors.grey[400],
+                        child: Center(
+                          child: Text(messageLastHour[index],
+                              style: const TextStyle(
+                                  fontSize: 22, color: Colors.black)),
+                        ),
+                      ),
+                      Container(
+                        width: 300,
+                        height: 50,
+                        color: Colors.grey[400],
+                        child: Center(
+                          child: Text(messageLastDay[index],
+                              style: const TextStyle(
+                                  fontSize: 22, color: Colors.black)),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: style,
+                        child: const Icon(
+                          Icons.arrow_right_sharp,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ActionScreen()),
+                          );
+                        },
+                      ),
+                    ]);
               },
               separatorBuilder: (BuildContext context, int index) =>
                   const Divider(
