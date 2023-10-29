@@ -48,65 +48,94 @@ class _ActionScreen extends State<ActionScreen> {
     ];
 
     return PortalMasterLayout(
-      body: Expanded(
-        child: ListView(
-          padding: const EdgeInsets.only(top: 20.0),
-          children: <Widget>[
-            Row(
-              children: [
-                Container(
-                  width: 150,
-                  height: 50,
-                  color: Colors.grey[400],
-                  child: const Center(
-                    child: Text("Create topic",
-                        style: TextStyle(fontSize: 22, color: Colors.black)),
-                  ),
-                ),
-                const SizedBox(
-                  width: 20,
-                ),
-                ElevatedButton(
-                  child: const Icon(
-                    Icons.create_new_folder_sharp,
-                  ),
-                  onPressed: () {
-                    print("Create!");
-                  },
-                ),
-                const SizedBox(
-                  width: 20,
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 150,
-                      height: 50,
-                      color: Colors.grey[400],
-                      child: const Center(
-                        child: Text("Delete topic",
-                            style:
-                                TextStyle(fontSize: 22, color: Colors.black)),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    ElevatedButton(
-                      child: const Icon(
-                        Icons.delete,
-                      ),
-                      onPressed: () {
-                        print("Delete!");
-                      },
-                    ),
-                  ],
-                )
-              ],
+      body: ListView(
+        padding: const EdgeInsets.only(left: 10, top: 10),
+        children: const <Widget>[
+          Row(children: [
+            Center(
+              child: Text("Created"),
             ),
-          ],
-        ),
+            SizedBox(
+              width: 20,
+            ),
+            Icon(Icons.create_new_folder_sharp),
+          ]),
+          Divider(
+            height: 20,
+            thickness: 0,
+            indent: 0,
+            endIndent: 10,
+            color: Colors.grey,
+          ),
+          Row(children: [
+            Center(
+              child: Text("Delete"),
+            ),
+            SizedBox(
+              width: 20,
+            ),
+            Icon(Icons.delete),
+          ]),
+        ],
       ),
     );
+    // return PortalMasterLayout(
+    //   body: ListView(
+    //     padding: const EdgeInsets.only(top: 20.0),
+    //     children: <Widget>[
+    //       Row(
+    //         children: [
+    //           Container(
+    //             width: 150,
+    //             height: 50,
+    //             color: Colors.grey[400],
+    //             child: const Center(
+    //               child: Text("Create topic",
+    //                   style: TextStyle(fontSize: 22, color: Colors.black)),
+    //             ),
+    //           ),
+    //           const SizedBox(
+    //             width: 20,
+    //           ),
+    //           ElevatedButton(
+    //             child: const Icon(
+    //               Icons.create_new_folder_sharp,
+    //             ),
+    //             onPressed: () {
+    //               print("Create!");
+    //             },
+    //           ),
+    //           const SizedBox(
+    //             width: 20,
+    //           ),
+    //           Row(
+    //             children: [
+    //               Container(
+    //                 width: 150,
+    //                 height: 50,
+    //                 color: Colors.grey[400],
+    //                 child: const Center(
+    //                   child: Text("Delete topic",
+    //                       style: TextStyle(fontSize: 22, color: Colors.black)),
+    //                 ),
+    //               ),
+    //               const SizedBox(
+    //                 width: 20,
+    //               ),
+    //               ElevatedButton(
+    //                 child: const Icon(
+    //                   Icons.delete,
+    //                 ),
+    //                 onPressed: () {
+    //                   print("Delete!");
+    //                 },
+    //               ),
+    //             ],
+    //           )
+    //         ],
+    //       ),
+    //     ],
+    //   ),
+    // );
   }
 }
