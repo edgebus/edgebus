@@ -12,14 +12,17 @@ class ApiClientMock extends ApiClient {
   final Map<TopicId, Topic> _topics;
 
   ApiClientMock() : _topics = {} {
-    const TopicId id1 = "0730c8b1-ebdd-4761-b90e-82f59f140c32";
-    const TopicId id2 = "950f6177-37c3-4bef-b236-2bc1e7635ac1";
+    const TopicId id1 = "1130c8b1-ebdd-4761-b90e-82f59f140cc1";
+    const TopicId id2 = "220f6177-37c3-4bef-b236-2bc1e7635ac2";
+    const TopicId id3 = "330de577-37c3-4bef-b236-2bc1e7635ac3";
 
     final Topic topic1 = Topic(id1, "my-topic-1", "Some messages 1");
     final Topic topic2 = Topic(id2, "my-topic-2", "Some messages 2");
+    final Topic topic3 = Topic(id3, "my-topic-3", "Some messages 3");
 
     this._topics[id1] = topic1;
     this._topics[id2] = topic2;
+    this._topics[id3] = topic3;
   }
 
 // This method create topic.

@@ -4,6 +4,9 @@ class Topic {
   final TopicId id;
   final String name;
   final String description;
+  // massege
+  // ingres
+  // egres
 
   Topic(
     this.id,

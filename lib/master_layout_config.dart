@@ -84,6 +84,11 @@ final sidebarMenuConfigs = [
     icon: Icons.topic_rounded,
     title: (context) => Lang.of(context).topic,
   ),
+  SidebarMenuConfig(
+    uri: RouteUri.description,
+    icon: Icons.description_sharp,
+    title: (context) => Lang.of(context).description,
+  ),
 ];
 
 const localeMenuConfigs = [
