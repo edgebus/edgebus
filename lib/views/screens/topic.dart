@@ -47,10 +47,10 @@ class _TopicScreenState extends State<TopicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle style = ButtonStyle(
-      backgroundColor: MaterialStateProperty.all(Colors.blue),
+    final ButtonStyle actionBottonStyle = ButtonStyle(
+      backgroundColor: MaterialStateProperty.all(Colors.grey.shade200),
       // padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
-      minimumSize: MaterialStateProperty.all(const Size(50, 50)),
+      minimumSize: MaterialStateProperty.all(const Size(30, 50)),
       // shape: MaterialStateProperty.all(RoundedRectangleBorder(
       //   borderRadius: BorderRadius.circular(50.0),
       //   side: const BorderSide(color: Colors.black),
@@ -125,12 +125,32 @@ class _TopicScreenState extends State<TopicScreen> {
                       cells: [
                         DataCell(
                           Text(topic.id),
-                          onTap: () {},
                         ),
-                        DataCell(Text(topic.name)),
-                        DataCell(Text(topic.description)),
-                        DataCell(Text(topic.description)),
-                        const DataCell(Text('actions')),
+                        DataCell(
+                          Text(topic.name),
+                        ),
+                        DataCell(
+                          Text(topic.description),
+                        ),
+                        DataCell(
+                          Text(topic.description),
+                        ),
+                        DataCell(
+                          ElevatedButton(
+                            style: actionBottonStyle,
+                            child: const Icon(
+                              Icons.more_horiz,
+                              color: Colors.black,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ActionScreen()),
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     );
                   },
@@ -175,11 +195,11 @@ class _TopicScreenState extends State<TopicScreen> {
             //               ),
             //             ),
             //           ),
-            //           // ElevatedButton(
-            //           //   style: style,
-            //           //   child: const Icon(
-            //           //     Icons.settings_applications_sharp,
-            //           //   ),
+            // ElevatedButton(
+            //   style: style,
+            //   child: const Icon(
+            //     Icons.settings_applications_sharp,
+            //   ),
             //           //   onPressed: () {
             //           //     Navigator.push(
             //           //       context,
@@ -214,11 +234,11 @@ class _TopicScreenState extends State<TopicScreen> {
             //               Icons.arrow_right_sharp,
             //             ),
             //             onPressed: () {
-            //               Navigator.push(
-            //                 context,
-            //                 MaterialPageRoute(
-            //                     builder: (context) => ActionScreen()),
-            //               );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //       builder: (context) => ActionScreen()),
+            // );
             //             },
             //           ),
             //         ]);
