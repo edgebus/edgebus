@@ -43,10 +43,6 @@ class _ActionScreen extends State<ActionScreen> {
     // final ThemeData themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
 
-    const List<String> action = <String>[
-      "Action",
-    ];
-
     return PortalMasterLayout(
       body: ListView(
         padding: const EdgeInsets.only(left: 10, top: 10),
