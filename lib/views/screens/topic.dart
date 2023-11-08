@@ -50,7 +50,7 @@ class _TopicScreenState extends State<TopicScreen> {
     final ButtonStyle actionBottonStyle = ButtonStyle(
       backgroundColor: MaterialStateProperty.all(Colors.grey.shade200),
       // padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
-      minimumSize: MaterialStateProperty.all(const Size(30, 50)),
+      // minimumSize: MaterialStateProperty.all(const Size(30, 50)),
       // shape: MaterialStateProperty.all(RoundedRectangleBorder(
       //   borderRadius: BorderRadius.circular(50.0),
       //   side: const BorderSide(color: Colors.black),
