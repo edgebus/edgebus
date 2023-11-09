@@ -3,15 +3,30 @@
 
 import base64, json, sys
 
-inputDataJson = json.load(sys.stdin)
+inputData = json.load(sys.stdin)
 
-outputDataStr = json.dumps({ "data": str(inputDataJson["data"]["a"]) })
+outputBodyStr: str = ""
 
-result = {
-	"headers": [],
-	"bodyBase64": base64.b64encode(outputDataStr.encode('utf-8')).decode('utf-8'),
+if "orderReference" in inputData:
+	orderReference = inputData["orderReference"]
+	if isinstance(orderReference, str):
+		print("Handling message with orderReference '%s'" % orderReference, file=sys.stderr)
+		outputBodyStr: str = orderReference
+	else:
+		print("Received a message with wrong type of 'orderReference' field.", file=sys.stderr)
+		json.dump(inputData, sys.stderr)
+else:
+	print("Received a message without 'orderReference' field.", file=sys.stderr)
+	json.dump(inputData, sys.stderr)
+
+
+outputData = {
+	"headers": [
+		"Content-Type: text/plain"
+	],
+	"bodyBase64": base64.b64encode(outputBodyStr.encode('utf-8')).decode('utf-8'),
 	"statusCode": 200,
-	"statusDescription": "testOk"
+	"statusDescription": "OK"
 }
 
-json.dump(result, sys.stdout)
+json.dump(outputData, sys.stdout)

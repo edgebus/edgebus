@@ -44,16 +44,28 @@ export class ResponseHandlerDynamicExternalProcess extends ResponseHandlerBase {
 
 		const dataStr = await externalProcess.run(executionContext, messageBodyJson);
 		try {
-			const dataRaw = JSON.parse(dataStr);
-			const headers = dataRaw.headers;
-			const statusCode = ensure.number(dataRaw.statusCode);
+			const dataRaw: any = JSON.parse(dataStr);
+			const headers: Record<string, string | null> | null = dataRaw.headers !== null
+				? ensure.array(dataRaw.headers)
+					.reduce<Record<string, string | null>>((acc, rawHeader) => {
+						const header: string = ensure.string(rawHeader);
+						const splitIndex: number = header.indexOf(":");
+						const headerName: string = splitIndex !== -1 ? header.substring(0, splitIndex) : header;
+						const headerValue: string | null = splitIndex !== -1 ? header.substring(0, splitIndex) : header;
+						acc[headerName] = headerValue;
+						return acc;
+					}, {})
+				: null;
+			const statusCode: number = ensure.number(dataRaw.statusCode);
 			const statusDescription = ensure.string(dataRaw.statusDescription);
-			const bodyBase64 = ensure.string(dataRaw.bodyBase64);
+			const bodyBase64: string | null = dataRaw.bodyBase64 !== null ? ensure.string(dataRaw.bodyBase64) : null;
 			return Object.freeze({
 				headers,
 				statusCode,
 				statusDescription,
-				body: Buffer.from(bodyBase64, 'base64')
+				body: bodyBase64 !== null
+					? Buffer.from(bodyBase64, 'base64')
+					: null
 			});
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);
