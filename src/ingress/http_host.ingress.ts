@@ -1,4 +1,4 @@
-import { FException, FExceptionArgument, FExceptionInvalidOperation, FExecutionContext, FLoggerLabelsExecutionContext } from "@freemework/common";
+import { FException, FExceptionArgument, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import * as ContentType from "content-type";
 import { Request, Response, Router } from "express";
@@ -13,31 +13,38 @@ import { HttpBadRequestException } from "../endpoints/exceptions";
 import { MIME_APPLICATION_JSON } from "../utils/mime";
 import { Bind } from "../utils/bind";
 import { ResponseHandlerBase } from "./response_handler/response_handler_base";
+import { FWebServer } from "@freemework/hosting";
+import { createExecutionContextMiddleware } from "../misc/express";
 
 export class HttpHostIngress extends BaseIngress {
-
-	public readonly router: Router; // TODO: temporary public
-	public readonly bindPath: string | null;
+	private readonly _servers: ReadonlyArray<FWebServer>;
+	private readonly _router: Router;
+	private readonly _messageBus: MessageBus;
+	private readonly _bindPath: string;
 	private readonly _successResponseHandler: Exclude<HttpHostIngress.Opts["successResponseHandler"], undefined> | null;
 	private readonly _transformers: HttpHostIngress.Opts["transformers"] | null;
+	private readonly _topicMediaType: Topic["topicMediaType"];
 
 	public constructor(
 		topic: Topic.Id & Topic.Name & Topic.Data,
 		ingressId: IngressIdentifier,
-		private readonly _messageBus: MessageBus,
-		opts?: HttpHostIngress.Opts
+		messageBus: MessageBus,
+		opts: HttpHostIngress.Opts
 	) {
 		super(topic, ingressId);
-		this.bindPath = null;
+		this._bindPath = "/";
 		this._successResponseHandler = null;
 		this._transformers = null;
-		if (opts !== undefined) {
-			this._transformers = opts.transformers;
-			if (opts.bindPath !== undefined) { this.bindPath = opts.bindPath; }
-			if (opts.successResponseHandler !== undefined) { this._successResponseHandler = opts.successResponseHandler; }
-		}
-		this.router = Router({ strict: true });
-		this.router.use(function rawBody(req, res, next) {
+		this._messageBus = messageBus;
+		this._topicMediaType = topic.topicMediaType;
+
+		this._transformers = opts.transformers;
+		this._servers = opts.servers;
+		if (opts.bindPath !== undefined) { this._bindPath = opts.bindPath; }
+		if (opts.successResponseHandler !== undefined) { this._successResponseHandler = opts.successResponseHandler; }
+
+		this._router = Router({ strict: true });
+		this._router.use(function rawBody(req, res, next) {
 			const chunks: Array<Uint8Array> = [];
 			req.on('data', function (chunk: any) {
 				if (!(chunk instanceof Uint8Array)) {
@@ -50,18 +57,22 @@ export class HttpHostIngress extends BaseIngress {
 				next();
 			});
 		});
-
-		switch (topic.topicMediaType) {
-			case MIME_APPLICATION_JSON:
-				this.router.use(this._handleMessageApplicationJson);
-				break;
-			default:
-				throw new FExceptionArgument(`Not supported mediaType: ${topic.topicMediaType}`, "topic");
-		}
 	}
 
 	protected onInit(): void | Promise<void> {
-		// NOP
+		this._router.use(createExecutionContextMiddleware(this._log, this.initExecutionContext));
+
+		switch (this._topicMediaType) {
+			case MIME_APPLICATION_JSON:
+				this._router.use(this._handleMessageApplicationJson);
+				break;
+			default:
+				throw new FExceptionArgument(`Not supported mediaType: ${this._topicMediaType}`, "topic");
+		}
+
+		for (const server of this._servers) {
+			server.rootExpressApplication.use(this._bindPath ?? "/", this._router);
+		}
 	}
 	protected onDispose(): void | Promise<void> {
 		// NOP
@@ -69,7 +80,7 @@ export class HttpHostIngress extends BaseIngress {
 
 	@Bind
 	private async _handleMessageApplicationJson(req: Request, res: Response): Promise<void> {
-		let executionContext: FExecutionContext = req.executionContext;
+		let executionContext: FExecutionContext = req.getExecutionContext();
 		try {
 			const ingressBody: unknown = req.body;
 			if (!(ingressBody instanceof Uint8Array)) {
@@ -178,6 +189,7 @@ export class HttpHostIngress extends BaseIngress {
 export namespace HttpHostIngress {
 	export interface Opts {
 		readonly bindPath?: string;
+		readonly servers: ReadonlyArray<FWebServer>;
 		readonly successResponseHandler?: ResponseHandlerBase;
 		readonly ssl?: {
 			readonly clientTrustedCA: string;

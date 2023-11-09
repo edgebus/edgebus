@@ -117,7 +117,7 @@ class HostingProviderImpl extends HostingProvider {
 export function setupExpressErrorHandles(app: express.Application, log: FLogger): void {
 	// 404 Not found (bad URL)
 	app.use(function (req: express.Request, res: express.Response) {
-		log.info(req.executionContext, "404 Not Found");
+		log.info(req.getExecutionContext(), "404 Not Found");
 		res.status(404).end("404 Not Found");
 	});
 
@@ -125,8 +125,8 @@ export function setupExpressErrorHandles(app: express.Application, log: FLogger)
 	app.use(function (err: any, req: express.Request, res: express.Response, next: express.NextFunction): any {
 		if (err) {
 			//TODO: send email, log err, etc...
-			log.error(req.executionContext, () => `${err}`);
-			// log.error(req.executionContext, `${err}`);
+			log.error(req.getExecutionContext(), () => `${err}`);
+			// log.error(req.getExecutionContext(), `${err}`);
 		}
 		//return res.status(500).end("500 Internal Error");
 		return next(err); // use express exception render

@@ -99,7 +99,7 @@ export namespace Settings {
 	export type Endpoint =
 		| RestInfoEndpoint
 		| RestManagementEndpoint
-		| RestIngressEndpoint
+		// | RestIngressEndpoint
 		| RestSubscriberEndpoint
 		| ExpressRouterManagementEndpoint
 		| ExpressRouterIngressEndpoint;
@@ -112,9 +112,9 @@ export namespace Settings {
 	}	export interface RestManagementEndpoint extends BaseRestEndpoint {
 		readonly type: "rest-management";
 	}
-	export interface RestIngressEndpoint extends BaseRestEndpoint {
-		readonly type: "rest-ingress";
-	}
+	// export interface RestIngressEndpoint extends BaseRestEndpoint {
+	// 	readonly type: "rest-ingress";
+	// }
 	export interface RestSubscriberEndpoint extends BaseRestEndpoint {
 		readonly type: "rest-egress";
 	}
@@ -191,6 +191,7 @@ export namespace Settings {
 
 			export interface HttpHost extends Base {
 				readonly kind: IngressModel.Kind.HttpHost;
+				readonly servers: ReadonlyArray<FHostingConfiguration.WebServer["name"]>;
 				readonly path: string;
 				readonly httpResponseKind: IngressModel.HttpResponseKind
 			}
@@ -208,6 +209,7 @@ export namespace Settings {
 				readonly responseHandlerKind: IngressModel.HttpHostResponseDynamic.Kind.ExternalProcess;
 				readonly responseHandlerPath: string;
 			}
+
 			export interface WebSocketClient extends Base {
 				readonly kind: IngressModel.Kind.WebSocketClient;
 				readonly url: URL;
@@ -327,18 +329,18 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Settings.Endpoint
 			});
 			return httpEndpoint;
 		}
-		case "rest-ingress": {
-			const cors = endpointConfiguration.hasNamespace("cors")
-				? parseCors(endpointConfiguration.getNamespace("cors")) : null;
+		// case "rest-ingress": {
+		// 	const cors = endpointConfiguration.hasNamespace("cors")
+		// 		? parseCors(endpointConfiguration.getNamespace("cors")) : null;
 
-			const httpEndpoint: Settings.RestIngressEndpoint = Object.freeze({
-				type: endpointType,
-				servers: endpointConfiguration.get("servers").asString.split(" "),
-				bindPath: endpointConfiguration.get("bindPath", "/").asString,
-				cors
-			});
-			return httpEndpoint;
-		}
+		// 	const httpEndpoint: Settings.RestIngressEndpoint = Object.freeze({
+		// 		type: endpointType,
+		// 		servers: endpointConfiguration.get("servers").asString.split(" "),
+		// 		bindPath: endpointConfiguration.get("bindPath", "/").asString,
+		// 		cors
+		// 	});
+		// 	return httpEndpoint;
+		// }
 		case "rest-egress": {
 			const cors = endpointConfiguration.hasNamespace("cors")
 				? parseCors(endpointConfiguration.getNamespace("cors")) : null;
@@ -406,7 +408,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 	if (setupConfiguration.hasNamespace(egressKey)) {
 		const subscribersConfiguration = setupConfiguration.getArray(egressKey);
 		for (const subscriberConfiguration of subscribersConfiguration) {
-			const egressId: string = subscriberConfiguration.get("index").asString;
+			const egressId: string = subscriberConfiguration.namespaceParent!;
 			const type: string = subscriberConfiguration.get("kind").asString;
 			const sourceTopicIds: string = subscriberConfiguration.get("source_topic_ids").asString;
 			const filterLabelPolicy: EgressModel.FilterLabelPolicy = (function () {
@@ -457,7 +459,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 					};
 					break;
 				default:
-					throw new FExceptionInvalidOperation(`Unsupported ${subscriberConfiguration.configurationNamespace}.type '${type}'.`);
+					throw new FExceptionInvalidOperation(`Unsupported ${subscriberConfiguration.namespaceFull}.type '${type}'.`);
 			}
 			egresses.push(Object.freeze(subscriberSettings));
 		}
@@ -467,7 +469,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 	if (setupConfiguration.hasNamespace(ingressConfigurationKey)) {
 		const ingressesConfiguration: Array<FConfiguration> = setupConfiguration.getArray(ingressConfigurationKey);
 		for (const ingressConfiguration of ingressesConfiguration) {
-			const ingressId: string = ingressConfiguration.get("index").asString;
+			const ingressId: string = ingressConfiguration.namespaceParent!;
 			const type: string = ingressConfiguration.get("kind").asString;
 			const topicId: string = ingressConfiguration.get("target_topic_id").asString;
 			const ingressBaseSettings = { ingressId, topicId };
@@ -475,6 +477,8 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 			switch (type) {
 				case IngressModel.Kind.HttpHost:
 					{
+						const servers: ReadonlyArray<string> = Object.freeze(ingressConfiguration.get("servers").asString.split(" "));
+
 						const responseConfiguration: FConfiguration | null = ingressConfiguration.findNamespace("response");
 						if (responseConfiguration === null) {
 							throw new FExceptionInvalidOperation(`Unexpected configuration, ingress ${ingressId} must be configured`);
@@ -496,6 +500,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 								ingressSettings = {
 									...ingressBaseSettings,
 									kind: type,
+									servers,
 									path: ingressConfiguration.get("path").asString,
 									httpResponseKind: IngressModel.HttpResponseKind.DYNAMIC,
 									responseHandlerKind,
@@ -526,6 +531,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 								ingressSettings = {
 									...ingressBaseSettings,
 									kind: type,
+									servers,
 									httpResponseKind: IngressModel.HttpResponseKind.STATIC,
 									path: ingressConfiguration.get("path").asString,
 									responseStatusCode,
@@ -553,7 +559,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 					}
 					break;
 				default:
-					throw new FExceptionInvalidOperation(`Unsupported ${ingressConfiguration.configurationNamespace}.type '${type}'.`);
+					throw new FExceptionInvalidOperation(`Unsupported ${ingressConfiguration.namespaceFull}.type '${type}'.`);
 			}
 			ingresses.push(Object.freeze(ingressSettings));
 		}
@@ -563,7 +569,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 	if (setupConfiguration.hasNamespace(topicKey)) {
 		const topicsConfiguration = setupConfiguration.getArray(topicKey);
 		for (const topicConfiguration of topicsConfiguration) {
-			const topicId: string = topicConfiguration.get("index").asString;
+			const topicId: string = topicConfiguration.namespaceParent!;
 			const name: string = topicConfiguration.get("name").asString;
 			const description: string = topicConfiguration.get("description").asString;
 			const mediaType: string = topicConfiguration.get("mediaType").asString;
@@ -573,7 +579,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 			if (topicConfiguration.hasNamespace(labelHandlerKey)) {
 				const labelHandlersConfiguration = topicConfiguration.getArray(labelHandlerKey);
 				for (const labelHandlerConfiguration of labelHandlersConfiguration) {
-					const labelHandlerId: string = labelHandlerConfiguration.get("index").asString;
+					const labelHandlerId: string = labelHandlerConfiguration.namespaceParent!;
 					const kind: string = labelHandlerConfiguration.get("kind").asString;
 
 					ensureLabelHandlerKind(kind);
@@ -588,7 +594,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 							}));
 							break;
 						default:
-							throw new FExceptionInvalidOperation(`Unsupported ${labelHandlerConfiguration.configurationNamespace}.type '${kind}'.`);
+							throw new FExceptionInvalidOperation(`Unsupported ${labelHandlerConfiguration.namespaceFull}.type '${kind}'.`);
 					}
 				}
 

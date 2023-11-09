@@ -178,10 +178,10 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 			try {
 				const result = cb(req, res);
 				if (result instanceof Promise) {
-					result.catch((e) => this.errorRenderer(req.executionContext, FException.wrapIfNeeded(e), res));
+					result.catch((e) => this.errorRenderer(req.getExecutionContext(), FException.wrapIfNeeded(e), res));
 				}
 			} catch (e) {
-				this.errorRenderer(req.executionContext, FException.wrapIfNeeded(e), res);
+				this.errorRenderer(req.getExecutionContext(), FException.wrapIfNeeded(e), res);
 			}
 		};
 		return handler;

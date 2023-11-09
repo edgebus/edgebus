@@ -6,7 +6,8 @@ import { v4 as uuid } from "uuid";
 
 declare module "express-serve-static-core" {
 	interface Request {
-		executionContext: FExecutionContext;
+		getExecutionContext(): FExecutionContext;
+		// _executionContext?: FExecutionContext;
 	}
 }
 
@@ -18,29 +19,35 @@ export function createExecutionContextMiddleware(logger: FLogger, baseExecutionC
 
 		const method: string = req.method.toUpperCase();
 
-		req.executionContext = baseExecutionContext;
-		req.executionContext = new FCancellationExecutionContext(req.executionContext, cancellationToken, true);
-		req.executionContext = new FLoggerLabelsExecutionContext(req.executionContext, {
+		let executionContext = baseExecutionContext;
+		executionContext = new FCancellationExecutionContext(executionContext, cancellationToken, true);
+		executionContext = new FLoggerLabelsExecutionContext(executionContext, {
 			"requestId": `req_${uuid().split('-').join('')}`,
 			"httpMethod": method,
 			"httpPath": req.originalUrl
 		});
 
-		logger.debug(req.executionContext, "Begin HTTP request");
+		(req as any)._executionContext = executionContext;
+
+		logger.debug((req as any)._executionContext, "Begin HTTP request");
 
 		const originalEnd: (chunk: any, encoding: BufferEncoding, cb?: (() => void) | undefined) => express.Response = res.end;
 		res.end = (chunk?: any, encodingOrCb?: BufferEncoding | Function, cb?: () => void) => {
 			const statusCode: number = res.statusCode;
 
-			req.executionContext = new FLoggerLabelsExecutionContext(req.executionContext, {
+			(req as any)._executionContext = new FLoggerLabelsExecutionContext(executionContext, {
 				"httpStatus": statusCode.toString()
 			});
 
-			logger.info(req.executionContext, () => `${statusCode} ${method} ${req.originalUrl} HTTP/${req.httpVersion}`);
-			logger.debug(req.executionContext, "End HTTP request");
+			logger.info((req as any)._executionContext, () => `${statusCode} ${method} ${req.originalUrl} HTTP/${req.httpVersion}`);
+			logger.debug((req as any)._executionContext, "End HTTP request");
 
 			return originalEnd.call(res, chunk, encodingOrCb as BufferEncoding, cb as () => void);
 		};
+
+		req.getExecutionContext = function() {
+			return (req as any)._executionContext;
+		}
 
 		next();
 	}

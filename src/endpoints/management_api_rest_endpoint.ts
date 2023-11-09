@@ -84,7 +84,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 
 			const topic: Topic = await this._managementApiProvider.using(
 				FExecutionContext.Default,
-				(api) => api.createTopic(req.executionContext, topicData)
+				(api) => api.createTopic(req.getExecutionContext(), topicData)
 			);
 
 			res
@@ -112,7 +112,7 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 
 			const topics: Array<Topic> = await this._managementApiProvider.using(
 				FExecutionContext.Default,
-				(api) => api.listTopics(req.executionContext, domain)
+				(api) => api.listTopics(req.getExecutionContext(), domain)
 			);
 
 			const responseData = topics.map(topic => ({

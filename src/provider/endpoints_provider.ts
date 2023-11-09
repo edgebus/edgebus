@@ -15,7 +15,7 @@ import { HostingProvider } from "./hosting_provider";
 // Endpoints
 import { InfoRestEndpoint } from "../endpoints/info_rest_endpoint";
 import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endpoint";
-import { IngressApiRestEndpoint } from "../endpoints/ingress_api_rest_endpoint";
+// import { IngressApiRestEndpoint } from "../endpoints/ingress_api_rest_endpoint";
 import { EgressApiRestEndpoint } from "../endpoints/egress_api_rest_endpoint";
 import { WebSocketHostEgressEndpoint } from "../endpoints/websocket_host_egress_endpoint";
 import { ProviderLocator } from "../provider_locator";
@@ -33,7 +33,7 @@ export abstract class EndpointsProvider extends FInitableBase {
 		}
 	}
 
-	public abstract get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint>;
+	// public abstract get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint>;
 	public abstract get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint>;
 }
 
@@ -47,7 +47,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 	private readonly _endpointInstances: Array<FInitable>;
 	private readonly _destroyHandlers: Array<() => Promise<void>>;
-	private readonly _ingressApiRestEndpoints: ReadonlyArray<IngressApiRestEndpoint>;
+	// private readonly _ingressApiRestEndpoints: ReadonlyArray<IngressApiRestEndpoint>;
 	private readonly _egressApiRestEndpoints: ReadonlyArray<EgressApiRestEndpoint>;
 
 	public constructor() {
@@ -62,7 +62,7 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._endpointInstances = [];
 
-		const ingressApiRestEndpoints: Array<IngressApiRestEndpoint> = [];
+		// const ingressApiRestEndpoints: Array<IngressApiRestEndpoint> = [];
 		const egressApiRestEndpoints: Array<EgressApiRestEndpoint> = [];
 
 		for (const endpoint of this._configProvider.endpoints) {
@@ -102,16 +102,16 @@ class EndpointsProviderImpl extends EndpointsProvider {
 					this._endpointInstances.push(endpointInstance);
 					break;
 				}
-				case "rest-ingress": {
-					const friendlyEndpoint: Settings.RestIngressEndpoint = endpoint;
-					const endpointInstance = new IngressApiRestEndpoint(
-						endpointServers, this._apiProvider.publisherApi, friendlyEndpoint,
-						//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
-					);
-					this._endpointInstances.push(endpointInstance);
-					ingressApiRestEndpoints.push(endpointInstance);
-					break;
-				}
+				// case "rest-ingress": {
+				// 	const friendlyEndpoint: Settings.RestIngressEndpoint = endpoint;
+				// 	const endpointInstance = new IngressApiRestEndpoint(
+				// 		endpointServers, this._apiProvider.publisherApi, friendlyEndpoint,
+				// 		//this.log.getLogger(friendlyEndpoint.type + " " + friendlyEndpoint.bindPath)
+				// 	);
+				// 	this._endpointInstances.push(endpointInstance);
+				// 	ingressApiRestEndpoints.push(endpointInstance);
+				// 	break;
+				// }
 				case "rest-egress": {
 					const friendlyEndpoint: Settings.RestSubscriberEndpoint = endpoint;
 					const endpointInstance = new EgressApiRestEndpoint(
@@ -129,13 +129,13 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._destroyHandlers = [];
 
-		this._ingressApiRestEndpoints = Object.freeze(ingressApiRestEndpoints);
+		// this._ingressApiRestEndpoints = Object.freeze(ingressApiRestEndpoints);
 		this._egressApiRestEndpoints = Object.freeze(egressApiRestEndpoints);
 	}
 
-	public get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint> {
-		return this._ingressApiRestEndpoints;
-	}
+	// public get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint> {
+	// 	return this._ingressApiRestEndpoints;
+	// }
 
 	public get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint> {
 		return this._egressApiRestEndpoints;

@@ -2,7 +2,7 @@
 #"edgebus.runtime.server.indexes" = "management ingress egress"
 
 # Enable (turn on) specific endpoints ONLY
-#"edgebus.runtime.endpoint.indexes" = "info management ingress egress"
+#"edgebus.runtime.endpoint.indexes" = "info management ingress0 ingress1 egress"
 
 
 # Configure web server "management"
@@ -13,13 +13,18 @@
 	type = "https"
 # /Configure web server "management"
 
-# Configure web server "ingress"
+# Configure web servers for ingresses
 [[edgebus.runtime.server]]
-	index = "ingress"
+	index = "ingress0"
 	listenHost = "0.0.0.0"
-	listenPort = "8444"
+	listenPort = "8450"
 	type = "https"
-# /Configure web server "ingress"
+[[edgebus.runtime.server]]
+	index = "ingress1"
+	listenHost = "0.0.0.0"
+	listenPort = "8451"
+	type = "https"
+# Configure web servers for ingresses
 
 # Configure web server "egress"
 [[edgebus.runtime.server]]
@@ -34,7 +39,7 @@
 [[edgebus.runtime.endpoint]]
 	index = "info"
 	type = "rest-info"
-	servers = "management ingress egress"
+	servers = "management ingress0 ingress1 egress"
 	bindPath = "/info"
 	[edgebus.runtime.endpoint.info.cors]
 		methods = "GET"
@@ -49,14 +54,6 @@
 	servers = "management"
 	bindPath = "/management"
 # /Configure endpoint "management"
-
-# Configure endpoint "ingress"
-[[edgebus.runtime.endpoint]]
-	index = "ingress"
-	type = "rest-ingress"
-	servers = "ingress"
-	bindPath = "/ingress"
-# /Configure endpoint "ingress"
 
 # Configure endpoint "egress"
 [[edgebus.runtime.endpoint]]

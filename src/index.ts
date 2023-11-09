@@ -2,7 +2,7 @@ import {
 	FDisposable, FExecutionContext,
 	FLoggerLabelsExecutionContext, FInitable,
 	FLogger, FExceptionArgument, FDecimal, FDecimalRoundMode,
-	FDecimalBackendNumber, FExceptionInvalidOperation
+	FDecimalBackendNumber, FExceptionInvalidOperation, FConfigurationException, FException
 } from "@freemework/common";
 import { FLauncherRuntime, FLauncherRestartRequiredException } from "@freemework/hosting";
 
@@ -90,7 +90,6 @@ export default async function (executionContext: FExecutionContext, settings: Se
 			ProviderLocator.default.get(MessageBusProvider),
 			ProviderLocator.default.get(ApiProvider),
 			ProviderLocator.default.get(EndpointsProvider),
-			ProviderLocator.default.get(HostingProvider)
 		);
 
 		try {
@@ -163,9 +162,18 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					}
 				}
 
+				const hostingProvider: HostingProvider = ProviderLocator.default.get(HostingProvider);
 				const endpointsProvider: EndpointsProvider = ProviderLocator.default.get(EndpointsProvider);
 				const messageBusProvider: MessageBusProvider = ProviderLocator.default.get(MessageBusProvider);
 				const storageProvider: StorageProvider = ProviderLocator.default.get(StorageProvider);
+
+				const serverInstancesMap: Map<string, HostingProvider.ServerInstance> = hostingProvider.serverInstances.reduce(
+					(acc, element) => {
+						acc.set(element.name, element);
+						return acc;
+					},
+					new Map<string, HostingProvider.ServerInstance>()
+				);
 
 				// Setup HTTP ingress
 				for (const hardcodedPublisherConfiguration of hardcodedPublisherConfigurations) {
@@ -191,11 +199,11 @@ export default async function (executionContext: FExecutionContext, settings: Se
 						await webSocketClientIngress.init(executionContext);
 						itemsToDispose.push(webSocketClientIngress);
 					} else {
-
 						if (ingressConfiguration.kind !== Ingress.Kind.HttpHost) {
 							throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 						}
-						const httpPublisherInstance: HttpHostIngress = new HttpHostIngress(
+
+						const httpHostIngressInstance: HttpHostIngress = new HttpHostIngress(
 							{
 								topicId: hardcodedPublisherConfiguration.topicId,
 								topicName: hardcodedPublisherConfiguration.topicName,
@@ -207,6 +215,15 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							messageBusProvider.wrap,
 							{
 								transformers: [],
+								servers: ingressConfiguration.servers.map((serverIndex) => {
+									const serverInstance: HostingProvider.ServerInstance | undefined = serverInstancesMap.get(serverIndex);
+									if (serverInstance === undefined) {
+										throw new FException(
+											`Non-existing server index '${serverIndex}' defined in ingress '${ingressConfiguration.ingressId}'`
+										);
+									}
+									return serverInstance.server;
+								}),
 								bindPath: ingressConfiguration.path,
 								successResponseHandler: (function () {
 									switch (ingressConfiguration.httpResponseKind) {
@@ -228,11 +245,12 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							}
 						);
 						//hardcodedItemsToDispose.push(httpPublisherInstance);
-						for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
-							publisherApiRestEndpoint.addHttpPublisher(executionContext, httpPublisherInstance);
-						}
-						await httpPublisherInstance.init(executionContext);
-						itemsToDispose.push(httpPublisherInstance);
+						// httpHostIngressInstance.bindPath
+						// for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
+						// 	publisherApiRestEndpoint.addHttpPublisher(executionContext, httpHostIngressInstance);
+						// }
+						await httpHostIngressInstance.init(executionContext);
+						itemsToDispose.push(httpHostIngressInstance);
 					}
 				}
 
@@ -282,16 +300,15 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					}
 				}
 			}
+
+			await ProviderLocator.default.get(HostingProvider).init(executionContext);
 		} catch (e) {
 			for (const hardcodedItem of itemsToDispose) { await hardcodedItem.dispose(); }
 
 			await FDisposable.disposeAll(
-				// Endpoints should dispose first (reply 503, while finishing all active requests)
 				ProviderLocator.default.get(EndpointsProvider),
-				ProviderLocator.default.get(HostingProvider),
 				ProviderLocator.default.get(ApiProvider),
-				ProviderLocator.default.get(MessageBusProvider),
-				ProviderLocator.default.get(StorageProvider)
+				ProviderLocator.default.get(MessageBusProvider)
 			);
 			throw e;
 		}

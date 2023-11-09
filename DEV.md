@@ -16,7 +16,7 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 	```
 1. Send few test messages
 	```shell
-	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:8082/webhooks/sumsub
+	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:12010/webhooks/sumsub
 	```
 1. Run WebSocket consumer to obtain messages
 	```shell
@@ -33,7 +33,8 @@ docker kill postgres10emptytestdb; docker rm postgres10emptytestdb; docker run -
 	```
 1. Send few test messages
 	```shell
-	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:8082/v2/callback/fireblocks
+	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:12010/webhooks/fireblocks
+	curl --verbose --header 'Content-Type: application/json' --data '{"a":42}' http://127.0.0.1:12011/webhooks/fireblocks
 	```
 1. Run HTTP Servers consumer to obtain messages
 	```shell
