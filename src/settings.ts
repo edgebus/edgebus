@@ -271,7 +271,8 @@ export namespace Settings {
 			readonly name: string;
 			readonly description: string;
 			readonly mediaType: string;
-			readonly labelHandlers: ReadonlyArray<LabelHandler>
+			readonly labelHandlers: ReadonlyArray<LabelHandler>;
+			readonly kind: string;
 		}
 
 		export type LabelHandler =
@@ -573,6 +574,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 			const name: string = topicConfiguration.get("name").asString;
 			const description: string = topicConfiguration.get("description").asString;
 			const mediaType: string = topicConfiguration.get("mediaType").asString;
+			const kind: string = topicConfiguration.get("kind").asString;
 
 			const labelHandlers: Array<Settings.Setup.LabelHandler> = []
 			const labelHandlerKey: string = "labelHandler";
@@ -600,7 +602,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 
 			}
 
-			const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers) };
+			const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers), kind };
 			topics.push(Object.freeze(topicSettings));
 		}
 	}

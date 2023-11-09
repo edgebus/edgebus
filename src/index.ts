@@ -30,6 +30,7 @@ import { MessageBusBull } from "./messaging/message_bus_bull";
 import { WebSocketClientIngress } from "./ingress/web_socket_client.ingress";
 import { ResponseHandlerDynamicExternalProcess } from "./ingress/response_handler/response_handler_dynamic_external_process";
 import { ResponseHandlerStatic } from "./ingress/response_handler/response_handler_static";
+import { Topic, ensureTopicKind } from "./model/topic";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
@@ -123,6 +124,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					// readonly ingressId: string;
 					// readonly publisherPath: string;
 					readonly ingressConfiguration: Settings.Setup.Ingress;
+					readonly topicKind: Topic.Kind;
 				}> = [];
 				const hardcodedSubscriberConfigurations: Array<{
 					readonly topicIds: ReadonlyArray<string>;
@@ -142,12 +144,16 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					}
 
 					for (const ingress of ingresses) {
+						const topicKind = topicsByIdMap.get(ingress.topicId)!.kind;
+						ensureTopicKind(topicKind);
+
 						hardcodedPublisherConfigurations.push({
 							topicId: TopicIdentifier.parse(topicsByIdMap.get(ingress.topicId)!.topicId),
 							topicName: topicsByIdMap.get(ingress.topicId)!.name,
 							topicDescription: topicsByIdMap.get(ingress.topicId)!.description,
 							topicMediaType: topicsByIdMap.get(ingress.topicId)!.mediaType,
-							ingressConfiguration: ingress
+							ingressConfiguration: ingress,
+							topicKind,
 						});
 					}
 
@@ -187,6 +193,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicDomain: null,
 								topicDescription: hardcodedPublisherConfiguration.topicDescription,
 								topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
 							messageBusProvider.wrap,
@@ -210,6 +217,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicDomain: null,
 								topicDescription: hardcodedPublisherConfiguration.topicDescription,
 								topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
 							messageBusProvider.wrap,

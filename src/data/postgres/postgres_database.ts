@@ -20,6 +20,7 @@ import { Database } from "../database";
 import { Label } from "../../model/label";
 import { LabelHandler, ensureLabelHandlerKind } from "../../model/label_handler";
 import { ensureEgressFilterLabelPolicy } from "../../model/egress";
+import { ensureTopicKind } from "../../model/topic";
 
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
@@ -457,9 +458,9 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-					INSERT INTO "tb_topic"("api_uuid", "domain", "name", "description", "media_type")
-					VALUES ($1, $2, $3, $4, $5)
-					RETURNING "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					INSERT INTO "tb_topic"("api_uuid", "domain", "name", "description", "media_type", "kind")
+					VALUES ($1, $2, $3, $4, $5, $6)
+					RETURNING "api_uuid", "domain", "name", "description", "media_type", "kind", "utc_created_date", "utc_deleted_date"
 				`)
 			.executeSingle(
 				executionContext,
@@ -468,6 +469,7 @@ export class PostgresDatabase extends SqlDatabase {
 				/* 3 */topicData.topicName,
 				/* 4 */topicData.topicDescription,
 				/* 5 */topicData.topicMediaType,
+				/* 6 */topicData.topicKind,
 			);
 
 		const topicModel: Topic = PostgresDatabase._mapTopicDbRow(sqlRecord);
@@ -764,7 +766,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
 			.statement(`
-					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					SELECT "api_uuid", "domain", "name", "description", "media_type", "kind", "utc_created_date", "utc_deleted_date"
 					FROM "tb_topic"
 					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 				`)
@@ -912,7 +914,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
 			.statement(`
-					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					SELECT "api_uuid", "domain", "name", "description", "media_type", "kind", "utc_created_date", "utc_deleted_date"
 					FROM "tb_topic"
 					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 				`)
@@ -1327,8 +1329,11 @@ export class PostgresDatabase extends SqlDatabase {
 		const topicName: string = sqlRow.get("name").asString;
 		const topicDescription: string = sqlRow.get("description").asString;
 		const topicMediaType: string = sqlRow.get("media_type").asString;
+		const topicKind: string = sqlRow.get("kind").asString;
 		const topicCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
 		const topicDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
+
+		ensureTopicKind(topicKind);
 
 		const topic: Topic = {
 			topicId: TopicIdentifier.fromUuid(topicUuid),
@@ -1336,6 +1341,7 @@ export class PostgresDatabase extends SqlDatabase {
 			topicDomain,
 			topicDescription,
 			topicMediaType,
+			topicKind,
 			topicCreatedAt,
 			topicDeletedAt
 		};
