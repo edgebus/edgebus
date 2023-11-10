@@ -36,6 +36,20 @@ class _TopicScreenState extends State<TopicScreen> {
   //   // print(topics);
   // }
 
+  Color _getDataRowColor(Set<MaterialState> states) {
+    const Set<MaterialState> interactiveStates = <MaterialState>{
+      MaterialState.pressed,
+      MaterialState.hovered,
+      MaterialState.focused,
+    };
+
+    if (states.any(interactiveStates.contains)) {
+      return Colors.blue;
+    }
+    //return Colors.green; // Use the default value.
+    return Colors.transparent;
+  }
+
   Future<List<Topic>> getList() async {
     final Future<List<Topic>> topics = this
         .widget
@@ -98,8 +112,10 @@ class _TopicScreenState extends State<TopicScreen> {
                 minWidth: 200,
                 headingRowColor: MaterialStateColor.resolveWith(
                     (states) => Colors.grey.shade400),
+                dataRowColor:
+                    MaterialStateProperty.resolveWith(this._getDataRowColor),
                 columns: const [
-                  DataColumn2(
+                  DataColumn(
                     label: Text('id'),
                     // size: ColumnSize.L,
                   ),
