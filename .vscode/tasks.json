@@ -20,36 +20,6 @@
 				"fileLocation": "relative"
 			},
 			"detail": "tsc"
-		},
-		{
-			"label": "Build Postgres Database",
-			"group": "build",
-			"type": "shell",
-			"command": "${workspaceFolder}/database/postgres/migration-build.sh",
-			"options": {
-				"env": {
-					"ZONE": "local",
-				}
-			},
-			"problemMatcher": []
-		},
-		
-		{
-			"label": "Database Postgres Install (Full)",
-			"group": "none",
-			"dependsOn": [
-				"Build Postgres Database"
-			],
-			"type": "shell",
-			"command": "${workspaceFolder}/database/postgres/migration-up.sh",
-			"problemMatcher": []
-		},
-		{
-			"label": "Database Postgres Rollback (Full)",
-			"group": "none",
-			"type": "shell",
-			"command": "${workspaceFolder}/database/postgres/migration-down.sh",
-			"problemMatcher": []
 		}
 	]
 }
