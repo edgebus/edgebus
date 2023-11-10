@@ -49,20 +49,40 @@ if [ ! -f "${SCRIPT_DIR}/startup.config.local" ]; then
 EOF
 fi
 
-if [ ! -f "${SCRIPT_DIR}/configs/edgebus.local.toml" ]; then
-	cat <<EOF >> "${SCRIPT_DIR}/configs/edgebus.local.toml"
+if [ ! -f "${SCRIPT_DIR}/configs/edgebus/edgebus.local.toml" ]; then
+	cat <<EOF >> "${SCRIPT_DIR}/configs/edgebus/edgebus.local.toml"
 #
-# Use this file for override startup configuration variables defined in the file edgebus.toml
+# Use this file for override EdgeBus configuration defined in the file configs/edgebus/edgebus.toml
 #
+
+#
+# Example of add additional topic "my-topic-3-toml"
+#
+# Use all topics (my-topic-1, my-topic-2 and my-topic-3-toml)
+#"edgebus.setup.topic.indexes" = "TOPC0730c8b1ebdd4761b90e82f59f140c32 TOPC950f617737c34befb2362bc1e7635ac1 TOPC201f5dddf40e4ef9b6b9de17ad37bb76"
+#[[edgebus.setup.topic]]
+#	index = "TOPC201f5dddf40e4ef9b6b9de17ad37bb76"
+#	name = "my-topic-3-toml"
+#	description = "Some messages 3 defined in edgebus.local.toml"
+#	mediaType = "application/json"
 
 EOF
 fi
 
-if [ ! -f "${SCRIPT_DIR}/configs/edgebus.local.env" ]; then
-	cat <<EOF >> "${SCRIPT_DIR}/configs/edgebus.local.env"
+if [ ! -f "${SCRIPT_DIR}/configs/edgebus/edgebus.local.env" ]; then
+	cat <<EOF >> "${SCRIPT_DIR}/configs/edgebus/edgebus.local.env"
 #
-# Use this file for override startup configuration variables defined in the files edgebus.toml and edgebus.local.toml
+# Use this file for override EdgeBus configuration defined in the files configs/edgebus/edgebus.toml and configs/edgebus/edgebus.local.toml
 #
+
+#
+# Example of add additional topic "my-topic-3-env"
+#
+# Use all topics (my-topic-1, my-topic-2 and my-topic-3-env)
+#edgebus.setup.topic.indexes=TOPC0730c8b1ebdd4761b90e82f59f140c32 TOPC950f617737c34befb2362bc1e7635ac1 TOPC201f5dddf40e4ef9b6b9de17ad37bb76
+#edgebus.setup.topic.TOPC201f5dddf40e4ef9b6b9de17ad37bb76.name=my-topic-3-env
+#edgebus.setup.topic.TOPC201f5dddf40e4ef9b6b9de17ad37bb76.description=Some messages 3 defined in edgebus.local.env
+#edgebus.setup.topic.TOPC201f5dddf40e4ef9b6b9de17ad37bb76.mediaType=application/json
 
 EOF
 fi

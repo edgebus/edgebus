@@ -72,7 +72,13 @@ services:
 {{#POSTGRES_USEDATAVOLUME}}
       - postgres-data:/data
 {{/POSTGRES_USEDATAVOLUME}}
-      - ./dbseed:/updates
+      - ./dbseed/10-extensions.sql:/updates/10-extensions.sql
+      - ./dbseed/11-edgebus-users.sql:/updates/11-edgebus-users.sql
+      - ./dbseed/12-edgebus-database.sql:/updates/12-edgebus-database.sql
+{{#POSTGRES_USEDBSEED}}
+      - ./dbseed/edgebus-local:/updates/edgebus-local
+{{/POSTGRES_USEDBSEED}}
+      - ./.gitignore:/tmp/.gitignore # This need for case no other volumes
     networks:
       - default
     ports:
@@ -130,12 +136,13 @@ services:
     command: "--config-toml-file=/etc/edgebus/edgebus.toml --config-toml-file=/etc/edgebus/edgebus.local.toml --config-file=/etc/edgebus/edgebus.local.env --config-env"
     ports:
       - 127.0.0.1:12001:8081/tcp
-      - 127.0.0.1:12002:8082/tcp
       - 127.0.0.1:12003:8083/tcp
+      - 127.0.0.1:12010:8090/tcp
+      - 127.0.0.1:12011:8091/tcp
     volumes:
-      - ./configs/edgebus.toml:/etc/edgebus/edgebus.toml
-      - ./configs/edgebus.local.toml:/etc/edgebus/edgebus.local.toml
-      - ./configs/edgebus.local.env:/etc/edgebus/edgebus.local.env
+      - ./configs/edgebus/edgebus.toml:/etc/edgebus/edgebus.toml
+      - ./configs/edgebus/edgebus.local.toml:/etc/edgebus/edgebus.local.toml
+      - ./configs/edgebus/edgebus.local.env:/etc/edgebus/edgebus.local.env
     environment:
       # Sleeping before launch (waiting for PostgreSQL, Redis etc)
       DO_INIT_SLEEP: 5

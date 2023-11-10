@@ -13,13 +13,18 @@
 	type = "http"
 # /Configure web server "management"
 
-# Configure web server "ingress"
+# Configure web servers for ingresses
 [[edgebus.runtime.server]]
-	index = "ingress"
+	index = "ingress0"
 	listenHost = "0.0.0.0"
-	listenPort = "8082"
+	listenPort = "8090"
 	type = "http"
-# /Configure web server "ingress"
+[[edgebus.runtime.server]]
+	index = "ingress1"
+	listenHost = "0.0.0.0"
+	listenPort = "8091"
+	type = "http"
+# /Configure web servers for ingresses
 
 # Configure web server "egress"
 [[edgebus.runtime.server]]
@@ -50,13 +55,13 @@
 	bindPath = "/management"
 # /Configure endpoint "management"
 
-# Configure endpoint "ingress"
-[[edgebus.runtime.endpoint]]
-	index = "ingress"
-	type = "rest-ingress"
-	servers = "ingress"
-	bindPath = "/ingress"
-# /Configure endpoint "ingress"
+# # Configure endpoint "ingress"
+# [[edgebus.runtime.endpoint]]
+# 	index = "ingress"
+# 	type = "rest-ingress"
+# 	servers = "ingress"
+# 	bindPath = "/ingress"
+# # /Configure endpoint "ingress"
 
 # Configure endpoint "egress"
 [[edgebus.runtime.endpoint]]
