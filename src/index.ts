@@ -64,7 +64,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 	}
 
 	{ // TODO: Temporary solution to expose Bull dashboard
-		const messageBus: MessageBus = ProviderLocator.default.get(MessageBusProvider).wrap;
+		const messageBus: MessageBus = ProviderLocator.default.get(MessageBusProvider).wrapAsynchronous;
 		if (messageBus instanceof MessageBusBull) {
 			ProviderLocator.default.get(HostingProvider).serverInstances.forEach(s => {
 				s.server.rootExpressApplication.use(messageBus.dashboardBindPath, messageBus.serverAdapterRouter);
@@ -196,7 +196,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
-							messageBusProvider.wrap,
+							messageBusProvider.wrapAsynchronous,
 							{
 								wsOptions: {},
 								transformers: [],
@@ -210,6 +210,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 						}
 
+						const messageBus = hardcodedPublisherConfiguration.topicKind === Topic.Kind.Asynchronous ? messageBusProvider.wrapAsynchronous : messageBusProvider.wrapSynchronous;
 						const httpHostIngressInstance: HttpHostIngress = new HttpHostIngress(
 							{
 								topicId: hardcodedPublisherConfiguration.topicId,
@@ -220,7 +221,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
-							messageBusProvider.wrap,
+							messageBus,
 							{
 								transformers: [],
 								servers: ingressConfiguration.servers.map((serverIndex) => {
@@ -269,7 +270,11 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					for (const topicIdStr of hardcodedSubscriberConfiguration.topicIds) {
 						const channelFactory = async (): Promise<MessageBus.Channel> => {
 							const topicId: TopicIdentifier = TopicIdentifier.parse(topicIdStr);
-							const channel = await messageBusProvider.wrap.retainChannel(executionContext, topicId, egressId);
+							const topicKind = setup!.topics.find(e => e.topicId === topicId.value)?.kind;
+							ensureTopicKind(topicKind!);
+
+							const messageBus = topicKind === Topic.Kind.Asynchronous ? messageBusProvider.wrapAsynchronous : messageBusProvider.wrapSynchronous;
+							const channel = await messageBus.retainChannel(executionContext, topicId, egressId);
 							return channel;
 						}
 						channelFactories.push(channelFactory);

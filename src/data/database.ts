@@ -4,6 +4,7 @@ import { EgressIdentifier, IngressIdentifier, MessageIdentifier, TopicIdentifier
 import { Delivery, Egress, Ingress, Message, Topic } from "../model";
 import { Label } from "../model/label";
 import { LabelHandler } from "../model/label_handler";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export abstract class Database extends FInitableBase {
 	public abstract createDelivery(
@@ -72,6 +73,8 @@ export abstract class Database extends FInitableBase {
 	public abstract getIngress(executionContext: FExecutionContext, opts: Ingress.Id): Promise<Ingress>;
 
 	public abstract getLabel(executionContext: FExecutionContext, opts: Label.Id): Promise<Label>;
+
+	public abstract getSuccessDeliveryEvidences(executionContext: FExecutionContext, message: Message.Id): Promise<DeliveryEvidence[]>;
 
 	public abstract getTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic>;
 

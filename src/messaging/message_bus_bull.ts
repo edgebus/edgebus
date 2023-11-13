@@ -22,6 +22,7 @@ import { Bind } from "../utils/bind";
 import { unpromise } from "../utils/unpromise";
 import { Delivery } from "../model";
 import { MaskService } from "../misc/mask_service";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 /**
  * Implementation of Message Bus top on bull library
@@ -76,8 +77,16 @@ export class MessageBusBull extends MessageBusBase {
 		});
 	}
 
+	public async getSuccessDeliveryEvidences(
+		executionContext: FExecutionContext,
+		message: Message.Id
+	): Promise<DeliveryEvidence[]> {
+		throw new FException("Not implemented yet");
+	}
+
 	protected async onPublish(
 		executionContext: FExecutionContext,
+		db: Database,
 		ingress: Ingress,
 		topic: Topic,
 		message: Message.Id & Message.Data & Message.Labels

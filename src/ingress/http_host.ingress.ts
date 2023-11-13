@@ -15,6 +15,7 @@ import { Bind } from "../utils/bind";
 import { ResponseHandlerBase } from "./response_handler/response_handler_base";
 import { FWebServer } from "@freemework/hosting";
 import { createExecutionContextMiddleware } from "../misc/express";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export class HttpHostIngress extends BaseIngress {
 	private readonly _servers: ReadonlyArray<FWebServer>;
@@ -146,23 +147,38 @@ export class HttpHostIngress extends BaseIngress {
 
 			await this._messageBus.publish(executionContext, ingressId, message);
 
+
 			res.header("EDGEBUS-MESSAGE-ID", message.messageId.value)
-			if (this._successResponseHandler !== null) {
-				const successData = await this._successResponseHandler.execute(executionContext, message);
-				if (successData.headers !== null) {
-					for (const [header, value] of _.entries(successData.headers)) {
-						if (value !== null) {
-							res.header(header, value);
-						} else {
-							res.header(header);
+
+			if (this.topicKind === Topic.Kind.Synchronous) {
+				const evidences: DeliveryEvidence[] = await this._messageBus.getSuccessDeliveryEvidences(executionContext, { messageId });
+
+				if (evidences.length !== 1) {
+					throw new FExceptionInvalidOperation(`Unexpected success evidence count for synchronous mode ${evidences.length}`);
+				}
+				
+				const [evidence] = evidences;
+				res.header(evidence.headers);
+				res.writeHead(evidence.statusCode, evidence.statusDescription);
+				res.end(evidence.body);
+			} else {
+				if (this._successResponseHandler !== null) {
+					const successData = await this._successResponseHandler.execute(executionContext, message);
+					if (successData.headers !== null) {
+						for (const [header, value] of _.entries(successData.headers)) {
+							if (value !== null) {
+								res.header(header, value);
+							} else {
+								res.header(header);
+							}
 						}
 					}
+					res.writeHead(successData.statusCode, successData.statusDescription ?? "OK");
+					res.end(successData.body);
+				} else {
+					res.writeHead(200, "OK");
+					res.end();
 				}
-				res.writeHead(successData.statusCode, successData.statusDescription ?? "OK");
-				res.end(successData.body);
-			} else {
-				res.writeHead(200, "OK");
-				res.end();
 			}
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);

@@ -1,4 +1,4 @@
-import { FExceptionInvalidOperation, FExecutionContext, FSqlResultRecord, FSqlStatementParam } from "@freemework/common";
+import { FEnsure, FExceptionInvalidOperation, FExecutionContext, FSqlResultRecord, FSqlStatementParam } from "@freemework/common";
 import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 import * as _ from "lodash";
@@ -21,7 +21,9 @@ import { Label } from "../../model/label";
 import { LabelHandler, ensureLabelHandlerKind } from "../../model/label_handler";
 import { ensureEgressFilterLabelPolicy } from "../../model/egress";
 import { ensureTopicKind } from "../../model/topic";
+import { DeliveryEvidence } from "../../model/delivery_evidence";
 
+const ensure: FEnsure = FEnsure.create();
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
 		super(sqlConnectionFactory);
@@ -813,6 +815,26 @@ export class PostgresDatabase extends SqlDatabase {
 		return labelModel;
 	}
 
+	public async getSuccessDeliveryEvidences(executionContext: FExecutionContext, message: Message.Id): Promise<DeliveryEvidence[]> {
+		this.verifyInitializedAndNotDisposed();
+
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+			SELECT ED."success_evidence"
+			FROM "tb_message" AS M
+			INNER JOIN "tb_egress_delivery" AS ED ON ED."message_id" = M."id"
+			WHERE ED."status" = 'SUCCESS' AND M."api_uuid" = $1
+			`)
+			.executeQuery(
+				executionContext,
+				message.messageId.uuid,
+			);
+
+		const result: DeliveryEvidence[] = sqlRecords.map((e) => PostgresDatabase._mapDeliveryEvidence(e));
+
+		return result;
+	}
+
 	public async getTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic> {
 		const topicModel: Topic | null = await this.findTopic(executionContext, opts);
 
@@ -1114,6 +1136,26 @@ export class PostgresDatabase extends SqlDatabase {
 
 	protected async onDispose(): Promise<void> {
 		await super.onDispose();
+	}
+
+
+	private static _mapDeliveryEvidence(
+		sqlRecord: FSqlResultRecord
+	): DeliveryEvidence {
+		const successEvidence = sqlRecord.get("success_evidence").asObject;
+		const kind = ensure.string(successEvidence.kind);
+		ensureEgressKind(kind);
+
+		const evidence: DeliveryEvidence = {
+			kind,
+			headers: successEvidence.headers,
+			body: ensure.string(successEvidence.body),
+			bodyJson: successEvidence.bodyJson,
+			statusCode: ensure.number(successEvidence.statusCode),
+			statusDescription: ensure.string(successEvidence.statusDescription),
+		}
+
+		return evidence;
 	}
 
 	private static _mapEgressDbRow(
