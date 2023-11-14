@@ -68,6 +68,7 @@ export namespace MessageBus {
 
 	export interface Channel extends FDisposable, FChannelEvent<Message.Id & Message.Data, Channel.Event> {
 		readonly topicName: Topic["topicName"];
+		readonly topicKind: Topic["topicKind"];
 		// wakeUp(): void;
 	}
 	export namespace Channel {

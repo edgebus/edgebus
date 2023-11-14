@@ -96,6 +96,7 @@ export class MessageBusLocalSynchronous extends MessageBusBase {
 
 				const status: Delivery.Status = isMatchLabels ? Delivery.Status.Success : Delivery.Status.Skip;
 
+				
 				await db.createDelivery(executionContext, {
 					egressId: egress.egressId,
 					topicId: topic.topicId,
@@ -151,7 +152,7 @@ export class MessageBusLocalSynchronous extends MessageBusBase {
 			throw new FExceptionInvalidOperation(`Unable to retain channel for ${egress.egressId.value} due it already used.`);
 		}
 
-		const channel: MessageBusLocalSynchronousEventChannel = new MessageBusLocalSynchronousEventChannel(topic.topicName, () => {
+		const channel: MessageBusLocalSynchronousEventChannel = new MessageBusLocalSynchronousEventChannel(topic.topicName, topic.topicKind, () => {
 			this._channels.get(egress.egressId.value)!.delete(topic.topicId.value);
 		});
 
@@ -192,6 +193,7 @@ class MessageBusLocalSynchronousEventChannel
 	implements MessageBus.Channel {
 	public constructor(
 		public readonly topicName: string,
+		public readonly topicKind: Topic.Kind,
 		private readonly _onDispose: () => void
 	) {
 		super();

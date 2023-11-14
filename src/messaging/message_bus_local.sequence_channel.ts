@@ -11,12 +11,14 @@ export class MessageBusLocalSequenceChannel extends EventChannelBase<Message.Id 
 	private readonly _disposer: () => void | Promise<void>;
 	private readonly _queue: Array<Message>;
 	private readonly _topicName: Topic["topicName"];
+	private readonly _topicKind: Topic["topicKind"];
 	private readonly _egressId: EgressIdentifier;
 	private _tickInterval: NodeJS.Timeout | null;
 	private _insideTick: boolean;
 
 	public constructor(
 		topicName: Topic["topicName"],
+		topicKind: Topic["topicKind"],
 		egressId: EgressIdentifier,
 		queue: Array<Message>,
 		disposer: () => void | Promise<void>,
@@ -24,6 +26,7 @@ export class MessageBusLocalSequenceChannel extends EventChannelBase<Message.Id 
 		super();
 		this._disposer = disposer;
 		this._topicName = topicName;
+		this._topicKind = topicKind;
 		this._egressId = egressId;
 		this._insideTick = false;
 		this._queue = queue;
@@ -35,6 +38,8 @@ export class MessageBusLocalSequenceChannel extends EventChannelBase<Message.Id 
 	}
 
 	public get topicName(): Topic["topicName"] { return this._topicName; }
+
+	public get topicKind(): Topic["topicKind"] { return this._topicKind; }
 
 	public onAddFirstHandler() {
 		super.onAddFirstHandler();

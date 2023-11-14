@@ -1,4 +1,4 @@
-import { FDisposableBase, FException, FExceptionAggregate, FExecutionContext, FLogger } from "@freemework/common";
+import { FCancellationExecutionContext, FCancellationTokenSource, FCancellationTokenSourceTimeout, FDisposableBase, FException, FExceptionAggregate, FExecutionContext, FLogger } from "@freemework/common";
 import { FHostingConfiguration, FWebServer, FWebSocketChannelFactoryEndpoint } from "@freemework/hosting";
 
 import { EventEmitter } from "events";
@@ -9,7 +9,8 @@ import { Message } from "../model/message";
 import { Topic } from "../model/topic";
 import { EventChannelBase } from "../utils/event_channel_base";
 import { Bind } from "../utils/bind";
-import { EgressIdentifier } from "../model";
+import { EgressIdentifier, MessageIdentifier } from "../model";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export class WebSocketHostEgressEndpoint extends FWebSocketChannelFactoryEndpoint {
 	private readonly _logger: FLogger;
@@ -102,22 +103,36 @@ export class WebSocketHostEgressEndpoint extends FWebSocketChannelFactoryEndpoin
 	@Bind
 	private async _onMessage(executionContext: FExecutionContext, event: MessageBus.Channel.Event): Promise<void> {
 		const topicName: Topic["topicName"] = event.source.topicName;
+		const topicKind: Topic["topicKind"] = event.source.topicKind;
 		this._logger.debug(executionContext, () => `Got message from topic '${topicName}'`);
-		const message: Message = event.data;
 		const errors: Array<FException> = [];
-		for (const egressClientChannel of this._egressClientChannels) {
-			try {
-				await egressClientChannel.delivery(
-					// this.initExecutionContext, // TODO: Why do we using this.initExecutionContext instead executionContext?
-					executionContext,
-					topicName,
-					message
-				);
-			} catch (e) {
-				errors.push(FException.wrapIfNeeded(e));
+
+		if (topicKind === Topic.Kind.Asynchronous) {
+			for (const egressClientChannel of this._egressClientChannels) {
+				try {
+					await egressClientChannel.delivery(
+						// this.initExecutionContext, // TODO: Why do we using this.initExecutionContext instead executionContext?
+						executionContext,
+						topicName,
+						event
+					);
+
+					console.log(123);
+				} catch (e) {
+					errors.push(FException.wrapIfNeeded(e));
+				}
 			}
+			FExceptionAggregate.throwIfNeeded(errors);
+		} else {
+			const [egressClientChannel] = this._egressClientChannels;
+
+			await egressClientChannel.deliveryWithResponse(
+				// this.initExecutionContext, // TODO: Why do we using this.initExecutionContext instead executionContext?
+				executionContext,
+				topicName,
+				event
+			);
 		}
-		FExceptionAggregate.throwIfNeeded(errors);
 	}
 }
 
@@ -125,7 +140,10 @@ export namespace WebSocketHostSubscriberEndpoint {
 }
 
 class TextChannel extends EventChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
+	private readonly responseWaiters: Map<MessageIdentifier, PromiseDefer> = new Map();
+	private static RESPONSE_WAIT = 150000;
 	private readonly _disposer: () => void | Promise<void>;
+
 
 	public constructor(
 		disposer: () => void | Promise<void>,
@@ -135,8 +153,12 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 	}
 
 	public async send(executionContext: FExecutionContext, data: string): Promise<void> {
-		// Echo any message from client
-		return this.notify(executionContext, { data });
+		const dataObj = JSON.parse(data);
+		const messageId: MessageIdentifier = MessageIdentifier.parse(dataObj.id);
+		const defer = this.responseWaiters.get(messageId);
+		if (defer) {
+			defer.resolve(dataObj.params);
+		}
 	}
 
 	protected onInit(): void {
@@ -150,8 +172,9 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 	public async delivery(
 		executionContext: FExecutionContext,
 		topicName: Topic["topicName"],
-		message: Message
+		event: MessageBus.Channel.Event,
 	): Promise<void> {
+		const message: Message = event.data;
 		const mediaType: string = message.messageMediaType;
 		const messageBody: Buffer = Buffer.from(message.messageBody);
 		let data: any = { rawBase64: messageBody.toString("base64") };
@@ -175,4 +198,49 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 
 		await this.notify(executionContext, { data: messageStr });
 	}
+
+	public async deliveryWithResponse(
+		executionContext: FExecutionContext,
+		topicName: Topic["topicName"],
+		event: MessageBus.Channel.Event
+	): Promise<void> {
+		const cts: FCancellationTokenSourceTimeout = new FCancellationTokenSourceTimeout(TextChannel.RESPONSE_WAIT);
+		executionContext = new FCancellationExecutionContext(executionContext, cts.token, true);
+
+		const createDefer = (executionContext: FExecutionContext): PromiseDefer => {
+			const cancellationToken = FCancellationExecutionContext.of(executionContext).cancellationToken;
+
+			const defer: any = {};
+			function cancelDefer() {
+				defer.reject(new FException('Timeout exception'));
+			}
+			const promise = new Promise<DeliveryEvidence>((resolve, reject) => {
+				defer.resolve = (data: DeliveryEvidence) => {
+					cancellationToken.removeCancelListener(cancelDefer);
+					resolve(data);
+				};
+				defer.reject = (err: FException) => {
+					cancellationToken.removeCancelListener(cancelDefer);
+					reject(err);
+				};
+			});
+			cancellationToken.addCancelListener(cancelDefer);
+			defer.promise = promise;
+			return defer;
+		}
+
+		const defer: PromiseDefer = createDefer(executionContext);
+		this.responseWaiters.set(event.data.messageId, defer);
+
+		await this.delivery(executionContext, topicName, event);
+		const response: DeliveryEvidence = await defer.promise;
+
+		event.deliveryEvidence = response;
+	}
+}
+
+interface PromiseDefer {
+	promise: Promise<DeliveryEvidence>;
+	resolve: (data: DeliveryEvidence) => void;
+	reject: (error: FException) => void;
 }

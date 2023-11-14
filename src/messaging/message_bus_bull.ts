@@ -140,7 +140,7 @@ export class MessageBusBull extends MessageBusBase {
 			throw new FExceptionInvalidOperation(`Unable to retain channel for ${egress.egressId.value} due it already used.`);
 		}
 
-		const channel: MessageBusBullEventChannel = new MessageBusBullEventChannel(topic.topicName, () => {
+		const channel: MessageBusBullEventChannel = new MessageBusBullEventChannel(topic.topicName, topic.topicKind, () => {
 			this._channels.get(egress.egressId.value)!.delete(topic.topicId.value);
 		});
 
@@ -447,6 +447,7 @@ class MessageBusBullEventChannel
 	implements MessageBus.Channel {
 	public constructor(
 		public readonly topicName: string,
+		public readonly topicKind: Topic["topicKind"],
 		private readonly _onDispose: () => void
 	) {
 		super();

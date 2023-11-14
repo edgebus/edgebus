@@ -112,10 +112,10 @@ export class MessageBusLocal extends MessageBusBase {
 
 		switch (this._opts.deliveryPolicy.type) {
 			case MessageBus.DeliveryPolicy.Type.SEQUENCE:
-				channel = new MessageBusLocalSequenceChannel(topic.topicName, egress.egressId, queue, channelDisposer);
+				channel = new MessageBusLocalSequenceChannel(topic.topicName, topic.topicKind, egress.egressId, queue, channelDisposer);
 				break;
 			case MessageBus.DeliveryPolicy.Type.PARALLEL:
-				channel = new MessageBusLocalParallelChannel(topic.topicName, egress.egressId, queue, channelDisposer);
+				channel = new MessageBusLocalParallelChannel(topic.topicName, topic.topicKind, egress.egressId, queue, channelDisposer);
 				break;
 			default:
 				throw new FExceptionInvalidOperation("Unexpected channel type.");
