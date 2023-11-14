@@ -160,7 +160,7 @@ export class HttpHostIngress extends BaseIngress {
 				const [evidence] = evidences;
 				res.header(evidence.headers);
 				res.writeHead(evidence.statusCode, evidence.statusDescription);
-				res.end(evidence.body);
+				res.end(Buffer.from(evidence.body, 'base64').toString('utf8'));
 			} else {
 				if (this._successResponseHandler !== null) {
 					const successData = await this._successResponseHandler.execute(executionContext, message);
