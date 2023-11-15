@@ -116,14 +116,15 @@ export class WebSocketHostEgressEndpoint extends FWebSocketChannelFactoryEndpoin
 						topicName,
 						event
 					);
-
-					console.log(123);
 				} catch (e) {
 					errors.push(FException.wrapIfNeeded(e));
 				}
 			}
 			FExceptionAggregate.throwIfNeeded(errors);
 		} else {
+			if (this._egressClientChannels.length !== 1) {
+				throw new FException(`Unexpected count of egresses ${this._egressClientChannels.length} for synchronous topic ${topicName}`)
+			}
 			const [egressClientChannel] = this._egressClientChannels;
 
 			await egressClientChannel.deliveryWithResponse(
@@ -141,7 +142,7 @@ export namespace WebSocketHostSubscriberEndpoint {
 
 class TextChannel extends EventChannelBase<string> implements FWebSocketChannelFactoryEndpoint.TextChannel {
 	private readonly responseWaiters: Map<MessageIdentifier, PromiseDefer> = new Map();
-	private static RESPONSE_WAIT = 150000;
+	private static RESPONSE_WAIT = 10000;
 	private readonly _disposer: () => void | Promise<void>;
 
 
@@ -158,6 +159,8 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		const defer = this.responseWaiters.get(messageId);
 		if (defer) {
 			defer.resolve(dataObj.params);
+		} else {
+			throw new FException(`Unexpected message ${messageId}`);
 		}
 	}
 
@@ -207,7 +210,7 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		const cts: FCancellationTokenSourceTimeout = new FCancellationTokenSourceTimeout(TextChannel.RESPONSE_WAIT);
 		executionContext = new FCancellationExecutionContext(executionContext, cts.token, true);
 
-		const createDefer = (executionContext: FExecutionContext): PromiseDefer => {
+		const createDefer = (executionContext: FExecutionContext, messageId: MessageIdentifier): PromiseDefer => {
 			const cancellationToken = FCancellationExecutionContext.of(executionContext).cancellationToken;
 
 			const defer: any = {};
@@ -217,10 +220,12 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 			const promise = new Promise<DeliveryEvidence>((resolve, reject) => {
 				defer.resolve = (data: DeliveryEvidence) => {
 					cancellationToken.removeCancelListener(cancelDefer);
+					this.responseWaiters.delete(messageId)
 					resolve(data);
 				};
 				defer.reject = (err: FException) => {
 					cancellationToken.removeCancelListener(cancelDefer);
+					this.responseWaiters.delete(messageId)
 					reject(err);
 				};
 			});
@@ -229,7 +234,7 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 			return defer;
 		}
 
-		const defer: PromiseDefer = createDefer(executionContext);
+		const defer: PromiseDefer = createDefer(executionContext, event.data.messageId);
 		this.responseWaiters.set(event.data.messageId, defer);
 
 		await this.delivery(executionContext, topicName, event);

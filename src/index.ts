@@ -186,6 +186,9 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					const ingressConfiguration = hardcodedPublisherConfiguration.ingressConfiguration;
 					const ingressId: IngressIdentifier = IngressIdentifier.parse(ingressConfiguration.ingressId);
 					if (ingressConfiguration.kind === Ingress.Kind.WebSocketClient) {
+						const messageBus = hardcodedPublisherConfiguration.topicKind === Topic.Kind.Asynchronous
+							? messageBusProvider.wrapAsynchronous
+							: messageBusProvider.wrapSynchronous;
 						const webSocketClientIngress: WebSocketClientIngress = new WebSocketClientIngress(
 							{
 								topicId: hardcodedPublisherConfiguration.topicId,
@@ -196,7 +199,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
-							messageBusProvider.wrapAsynchronous,
+							messageBus,
 							{
 								wsOptions: {},
 								transformers: [],

@@ -1,6 +1,6 @@
 import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLoggerLabelsExecutionContext } from "@freemework/common";
 
-import { Delivery, Egress, EgressIdentifier, Ingress, Label, Message, Topic, TopicIdentifier } from "../model";
+import { Delivery, Egress, EgressIdentifier, Ingress, Label, LabelIdentifier, Message, Topic, TopicIdentifier } from "../model";
 import { MessageBus } from "./message_bus";
 import { MessageBusBase } from "./message_bus_base";
 import { DatabaseFactory } from "../data/database_factory";
@@ -38,11 +38,7 @@ export class MessageBusLocalSynchronous extends MessageBusBase {
 			executionContext = new FLoggerLabelsExecutionContext(executionContext, {
 				topicId: topic.topicId.value,
 				egressId: egress.egressId.value,
-			});
-
-
-			executionContext = new FLoggerLabelsExecutionContext(executionContext, {
-				messageId: message.messageId.value
+				messageId: message.messageId.value,
 			});
 
 			await db.lockEgressMessageQueue(
@@ -63,12 +59,12 @@ export class MessageBusLocalSynchronous extends MessageBusBase {
 				}
 
 				const messageLabels: Array<Label> = [];
-				// {
-				// 	const labelIds: Array<LabelIdentifier> = message.labels.map((l: any) => LabelIdentifier.parse(l.id));
-				// 	for (const labelId of labelIds) {
-				// 		messageLabels.push(await db.getLabel(executionContext, { labelId }));
-				// 	}
-				// }
+				{
+					const labelIds: Array<LabelIdentifier> = message.messageLabels.map((l: any) => LabelIdentifier.parse(l.id));
+					for (const labelId of labelIds) {
+						messageLabels.push(await db.getLabel(executionContext, { labelId }));
+					}
+				}
 
 				const eventMessage: Message = {
 					messageId: message.messageId,
@@ -84,8 +80,7 @@ export class MessageBusLocalSynchronous extends MessageBusBase {
 					data: eventMessage
 				};
 
-				// const isMatchLabels: boolean = await this.matchLabels(executionContext, db, egressId, message.messageLabels);
-				const isMatchLabels: boolean = true;
+				const isMatchLabels: boolean = await this.matchLabels(executionContext, db, egress.egressId, message.messageLabels);
 				if (isMatchLabels) {
 					await channel.notify(executionContext, event);
 				}
@@ -96,7 +91,6 @@ export class MessageBusLocalSynchronous extends MessageBusBase {
 
 				const status: Delivery.Status = isMatchLabels ? Delivery.Status.Success : Delivery.Status.Skip;
 
-				
 				await db.createDelivery(executionContext, {
 					egressId: egress.egressId,
 					topicId: topic.topicId,
