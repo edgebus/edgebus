@@ -11,6 +11,7 @@ import { IngressIdentifier, MessageIdentifier, Message, Topic } from "../model";
 import { BaseIngress } from "./base.ingress";
 import { WebSocketMessenger } from "../misc/web_socket_messenger";
 import { Bind } from "../utils/bind";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 
 export class WebSocketClientIngress extends BaseIngress {
@@ -237,17 +238,17 @@ export class WebSocketClientIngress extends BaseIngress {
 
 			await this._messageBus.publish(executionContext, ingressId, message);
 			if (this.topicKind === Topic.Kind.Synchronous) {
-				const deliveryEvidences = await this._messageBus.getSuccessDeliveryEvidences(executionContext, { messageId });
+				const deliveryEvidences: DeliveryEvidence[] = await this._messageBus.getDeliveryEvidences(executionContext, { messageId });
 				if (deliveryEvidences.length !== 1) {
 					throw new FException("Expected only one success delivery evidence");
 				}
 
-				const [successDeliveryEvidence] = deliveryEvidences;
+				const [deliveryEvidence] = deliveryEvidences;
 				const messageStr: string = JSON.stringify({
 					jsonrpc: "2.0",
 					method: messageMethod,
 					id: messageId.value,
-					params: successDeliveryEvidence
+					params: deliveryEvidence.data
 				});
 
 				await messenger.send(executionContext, messageStr);

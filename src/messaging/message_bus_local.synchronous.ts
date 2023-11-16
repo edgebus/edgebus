@@ -6,20 +6,12 @@ import { MessageBusBase } from "./message_bus_base";
 import { DatabaseFactory } from "../data/database_factory";
 import { EventChannelBase } from "../utils/event_channel_base";
 import { Database } from "../data/database";
-import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export class MessageBusLocalSynchronous extends MessageBusBase {
 	constructor(storage: DatabaseFactory,) {
 		super(storage);
 
 		this._channels = new Map();
-	}
-
-	public async getSuccessDeliveryEvidences(
-		executionContext: FExecutionContext,
-		message: Message.Id
-	): Promise<DeliveryEvidence[]> {
-		return await this.storage.using(executionContext, (db: Database) => db.getSuccessDeliveryEvidences(executionContext, message));
 	}
 
 	protected async onPublish(

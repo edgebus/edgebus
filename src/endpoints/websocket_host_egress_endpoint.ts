@@ -217,8 +217,8 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 			function cancelDefer() {
 				defer.reject(new FException('Timeout exception'));
 			}
-			const promise = new Promise<DeliveryEvidence>((resolve, reject) => {
-				defer.resolve = (data: DeliveryEvidence) => {
+			const promise = new Promise<DeliveryEvidence.SuccessData>((resolve, reject) => {
+				defer.resolve = (data: DeliveryEvidence.SuccessData) => {
 					cancellationToken.removeCancelListener(cancelDefer);
 					this.responseWaiters.delete(messageId)
 					resolve(data);
@@ -238,14 +238,14 @@ class TextChannel extends EventChannelBase<string> implements FWebSocketChannelF
 		this.responseWaiters.set(event.data.messageId, defer);
 
 		await this.delivery(executionContext, topicName, event);
-		const response: DeliveryEvidence = await defer.promise;
+		const response: DeliveryEvidence.SuccessData = await defer.promise;
 
 		event.deliveryEvidence = response;
 	}
 }
 
 interface PromiseDefer {
-	promise: Promise<DeliveryEvidence>;
-	resolve: (data: DeliveryEvidence) => void;
+	promise: Promise<DeliveryEvidence.SuccessData>;
+	resolve: (data: DeliveryEvidence.SuccessData) => void;
 	reject: (error: FException) => void;
 }

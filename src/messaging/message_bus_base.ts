@@ -12,7 +12,7 @@ import { LabelHandler } from "../model/label_handler";
 import { AbstractLabelsHandler } from "./labels_handler/abstract_labels_handler";
 import { ExternalLabelsHandler } from "./labels_handler/external_process_labels_handler";
 import { Label } from "../model";
-import { PostgresDatabase } from "../data/postgres/postgres_database";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export abstract class MessageBusBase extends MessageBus {
 	private readonly labelHandlers: Map<TopicIdentifier, ReadonlyArray<AbstractLabelsHandler>>;
@@ -59,6 +59,13 @@ export abstract class MessageBusBase extends MessageBus {
 		// TODO
 	}
 
+	public async getDeliveryEvidences(
+		executionContext: FExecutionContext,
+		message: Message.Id
+	): Promise<DeliveryEvidence[]> {
+		return await this.storage.using(executionContext, (db: Database) => db.getSuccessDeliveryEvidences(executionContext, message));
+	}
+	
 	public async publish(
 		executionContext: FExecutionContext,
 		ingressId: IngressIdentifier,

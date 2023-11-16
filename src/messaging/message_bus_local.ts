@@ -1,4 +1,4 @@
-import { FException, FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
+import { FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
 
 import { Message } from "../model/message";
 import { Topic } from "../model/topic";
@@ -10,7 +10,6 @@ import { MessageBusBase } from "./message_bus_base";
 import { DatabaseFactory } from "../data/database_factory";
 import { EgressIdentifier, Egress, Ingress } from "../model";
 import { Database } from "../data/database";
-import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export class MessageBusLocal extends MessageBusBase {
 	private readonly _messageQueues: Map<Topic["topicName"], Map<EgressIdentifier, Array<Message>>>;
@@ -24,12 +23,6 @@ export class MessageBusLocal extends MessageBusBase {
 		this._opts = opts;
 	}
 
-	public async getSuccessDeliveryEvidences(
-		executionContext: FExecutionContext,
-		message: Message.Id
-	): Promise<DeliveryEvidence[]> {
-		throw new FException("Not implemented yet");
-	}
 	
 	protected async onPublish(
 		executionContext: FExecutionContext,

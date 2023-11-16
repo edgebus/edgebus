@@ -6,7 +6,7 @@ import * as  _ from "lodash";
 
 import { MessageBus } from "../messaging/message_bus";
 
-import { IngressIdentifier, MessageIdentifier, Message, Topic } from "../model";
+import { IngressIdentifier, MessageIdentifier, Message, Topic, Egress } from "../model";
 
 import { BaseIngress } from "./base.ingress";
 import { HttpBadRequestException } from "../endpoints/exceptions";
@@ -151,16 +151,21 @@ export class HttpHostIngress extends BaseIngress {
 			res.header("EDGEBUS-MESSAGE-ID", message.messageId.value)
 
 			if (this.topicKind === Topic.Kind.Synchronous) {
-				const evidences: DeliveryEvidence[] = await this._messageBus.getSuccessDeliveryEvidences(executionContext, { messageId });
+				const evidences: DeliveryEvidence[] = await this._messageBus.getDeliveryEvidences(executionContext, { messageId });
 
-				if (evidences.length !== 1) {
+				const successDeliveryEvidences: DeliveryEvidence.SuccessDeliveryEvidence[] = evidences.filter(e => e.type === DeliveryEvidence.Type.Success)  as DeliveryEvidence.SuccessDeliveryEvidence[];
+				if (successDeliveryEvidences.length !== 1) {
 					throw new FExceptionInvalidOperation(`Unexpected success evidence count for synchronous mode ${evidences.length}`);
 				}
-				
-				const [evidence] = evidences;
-				res.header(evidence.headers);
-				res.writeHead(evidence.statusCode, evidence.statusDescription);
-				res.end(Buffer.from(evidence.body, 'base64').toString('utf8'));
+
+				const [successDeliveryEvidence] = successDeliveryEvidences;
+				if (successDeliveryEvidence.data.kind === Egress.Kind.Webhook) {
+					res.header(successDeliveryEvidence.data.headers);
+					res.writeHead(successDeliveryEvidence.data.statusCode, successDeliveryEvidence.data.statusDescription);
+					res.end(Buffer.from(successDeliveryEvidence.data.body, 'base64').toString('utf8'));
+				} else {
+					throw new FException(`Unexpected evidence kind ${successDeliveryEvidence.data.kind} for http host ingress`);
+				}
 			} else {
 				if (this._successResponseHandler !== null) {
 					const successData = await this._successResponseHandler.execute(executionContext, message);

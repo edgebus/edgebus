@@ -27,7 +27,7 @@ export abstract class MessageBus extends FInitableBase {
 		egressId: EgressIdentifier
 	): Promise<MessageBus.Channel>;
 
-	public abstract getSuccessDeliveryEvidences(
+	public abstract getDeliveryEvidences(
 		executionContext: FExecutionContext,
 		message: Message.Id
 	): Promise<DeliveryEvidence[]>;

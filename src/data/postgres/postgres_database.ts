@@ -1,4 +1,4 @@
-import { FEnsure, FExceptionInvalidOperation, FExecutionContext, FSqlResultRecord, FSqlStatementParam } from "@freemework/common";
+import { FEnsure, FException, FExceptionInvalidOperation, FExecutionContext, FSqlResultRecord, FSqlStatementParam } from "@freemework/common";
 import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 import * as _ from "lodash";
@@ -820,10 +820,10 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
 			.statement(`
-			SELECT ED."success_evidence"
+			SELECT ED."success_evidence", ED."failure_evidence"
 			FROM "tb_message" AS M
 			INNER JOIN "tb_egress_delivery" AS ED ON ED."message_id" = M."id"
-			WHERE ED."status" = 'SUCCESS' AND M."api_uuid" = $1
+			WHERE M."api_uuid" = $1
 			`)
 			.executeQuery(
 				executionContext,
@@ -1142,20 +1142,47 @@ export class PostgresDatabase extends SqlDatabase {
 	private static _mapDeliveryEvidence(
 		sqlRecord: FSqlResultRecord
 	): DeliveryEvidence {
-		const successEvidence = sqlRecord.get("success_evidence").asObject;
-		const kind = ensure.string(successEvidence.kind);
-		ensureEgressKind(kind);
+		const successEvidence = sqlRecord.get("success_evidence").asObjectNullable;
+		const failureEvidence = sqlRecord.get("failure_evidence").asStringNullable;
 
-		const evidence: DeliveryEvidence = {
-			kind,
-			headers: successEvidence.headers,
-			body: ensure.string(successEvidence.body),
-			bodyJson: successEvidence.bodyJson,
-			statusCode: ensure.number(successEvidence.statusCode),
-			statusDescription: ensure.string(successEvidence.statusDescription),
+		if (successEvidence) {
+			const kind = ensure.string(successEvidence.kind);
+			ensureEgressKind(kind);
+
+			switch (kind) {
+				case Egress.Kind.Webhook:
+					return {
+						type: DeliveryEvidence.Type.Success,
+						data: {
+							kind: Egress.Kind.Webhook,
+							headers: successEvidence.headers,
+							body: ensure.string(successEvidence.body),
+							bodyJson: successEvidence.bodyJson,
+							statusCode: ensure.number(successEvidence.statusCode),
+							statusDescription: ensure.string(successEvidence.statusDescription),
+						}
+					}
+				case Egress.Kind.Telegram:
+				case Egress.Kind.WebSocketHost:
+					return {
+						type: DeliveryEvidence.Type.Success,
+						data: {
+							kind
+						}
+					}
+				default:
+					throw new FException(`Unexpected egress kind in success delivery evidence`);
+			}
 		}
 
-		return evidence;
+		if (failureEvidence) {
+			return {
+				type: DeliveryEvidence.Type.Failed,
+				data: failureEvidence
+			}
+		}
+
+		throw new FException("Unexpected delivery evidence");
 	}
 
 	private static _mapEgressDbRow(

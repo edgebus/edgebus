@@ -1,4 +1,4 @@
-import { FConfigurationException, FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
+import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import { DoneCallback, Job, JobOptions, Queue } from "bull";
 import * as Bull from "bull";
@@ -22,7 +22,6 @@ import { Bind } from "../utils/bind";
 import { unpromise } from "../utils/unpromise";
 import { Delivery } from "../model";
 import { MaskService } from "../misc/mask_service";
-import { DeliveryEvidence } from "../model/delivery_evidence";
 
 /**
  * Implementation of Message Bus top on bull library
@@ -75,13 +74,6 @@ export class MessageBusBull extends MessageBusBase {
 			queues: [],
 			serverAdapter: this._serverAdapter,
 		});
-	}
-
-	public async getSuccessDeliveryEvidences(
-		executionContext: FExecutionContext,
-		message: Message.Id
-	): Promise<DeliveryEvidence[]> {
-		throw new FException("Not implemented yet");
 	}
 
 	protected async onPublish(
