@@ -96,32 +96,31 @@ class _TopicScreenState extends State<TopicScreen> {
             final horizontalScrollController = ScrollController();
 
             return Padding(
-                 padding: const EdgeInsets.all(16),
-                // ConstrainedBox(
-                //   constraints: const BoxConstraints(
-                //     minWidth: 200,
-                //     maxWidth: double.infinity,
-                //   ),
-                  child:
-                AdaptiveScrollbar(
-              underColor: Colors.blueGrey.withOpacity(0.3),
-              sliderDefaultColor: Colors.grey.withOpacity(0.7),
-              sliderActiveColor: Colors.grey,
-              controller: verticalScrollController,
+              padding: const EdgeInsets.all(16),
+              // ConstrainedBox(
+              //   constraints: const BoxConstraints(
+              //     minWidth: 200,
+              //     maxWidth: double.infinity,
+              //   ),
               child: AdaptiveScrollbar(
-                controller: horizontalScrollController,
-                position: ScrollbarPosition.bottom,
                 underColor: Colors.blueGrey.withOpacity(0.3),
                 sliderDefaultColor: Colors.grey.withOpacity(0.7),
                 sliderActiveColor: Colors.grey,
-                child: SingleChildScrollView(
-                  controller: verticalScrollController,
-                  scrollDirection: Axis.vertical,
+                controller: verticalScrollController,
+                child: AdaptiveScrollbar(
+                  controller: horizontalScrollController,
+                  position: ScrollbarPosition.bottom,
+                  underColor: Colors.blueGrey.withOpacity(0.3),
+                  sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                  sliderActiveColor: Colors.grey,
                   child: SingleChildScrollView(
-                    controller: horizontalScrollController,
-                    scrollDirection: Axis.horizontal,
-                    // child: Padding(
-                    //   padding: const EdgeInsets.all(16),
+                    controller: verticalScrollController,
+                    scrollDirection: Axis.vertical,
+                    child: SingleChildScrollView(
+                      controller: horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      // child: Padding(
+                      //   padding: const EdgeInsets.all(16),
                       child: DataTable(
                         showCheckboxColumn: false,
                         columnSpacing: 12,
@@ -130,7 +129,11 @@ class _TopicScreenState extends State<TopicScreen> {
                             (states) => Colors.grey.shade400),
                         columns: const [
                           DataColumn(
+                            label: Text('actions'),
+                          ),
+                          DataColumn(
                             label: Text('id'),
+                            // numeric: true,
                           ),
                           DataColumn(
                             label: Text('topics'),
@@ -141,10 +144,6 @@ class _TopicScreenState extends State<TopicScreen> {
                           DataColumn(
                             label: Text('description_2'),
                           ),
-                          DataColumn(
-                            label: Text('actions'),
-                            numeric: true,
-                          ),
                         ],
                         rows: List<DataRow>.generate(
                           topics.length,
@@ -152,6 +151,23 @@ class _TopicScreenState extends State<TopicScreen> {
                             final Topic topic = topics[index];
                             return DataRow(
                               cells: [
+                                DataCell(
+                                  ElevatedButton(
+                                    style: actionBottonStyle,
+                                    child: const Icon(
+                                      Icons.more_horiz,
+                                      color: Colors.black,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ActionScreen()),
+                                      );
+                                    },
+                                  ),
+                                ),
                                 DataCell(
                                   ConstrainedBox(
                                     constraints: const BoxConstraints(
@@ -180,23 +196,6 @@ class _TopicScreenState extends State<TopicScreen> {
                                     child: Text(topic.description),
                                   ),
                                 ),
-                                DataCell(
-                                  ElevatedButton(
-                                    style: actionBottonStyle,
-                                    child: const Icon(
-                                      Icons.more_horiz,
-                                      color: Colors.black,
-                                    ),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ActionScreen()),
-                                      );
-                                    },
-                                  ),
-                                ),
                               ],
                               onSelectChanged: (bool? value) {
                                 // setState(() {
@@ -209,9 +208,9 @@ class _TopicScreenState extends State<TopicScreen> {
                     ),
                   ),
                 ),
-              // ),
-            ),
-             );
+                // ),
+              ),
+            );
           }
           return const Center(
             child: CircularProgressIndicator(
