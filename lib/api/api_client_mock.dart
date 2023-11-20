@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_this
 
-import 'package:freemework/execution_context/f_execution_context.dart';
+import 'package:freemework/execution_context/f_execution_context.dart'
+    show FExecutionContext;
 import 'package:uuid/uuid.dart' show Uuid;
 
 import '../model/topic.dart' show Topic;
@@ -17,8 +18,10 @@ class ApiClientMock extends ApiClient {
     const TopicId id3 = "330de577-37c3-4bef-b236-2bc1e7635ac3";
 
     final Topic topic1 = Topic(id1, "my-topic-1", "Some messages 1");
-    final Topic topic2 = Topic(id2, "my-topic-2", "Some messages 2");
-    final Topic topic3 = Topic(id3, "my-topic-3", "Some messages 3");
+    final Topic topic2 = Topic(
+        id2, "my-topic-2", "Some messages 2 In hac habitasse platea dictumst.");
+    final Topic topic3 = Topic(id3, "my-topic-3",
+        "In hac habitasse platea dictumst. Ut placerat odio in malesuada rhoncus. Nam commodo, quam ac vestibulum iaculis, ipsum nulla sagittis tortor, id aliquet tellus elit in ante.");
 
     this._topics[id1] = topic1;
     this._topics[id2] = topic2;

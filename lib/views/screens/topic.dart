@@ -1,15 +1,19 @@
 // ignore_for_file: unnecessary_this
 
-import 'package:edgebus_console/api/api_client.dart';
-import 'package:edgebus_console/api/api_client_mock.dart';
-import 'package:edgebus_console/model/topic.dart';
-import 'package:edgebus_console/views/screens/action.dart';
-import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/api/api_client.dart' show ApiClient;
+import 'package:edgebus_console/api/api_client_mock.dart' show ApiClientMock;
+import 'package:edgebus_console/model/topic.dart' show Topic;
+import 'package:edgebus_console/views/screens/action.dart' show ActionScreen;
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
+    show PortalMasterLayout;
 import 'package:flutter/material.dart';
-import 'package:freemework/execution_context/f_execution_context.dart';
+import 'package:freemework/execution_context/f_execution_context.dart'
+    show FExecutionContext;
+import 'package:adaptive_scrollbar/adaptive_scrollbar.dart'
+    show AdaptiveScrollbar, ScrollbarPosition;
 // import 'package:freemework/freemework.dart';
 
-import 'package:data_table_2/data_table_2.dart';
+// import 'package:data_table_2/data_table_2.dart' show DataTable2;
 // import 'package:flutter/rendering.dart';
 
 class TopicScreen extends StatefulWidget {
@@ -88,82 +92,126 @@ class _TopicScreenState extends State<TopicScreen> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             final List<Topic> topics = snapshot.data!;
+            final verticalScrollController = ScrollController();
+            final horizontalScrollController = ScrollController();
 
             return Padding(
-              padding: const EdgeInsets.all(16),
-              child: DataTable2(
-                showCheckboxColumn: false,
-                columnSpacing: 12,
-                horizontalMargin: 12,
-                // isVerticalScrollBarVisible: true,
-                minWidth: 200,
-                headingRowColor: MaterialStateColor.resolveWith(
-                    (states) => Colors.grey.shade400),
-                // dataRowColor:
-                //     MaterialStateProperty.resolveWith(this._getDataRowColor),
-                columns: const [
-                  DataColumn(
-                    label: Text('id'),
-                    // size: ColumnSize.L,
-                  ),
-                  DataColumn(
-                    label: Text('topics'),
-                  ),
-                  DataColumn(
-                    label: Text('description_1'),
-                  ),
-                  DataColumn(
-                    label: Text('description_2'),
-                  ),
-                  DataColumn(
-                    label: Text('actions'),
-                    numeric: true,
-                  ),
-                ],
-                rows: List<DataRow>.generate(
-                  topics.length,
-                  (index) {
-                    final Topic topic = topics[index];
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Text(topic.id),
-                        ),
-                        DataCell(
-                          Text(topic.name),
-                        ),
-                        DataCell(
-                          Text(topic.description),
-                        ),
-                        DataCell(
-                          Text(topic.description),
-                        ),
-                        DataCell(
-                          ElevatedButton(
-                            style: actionBottonStyle,
-                            child: const Icon(
-                              Icons.more_horiz,
-                              color: Colors.black,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ActionScreen()),
-                              );
-                            },
+                 padding: const EdgeInsets.all(16),
+                // ConstrainedBox(
+                //   constraints: const BoxConstraints(
+                //     minWidth: 200,
+                //     maxWidth: double.infinity,
+                //   ),
+                  child:
+                AdaptiveScrollbar(
+              underColor: Colors.blueGrey.withOpacity(0.3),
+              sliderDefaultColor: Colors.grey.withOpacity(0.7),
+              sliderActiveColor: Colors.grey,
+              controller: verticalScrollController,
+              child: AdaptiveScrollbar(
+                controller: horizontalScrollController,
+                position: ScrollbarPosition.bottom,
+                underColor: Colors.blueGrey.withOpacity(0.3),
+                sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                sliderActiveColor: Colors.grey,
+                child: SingleChildScrollView(
+                  controller: verticalScrollController,
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    controller: horizontalScrollController,
+                    scrollDirection: Axis.horizontal,
+                    // child: Padding(
+                    //   padding: const EdgeInsets.all(16),
+                      child: DataTable(
+                        showCheckboxColumn: false,
+                        columnSpacing: 12,
+                        horizontalMargin: 12,
+                        headingRowColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade400),
+                        columns: const [
+                          DataColumn(
+                            label: Text('id'),
                           ),
+                          DataColumn(
+                            label: Text('topics'),
+                          ),
+                          DataColumn(
+                            label: Text('description_1'),
+                          ),
+                          DataColumn(
+                            label: Text('description_2'),
+                          ),
+                          DataColumn(
+                            label: Text('actions'),
+                            numeric: true,
+                          ),
+                        ],
+                        rows: List<DataRow>.generate(
+                          topics.length,
+                          (index) {
+                            final Topic topic = topics[index];
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                        maxWidth: 400, minWidth: 50),
+                                    child: Text(topic.id),
+                                  ),
+                                ),
+                                DataCell(
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                        maxWidth: 100, minWidth: 50),
+                                    child: Text(topic.name),
+                                  ),
+                                ),
+                                DataCell(
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                        maxWidth: 600, minWidth: 100),
+                                    child: Text(topic.description),
+                                  ),
+                                ),
+                                DataCell(
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                        maxWidth: 600, minWidth: 100),
+                                    child: Text(topic.description),
+                                  ),
+                                ),
+                                DataCell(
+                                  ElevatedButton(
+                                    style: actionBottonStyle,
+                                    child: const Icon(
+                                      Icons.more_horiz,
+                                      color: Colors.black,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ActionScreen()),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                              onSelectChanged: (bool? value) {
+                                // setState(() {
+                                // });
+                              },
+                            );
+                          },
                         ),
-                      ],
-                      onSelectChanged: (bool? value) {
-                        // setState(() {
-                        // });
-                      },
-                    );
-                  },
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            );
+              // ),
+            ),
+             );
           }
           return const Center(
             child: CircularProgressIndicator(

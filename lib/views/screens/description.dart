@@ -1,8 +1,8 @@
 // ignore_for_file: unnecessary_this
 
-import 'package:edgebus_console/api/api_client.dart';
+import 'package:edgebus_console/api/api_client.dart' show ApiClient;
 import 'package:edgebus_console/api/api_client_mock.dart' show ApiClientMock;
-import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart';
+import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart' show PortalMasterLayout;
 import 'package:flutter/material.dart';
 
 class DescriptionScreen extends StatefulWidget {
