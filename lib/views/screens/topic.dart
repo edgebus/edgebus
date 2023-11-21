@@ -169,7 +169,7 @@ class _TopicScreenState extends State<TopicScreen> {
                                         //   color: Colors.deepPurpleAccent,
                                         // ),
                                         onChanged: (String? value) {
-                                          if (value == 'Create') {
+                                          if (value == 'Edit') {
                                             // This is called when the user selects an item.
                                             setState(
                                               () {

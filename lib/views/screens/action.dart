@@ -45,35 +45,65 @@ class _ActionScreen extends State<ActionScreen> {
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
 
     return PortalMasterLayout(
-      body: ListView(
-        padding: const EdgeInsets.only(left: 10, top: 10),
-        children: const <Widget>[
-          Row(children: [
-            Center(
-              child: Text("Created"),
+      body: Padding(
+        padding: const EdgeInsets.only(
+            top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
+        child: DataTable(
+          columns: const <DataColumn>[
+            DataColumn(
+              label: Expanded(
+                child: Text(
+                  'id',
+                  style: TextStyle(
+                      color: Colors.grey, fontStyle: FontStyle.italic),
+                ),
+              ),
             ),
-            SizedBox(
-              width: 20,
+          ],
+          rows: const <DataRow>[
+            DataRow(
+              cells: <DataCell>[
+                DataCell(Text('19-id')),
+              ],
             ),
-            Icon(Icons.create_new_folder_sharp),
-          ]),
-          Divider(
-            height: 20,
-            thickness: 0,
-            indent: 0,
-            endIndent: 10,
-            color: Colors.grey,
-          ),
-          Row(children: [
-            Center(
-              child: Text("Delete"),
+            DataRow(
+              cells: <DataCell>[
+                DataCell(
+                  Text(
+                    'topic',
+                    style: TextStyle(
+                        color: Colors.grey, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-              width: 20,
+            DataRow(
+              cells: <DataCell>[
+                DataCell(Text('topic-1')),
+              ],
             ),
-            Icon(Icons.delete),
-          ]),
-        ],
+            DataRow(
+              cells: <DataCell>[
+                DataCell(
+                  Text(
+                    'description',
+                    style: TextStyle(
+                        color: Colors.grey, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
+            ),
+            DataRow(
+              cells: <DataCell>[
+                DataCell(
+                  Text(
+                    'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
     // return PortalMasterLayout(
