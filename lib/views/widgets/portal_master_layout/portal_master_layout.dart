@@ -1,3 +1,4 @@
+import 'package:edgebus_console/views/screens/action.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -59,6 +60,17 @@ class PortalMasterLayout extends StatelessWidget {
           onAppBarTitlePressed: () => GoRouter.of(context).go(RouteUri.home),
         ),
         actions: [
+          _createTopicButton(context),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: VerticalDivider(
+              width: 1.0,
+              thickness: 1.0,
+              color: themeData.appBarTheme.foregroundColor!.withOpacity(0.5),
+              indent: 14.0,
+              endIndent: 14.0,
+            ),
+          ),
           _toggleThemeButton(context),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -167,6 +179,22 @@ class PortalMasterLayout extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+
+  Widget _createTopicButton(BuildContext context) {
+    return ElevatedButton(
+      // style: actionBottonStyle,
+      child: const Icon(
+        Icons.add,
+        color: Colors.white,
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ActionScreen()),
+        );
+      },
     );
   }
 
