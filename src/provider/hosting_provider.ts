@@ -7,6 +7,7 @@ import * as _ from "lodash";
 
 import { SettingsProvider } from "./settings_provider";
 import { ProviderLocator } from "../provider_locator";
+import { createExecutionContextMiddleware } from "../misc/express";
 
 @Singleton
 export abstract class HostingProvider extends FInitableBase {
@@ -87,6 +88,9 @@ class HostingProviderImpl extends HostingProvider {
 				if (this.log.isInfoEnabled) {
 					this.log.info(this.initExecutionContext, `Start server: ${serverInfo.server.name}`);
 				}
+
+				serverInfo.server.rootExpressApplication.use(createExecutionContextMiddleware(this.log, this.initExecutionContext));
+
 				if (serverInfo.isOwnInstance === true) {
 					setupExpressErrorHandles(serverInfo.server.rootExpressApplication, this.log);
 				}
