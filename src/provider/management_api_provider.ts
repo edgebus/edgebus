@@ -35,7 +35,7 @@ class ManagementApiProviderImpl extends ManagementApiProvider {
 		super();
 
 		this._databaseFactory = ProviderLocator.default.get(StorageProvider).databaseFactory;
-		this._messageBus = ProviderLocator.default.get(MessageBusProvider).wrap;
+		this._messageBus = ProviderLocator.default.get(MessageBusProvider).wrapAsynchronous;
 	}
 
 	protected create(): ManagementApi {

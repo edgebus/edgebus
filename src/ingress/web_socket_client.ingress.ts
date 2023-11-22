@@ -11,6 +11,7 @@ import { IngressIdentifier, MessageIdentifier, Message, Topic } from "../model";
 import { BaseIngress } from "./base.ingress";
 import { WebSocketMessenger } from "../misc/web_socket_messenger";
 import { Bind } from "../utils/bind";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 
 export class WebSocketClientIngress extends BaseIngress {
@@ -162,8 +163,6 @@ export class WebSocketClientIngress extends BaseIngress {
 		this._watchdogInterval = 1000;
 	}
 
-
-
 	private async _createMessenger(executionContext: FExecutionContext): Promise<WebSocketMessenger> {
 		const messenger = new WebSocketMessenger(
 			this._url,
@@ -198,6 +197,11 @@ export class WebSocketClientIngress extends BaseIngress {
 			}
 			return Promise.resolve();
 		} else {
+			if (this._lazyMessenger === null || (this._lazyMessenger instanceof Promise)) {
+				return;
+			}
+			const messenger: WebSocketMessenger = this._lazyMessenger;
+
 			const { data: eventData } = event;
 
 			const eventDataStr: string = (function () {
@@ -213,6 +217,7 @@ export class WebSocketClientIngress extends BaseIngress {
 			const messageId: MessageIdentifier = MessageIdentifier.parse(wsMessage.id);
 			const messageHeaders = wsMessage.params.headers;
 			const messageMediaType = wsMessage.params.mediaType;
+			const messageMethod = wsMessage.method;
 
 			const messageIngressBody: Uint8Array = Buffer.from(wsMessage.params.data.rawBase64, "base64");
 
@@ -232,8 +237,22 @@ export class WebSocketClientIngress extends BaseIngress {
 			});
 
 			await this._messageBus.publish(executionContext, ingressId, message);
+			if (this.topicKind === Topic.Kind.Synchronous) {
+				const deliveryEvidences: DeliveryEvidence[] = await this._messageBus.getDeliveryEvidences(executionContext, { messageId });
+				if (deliveryEvidences.length !== 1) {
+					throw new FException("Expected only one success delivery evidence");
+				}
 
+				const [deliveryEvidence] = deliveryEvidences;
+				const messageStr: string = JSON.stringify({
+					jsonrpc: "2.0",
+					method: messageMethod,
+					id: messageId.value,
+					params: deliveryEvidence.data
+				});
 
+				await messenger.send(executionContext, messageStr);
+			}
 			return Promise.resolve();
 		}
 	}

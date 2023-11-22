@@ -31,9 +31,14 @@ export class Settings {
 		public readonly persistentStorageURL: URL,
 
 		/**
-		 * Message Bus instance settings
+		 * Asynchronous Message Bus instance settings
 		 */
-		public readonly messageBus: Settings.MessageBus,
+		public readonly messageBusAsynchronous: Settings.MessageBus,
+
+		/**
+		 * Synchronous Message Bus instance settings
+		 */
+		public readonly messageBusSynchronous: Settings.MessageBus,
 
 		/**
 		 * Predefined configuration
@@ -52,13 +57,15 @@ export class Settings {
 			edgebusRuntimeConfiguration.getArray("endpoint").map(parseEndpoint)
 		);
 
-		const messageBus: Settings.MessageBus = (function () {
-			const messageBusConfiguration: FConfiguration = edgebusRuntimeConfiguration.getNamespace("messagebus");
-			const messageBusKind: string = messageBusConfiguration.get("kind").asString;
+		const messageBusConfiguration: FConfiguration = edgebusRuntimeConfiguration.getNamespace("messagebus");
+
+		const asynchronousMessageBus: Settings.MessageBus = (function () {
+			const asynchronousBusConfiguration: FConfiguration = messageBusConfiguration.getNamespace('asynchronous');
+			const messageBusKind: string = asynchronousBusConfiguration.get("kind").asString;
 			switch (messageBusKind) {
 				case "bull":
 					{
-						const messageBusBullConfiguration = messageBusConfiguration.getNamespace(messageBusKind);
+						const messageBusBullConfiguration = asynchronousBusConfiguration.getNamespace(messageBusKind);
 						const redisUrl: URL = messageBusBullConfiguration.get("redisUrl").asUrl;
 						return Object.freeze<Settings.MessageBus>({
 							kind: "bull",
@@ -67,7 +74,23 @@ export class Settings {
 					}
 				case "local":
 					{
-						const messageBusLocalConfiguration = messageBusConfiguration.getNamespace(messageBusKind);
+						// const messageBusLocalConfiguration = asynchronousBusConfiguration.getNamespace(messageBusKind);
+						return Object.freeze<Settings.MessageBus>({
+							kind: "local",
+						});
+					}
+				default:
+					throw new FExceptionInvalidOperation(`Not supported message bus kind '${messageBusKind}'.`);
+			}
+		})();
+
+		const synchronousMessageBus: Settings.MessageBus = (function () {
+			const synchronousBusConfiguration: FConfiguration = messageBusConfiguration.getNamespace('synchronous');
+			const messageBusKind: string = synchronousBusConfiguration.get("kind").asString;
+			switch (messageBusKind) {
+				case "local":
+					{
+						// const messageBusLocalConfiguration = synchronousBusConfiguration.getNamespace(messageBusKind);
 						return Object.freeze<Settings.MessageBus>({
 							kind: "local",
 						});
@@ -86,7 +109,8 @@ export class Settings {
 			servers,
 			endpoints,
 			persistentStorageURL,
-			messageBus,
+			asynchronousMessageBus,
+			synchronousMessageBus,
 			setup
 		);
 
@@ -271,7 +295,8 @@ export namespace Settings {
 			readonly name: string;
 			readonly description: string;
 			readonly mediaType: string;
-			readonly labelHandlers: ReadonlyArray<LabelHandler>
+			readonly labelHandlers: ReadonlyArray<LabelHandler>;
+			readonly kind: string;
 		}
 
 		export type LabelHandler =
@@ -573,6 +598,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 			const name: string = topicConfiguration.get("name").asString;
 			const description: string = topicConfiguration.get("description").asString;
 			const mediaType: string = topicConfiguration.get("mediaType").asString;
+			const kind: string = topicConfiguration.get("kind").asString;
 
 			const labelHandlers: Array<Settings.Setup.LabelHandler> = []
 			const labelHandlerKey: string = "labelHandler";
@@ -600,7 +626,7 @@ function parseSetup(setupConfiguration: FConfiguration): Settings.Setup | null {
 
 			}
 
-			const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers) };
+			const topicSettings: Settings.Setup.Topic = { topicId, name, description, mediaType, labelHandlers: Object.freeze(labelHandlers), kind };
 			topics.push(Object.freeze(topicSettings));
 		}
 	}

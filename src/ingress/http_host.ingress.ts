@@ -6,7 +6,7 @@ import * as  _ from "lodash";
 
 import { MessageBus } from "../messaging/message_bus";
 
-import { IngressIdentifier, MessageIdentifier, Message, Topic } from "../model";
+import { IngressIdentifier, MessageIdentifier, Message, Topic, Egress } from "../model";
 
 import { BaseIngress } from "./base.ingress";
 import { HttpBadRequestException } from "../endpoints/exceptions";
@@ -15,6 +15,7 @@ import { Bind } from "../utils/bind";
 import { ResponseHandlerBase } from "./response_handler/response_handler_base";
 import { FWebServer } from "@freemework/hosting";
 import { createExecutionContextMiddleware } from "../misc/express";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export class HttpHostIngress extends BaseIngress {
 	private readonly _servers: ReadonlyArray<FWebServer>;
@@ -146,23 +147,43 @@ export class HttpHostIngress extends BaseIngress {
 
 			await this._messageBus.publish(executionContext, ingressId, message);
 
+
 			res.header("EDGEBUS-MESSAGE-ID", message.messageId.value)
-			if (this._successResponseHandler !== null) {
-				const successData = await this._successResponseHandler.execute(executionContext, message);
-				if (successData.headers !== null) {
-					for (const [header, value] of _.entries(successData.headers)) {
-						if (value !== null) {
-							res.header(header, value);
-						} else {
-							res.header(header);
+
+			if (this.topicKind === Topic.Kind.Synchronous) {
+				const evidences: DeliveryEvidence[] = await this._messageBus.getDeliveryEvidences(executionContext, { messageId });
+
+				const successDeliveryEvidences: DeliveryEvidence.SuccessDeliveryEvidence[] = evidences.filter(e => e.type === DeliveryEvidence.Type.Success)  as DeliveryEvidence.SuccessDeliveryEvidence[];
+				if (successDeliveryEvidences.length !== 1) {
+					throw new FExceptionInvalidOperation(`Unexpected success evidence count for synchronous mode ${evidences.length}`);
+				}
+
+				const [successDeliveryEvidence] = successDeliveryEvidences;
+				if (successDeliveryEvidence.data.kind === Egress.Kind.Webhook) {
+					res.header(successDeliveryEvidence.data.headers);
+					res.writeHead(successDeliveryEvidence.data.statusCode, successDeliveryEvidence.data.statusDescription);
+					res.end(Buffer.from(successDeliveryEvidence.data.body, 'base64').toString('utf8'));
+				} else {
+					throw new FException(`Unexpected evidence kind ${successDeliveryEvidence.data.kind} for http host ingress`);
+				}
+			} else {
+				if (this._successResponseHandler !== null) {
+					const successData = await this._successResponseHandler.execute(executionContext, message);
+					if (successData.headers !== null) {
+						for (const [header, value] of _.entries(successData.headers)) {
+							if (value !== null) {
+								res.header(header, value);
+							} else {
+								res.header(header);
+							}
 						}
 					}
+					res.writeHead(successData.statusCode, successData.statusDescription ?? "OK");
+					res.end(successData.body);
+				} else {
+					res.writeHead(200, "OK");
+					res.end();
 				}
-				res.writeHead(successData.statusCode, successData.statusDescription ?? "OK");
-				res.end(successData.body);
-			} else {
-				res.writeHead(200, "OK");
-				res.end();
 			}
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);

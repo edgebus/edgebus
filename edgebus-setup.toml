@@ -14,6 +14,7 @@
 	name = "clear-junction"
 	description = "Clear Junction's callbacks"
 	mediaType = "application/json"
+	kind = "ASYNCHRONOUS"
 	# [[edgebus.setup.topic.labelHandler]]
 	# 	index = "LBHD"
 	# 	kind = "EXTERNAL_PROCESS"
@@ -25,6 +26,7 @@
 	name = "fireblocks-production"
 	description = "Fireblock's callbacks"
 	mediaType = "application/json"
+	kind = "ASYNCHRONOUS"
 	[[edgebus.setup.topic.labelHandler]]
 		index = "LBHDc3190fcbf16c4c41ac7e846daefc8d2c"
 		kind = "EXTERNAL_PROCESS"
@@ -36,6 +38,7 @@
 	name = "fireblocks-development"
 	description = "Fireblock's callbacks"
 	mediaType = "application/json"
+	kind = "ASYNCHRONOUS"
 	[[edgebus.setup.topic.labelHandler]]
 		index = "LBHD499253286c7647d9a8aa2c03f8a38b2b"
 		kind = "EXTERNAL_PROCESS"
@@ -47,6 +50,7 @@
 	name = "sumsub"
 	description = "Sumsub's callbacks"
 	mediaType = "application/json"
+	kind = "SYNCHRONOUS"
 	# [[edgebus.setup.topic.labelHandler]]
 	# 	index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
 	# 	kind = "EXTERNAL_PROCESS"
@@ -202,7 +206,7 @@
 	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
 	kind = "WEBHOOK"
 	method="POST"
-	url="http://127.0.0.1:52003/webhooks/fireblocks"
+	url="http://127.0.0.1:8020/webhooks/fireblocks"
 
 [[edgebus.setup.egress]]
 	# Deliver messages from Sumsub topics

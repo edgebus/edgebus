@@ -12,6 +12,7 @@ import { LabelHandler } from "../model/label_handler";
 import { AbstractLabelsHandler } from "./labels_handler/abstract_labels_handler";
 import { ExternalLabelsHandler } from "./labels_handler/external_process_labels_handler";
 import { Label } from "../model";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 export abstract class MessageBusBase extends MessageBus {
 	private readonly labelHandlers: Map<TopicIdentifier, ReadonlyArray<AbstractLabelsHandler>>;
@@ -58,6 +59,13 @@ export abstract class MessageBusBase extends MessageBus {
 		// TODO
 	}
 
+	public async getDeliveryEvidences(
+		executionContext: FExecutionContext,
+		message: Message.Id
+	): Promise<DeliveryEvidence[]> {
+		return await this.storage.using(executionContext, (db: Database) => db.getSuccessDeliveryEvidences(executionContext, message));
+	}
+	
 	public async publish(
 		executionContext: FExecutionContext,
 		ingressId: IngressIdentifier,
@@ -65,7 +73,7 @@ export abstract class MessageBusBase extends MessageBus {
 	): Promise<void> {
 		await this.storage.using(
 			executionContext,
-			async (db) => {
+			async (db: Database) => {
 				const topic: Topic = await db.getTopic(executionContext, { ingressId });
 				executionContext = new FLoggerLabelsExecutionContext(executionContext, {
 					topicId: topic.topicId.value
@@ -124,7 +132,7 @@ export abstract class MessageBusBase extends MessageBus {
 					labels
 				);
 
-				await this.onPublish(executionContext, ingress, topic, messageInstance);
+				await this.onPublish(executionContext, db, ingress, topic, messageInstance);
 			}
 		);
 	}
@@ -225,6 +233,7 @@ export abstract class MessageBusBase extends MessageBus {
 
 	protected abstract onPublish(
 		executionContext: FExecutionContext,
+		db: Database,
 		ingress: Ingress,
 		topic: Topic,
 		message: Message.Id & Message.Data & Message.Labels

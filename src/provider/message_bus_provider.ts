@@ -12,12 +12,15 @@ import { DatabaseFactory } from "../data/database_factory";
 import { StorageProvider } from "./storage_provider";
 import { ProviderLocator } from "../provider_locator";
 import { Settings } from "../settings";
+import { MessageBusLocalSynchronous } from "../messaging/message_bus_local.synchronous";
 
 @Singleton
 export abstract class MessageBusProvider extends FInitableBase {
 	protected readonly log: FLogger;
 
-	public abstract get wrap(): MessageBus;
+	public abstract get wrapSynchronous(): MessageBus;
+
+	public abstract get wrapAsynchronous(): MessageBus;
 
 	public constructor() {
 		super();
@@ -30,7 +33,9 @@ export abstract class MessageBusProvider extends FInitableBase {
 
 @Provides(MessageBusProvider)
 export class MessageBusProviderImpl extends MessageBusProvider {
-	public get wrap() { return this._messageBus; }
+	public get wrapSynchronous() { return this._synchronousMessageBus; }
+
+	public get wrapAsynchronous() { return this._asynchronousMessageBus; }
 
 	public constructor() {
 		super();
@@ -40,16 +45,16 @@ export class MessageBusProviderImpl extends MessageBusProvider {
 
 		const storage: DatabaseFactory = storageProvider.databaseFactory;
 
-		const messageBusSettings: Settings.MessageBus = settingsProvider.messageBus;
-		switch (messageBusSettings.kind) {
+		const asynchronousMessageBusSettings: Settings.MessageBus = settingsProvider.messageBusAsynchronous;
+		switch (asynchronousMessageBusSettings.kind) {
 			case "bull":
-				this._messageBus = new MessageBusBull(
+				this._asynchronousMessageBus = new MessageBusBull(
 					storage,
-					messageBusSettings.redisUrl,
+					asynchronousMessageBusSettings.redisUrl,
 				);
 				break;
 			case "local":
-				this._messageBus = new MessageBusLocal(
+				this._asynchronousMessageBus = new MessageBusLocal(
 					storage,
 					{
 						deliveryPolicy: {
@@ -59,17 +64,29 @@ export class MessageBusProviderImpl extends MessageBusProvider {
 					});
 				break;
 			default:
-				throw new FExceptionInvalidOperation(`Not supported message bus kind '${(messageBusSettings as any).kind}'.`);
+				throw new FExceptionInvalidOperation(`Not supported message bus kind '${(asynchronousMessageBusSettings as any).kind}'.`);
+		}
+
+		const synchronousMessageBusSettings: Settings.MessageBus = settingsProvider.messageBusSynchronous;
+		switch (synchronousMessageBusSettings.kind) {
+			case "local":
+				this._synchronousMessageBus = new MessageBusLocalSynchronous(storage);
+				break;
+			default:
+				throw new FExceptionInvalidOperation(`Not supported message bus kind '${(synchronousMessageBusSettings as any).kind}'.`);
 		}
 	}
 
 	protected async onInit() {
-		await this._messageBus.init(this.initExecutionContext);
+		await this._asynchronousMessageBus.init(this.initExecutionContext);
+		await this._synchronousMessageBus.init(this.initExecutionContext);
 	}
 
 	protected async onDispose() {
-		await this._messageBus.dispose();
+		await this._asynchronousMessageBus.dispose();
+		await this._synchronousMessageBus.dispose();
 	}
 
-	private readonly _messageBus: MessageBus;
+	private readonly _asynchronousMessageBus: MessageBus;
+	private readonly _synchronousMessageBus: MessageBus;
 }

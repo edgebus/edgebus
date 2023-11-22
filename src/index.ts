@@ -30,6 +30,7 @@ import { MessageBusBull } from "./messaging/message_bus_bull";
 import { WebSocketClientIngress } from "./ingress/web_socket_client.ingress";
 import { ResponseHandlerDynamicExternalProcess } from "./ingress/response_handler/response_handler_dynamic_external_process";
 import { ResponseHandlerStatic } from "./ingress/response_handler/response_handler_static";
+import { Topic, ensureTopicKind } from "./model/topic";
 
 // Re-export stuff for embedded user's
 export * from "./api/errors";
@@ -63,7 +64,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 	}
 
 	{ // TODO: Temporary solution to expose Bull dashboard
-		const messageBus: MessageBus = ProviderLocator.default.get(MessageBusProvider).wrap;
+		const messageBus: MessageBus = ProviderLocator.default.get(MessageBusProvider).wrapAsynchronous;
 		if (messageBus instanceof MessageBusBull) {
 			ProviderLocator.default.get(HostingProvider).serverInstances.forEach(s => {
 				s.server.rootExpressApplication.use(messageBus.dashboardBindPath, messageBus.serverAdapterRouter);
@@ -123,6 +124,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					// readonly ingressId: string;
 					// readonly publisherPath: string;
 					readonly ingressConfiguration: Settings.Setup.Ingress;
+					readonly topicKind: Topic.Kind;
 				}> = [];
 				const hardcodedSubscriberConfigurations: Array<{
 					readonly topicIds: ReadonlyArray<string>;
@@ -142,12 +144,16 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					}
 
 					for (const ingress of ingresses) {
+						const topicKind = topicsByIdMap.get(ingress.topicId)!.kind;
+						ensureTopicKind(topicKind);
+
 						hardcodedPublisherConfigurations.push({
 							topicId: TopicIdentifier.parse(topicsByIdMap.get(ingress.topicId)!.topicId),
 							topicName: topicsByIdMap.get(ingress.topicId)!.name,
 							topicDescription: topicsByIdMap.get(ingress.topicId)!.description,
 							topicMediaType: topicsByIdMap.get(ingress.topicId)!.mediaType,
-							ingressConfiguration: ingress
+							ingressConfiguration: ingress,
+							topicKind,
 						});
 					}
 
@@ -180,6 +186,9 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					const ingressConfiguration = hardcodedPublisherConfiguration.ingressConfiguration;
 					const ingressId: IngressIdentifier = IngressIdentifier.parse(ingressConfiguration.ingressId);
 					if (ingressConfiguration.kind === Ingress.Kind.WebSocketClient) {
+						const messageBus = hardcodedPublisherConfiguration.topicKind === Topic.Kind.Asynchronous
+							? messageBusProvider.wrapAsynchronous
+							: messageBusProvider.wrapSynchronous;
 						const webSocketClientIngress: WebSocketClientIngress = new WebSocketClientIngress(
 							{
 								topicId: hardcodedPublisherConfiguration.topicId,
@@ -187,9 +196,10 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicDomain: null,
 								topicDescription: hardcodedPublisherConfiguration.topicDescription,
 								topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
-							messageBusProvider.wrap,
+							messageBus,
 							{
 								wsOptions: {},
 								transformers: [],
@@ -203,6 +213,7 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 						}
 
+						const messageBus = hardcodedPublisherConfiguration.topicKind === Topic.Kind.Asynchronous ? messageBusProvider.wrapAsynchronous : messageBusProvider.wrapSynchronous;
 						const httpHostIngressInstance: HttpHostIngress = new HttpHostIngress(
 							{
 								topicId: hardcodedPublisherConfiguration.topicId,
@@ -210,9 +221,10 @@ export default async function (executionContext: FExecutionContext, settings: Se
 								topicDomain: null,
 								topicDescription: hardcodedPublisherConfiguration.topicDescription,
 								topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+								topicKind: hardcodedPublisherConfiguration.topicKind
 							},
 							ingressId,
-							messageBusProvider.wrap,
+							messageBus,
 							{
 								transformers: [],
 								servers: ingressConfiguration.servers.map((serverIndex) => {
@@ -261,7 +273,11 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					for (const topicIdStr of hardcodedSubscriberConfiguration.topicIds) {
 						const channelFactory = async (): Promise<MessageBus.Channel> => {
 							const topicId: TopicIdentifier = TopicIdentifier.parse(topicIdStr);
-							const channel = await messageBusProvider.wrap.retainChannel(executionContext, topicId, egressId);
+							const topicKind = setup!.topics.find(e => e.topicId === topicId.value)?.kind;
+							ensureTopicKind(topicKind!);
+
+							const messageBus = topicKind === Topic.Kind.Asynchronous ? messageBusProvider.wrapAsynchronous : messageBusProvider.wrapSynchronous;
+							const channel = await messageBus.retainChannel(executionContext, topicId, egressId);
 							return channel;
 						}
 						channelFactories.push(channelFactory);

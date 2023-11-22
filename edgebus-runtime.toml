@@ -65,13 +65,13 @@
 
 
 # Message Bus implementation
-[edgebus.runtime.messagebus]
+[edgebus.runtime.messagebus.asynchronous]
 	# kind = "bull"
 	kind = "local"
-	[edgebus.runtime.messagebus.bull]
+	[edgebus.runtime.messagebus.asynchronous.bull]
 		redisUrl = "redis://your.redis.server:6379/0"
-	[edgebus.runtime.messagebus.local]
-		[edgebus.runtime.messagebus.local.delivery]
+	[edgebus.runtime.messagebus.asynchronous.local]
+		[edgebus.runtime.messagebus.asynchronous.local.delivery]
 			policy = "SEQUENCE"
 # /Message Bus implementation
 

@@ -116,7 +116,8 @@ export class ManagementApi extends FInitableBase {
 			topicName: topicData.topicName,
 			topicDomain: topicData.topicDomain,
 			topicDescription: topicData.topicDescription,
-			topicMediaType: topicData.topicMediaType
+			topicMediaType: topicData.topicMediaType,
+			topicKind: topicData.topicKind
 		};
 
 		const topic: Topic = await this._db.createTopic(

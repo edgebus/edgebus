@@ -8,6 +8,7 @@ import { MessageBusBase } from "./message_bus_base";
 import { DatabaseFactory } from "../data/database_factory";
 import { Ingress } from "../model";
 import { Egress } from "../model";
+import { Database } from "../data/database";
 
 export class MessageBusRabbitMQ extends MessageBusBase {
 	public constructor(storage: DatabaseFactory, opts: MessageBusRabbitMQ.Opts) {
@@ -18,6 +19,7 @@ export class MessageBusRabbitMQ extends MessageBusBase {
 
 	protected async onPublish(
 		executionContext: FExecutionContext,
+		db: Database,
 		ingress: Ingress,
 		topic: Topic,
 		message: Message.Id & Message.Data

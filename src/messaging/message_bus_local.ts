@@ -1,4 +1,4 @@
-import { FExceptionInvalidOperation, FExecutionContext, FInitableBase } from "@freemework/common";
+import { FExceptionInvalidOperation, FExecutionContext } from "@freemework/common";
 
 import { Message } from "../model/message";
 import { Topic } from "../model/topic";
@@ -9,6 +9,7 @@ import { MessageBusLocalSequenceChannel } from "./message_bus_local.sequence_cha
 import { MessageBusBase } from "./message_bus_base";
 import { DatabaseFactory } from "../data/database_factory";
 import { EgressIdentifier, Egress, Ingress } from "../model";
+import { Database } from "../data/database";
 
 export class MessageBusLocal extends MessageBusBase {
 	private readonly _messageQueues: Map<Topic["topicName"], Map<EgressIdentifier, Array<Message>>>;
@@ -22,8 +23,10 @@ export class MessageBusLocal extends MessageBusBase {
 		this._opts = opts;
 	}
 
+	
 	protected async onPublish(
 		executionContext: FExecutionContext,
+		db: Database,
 		ingress: Ingress,
 		topic: Topic,
 		message: Message
@@ -102,10 +105,10 @@ export class MessageBusLocal extends MessageBusBase {
 
 		switch (this._opts.deliveryPolicy.type) {
 			case MessageBus.DeliveryPolicy.Type.SEQUENCE:
-				channel = new MessageBusLocalSequenceChannel(topic.topicName, egress.egressId, queue, channelDisposer);
+				channel = new MessageBusLocalSequenceChannel(topic.topicName, topic.topicKind, egress.egressId, queue, channelDisposer);
 				break;
 			case MessageBus.DeliveryPolicy.Type.PARALLEL:
-				channel = new MessageBusLocalParallelChannel(topic.topicName, egress.egressId, queue, channelDisposer);
+				channel = new MessageBusLocalParallelChannel(topic.topicName, topic.topicKind, egress.egressId, queue, channelDisposer);
 				break;
 			default:
 				throw new FExceptionInvalidOperation("Unexpected channel type.");

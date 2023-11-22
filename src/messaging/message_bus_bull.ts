@@ -1,4 +1,4 @@
-import { FConfigurationException, FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
+import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import { DoneCallback, Job, JobOptions, Queue } from "bull";
 import * as Bull from "bull";
@@ -78,6 +78,7 @@ export class MessageBusBull extends MessageBusBase {
 
 	protected async onPublish(
 		executionContext: FExecutionContext,
+		db: Database,
 		ingress: Ingress,
 		topic: Topic,
 		message: Message.Id & Message.Data & Message.Labels
@@ -131,7 +132,7 @@ export class MessageBusBull extends MessageBusBase {
 			throw new FExceptionInvalidOperation(`Unable to retain channel for ${egress.egressId.value} due it already used.`);
 		}
 
-		const channel: MessageBusBullEventChannel = new MessageBusBullEventChannel(topic.topicName, () => {
+		const channel: MessageBusBullEventChannel = new MessageBusBullEventChannel(topic.topicName, topic.topicKind, () => {
 			this._channels.get(egress.egressId.value)!.delete(topic.topicId.value);
 		});
 
@@ -438,6 +439,7 @@ class MessageBusBullEventChannel
 	implements MessageBus.Channel {
 	public constructor(
 		public readonly topicName: string,
+		public readonly topicKind: Topic["topicKind"],
 		private readonly _onDispose: () => void
 	) {
 		super();

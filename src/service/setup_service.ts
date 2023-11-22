@@ -10,6 +10,7 @@ import {
 	LabelHandlerIdentifier,
 	TopicIdentifier, Topic, LabelIdentifier
 } from "../model";
+import { ensureTopicKind } from "../model/topic";
 
 
 export interface SetupService {
@@ -51,12 +52,17 @@ export class SetupServiceImpl implements SetupService {
 				}
 				this._log.info(setupTopicExecutionContext, () => `Skip topic '${setupTopic.name}' creation due it already exist`);
 			} else {
+				const topicKind: string = setupTopic.kind;
+
+				ensureTopicKind(topicKind);
+
 				await managementApi.createTopic(setupTopicExecutionContext, {
 					topicId,
 					topicName: setupTopic.name,
 					topicDescription: setupTopic.description,
 					topicDomain: null,
 					topicMediaType: setupTopic.mediaType,
+					topicKind,
 				});
 				this._log.info(setupTopicExecutionContext, () => `A new topic '${setupTopic.name}' was created`);
 				wasChanged = true;

@@ -1,6 +1,7 @@
 import { FDisposable, FExecutionContext, FChannelEvent, FInitableBase } from "@freemework/common";
 
 import { EgressIdentifier, IngressIdentifier, Message, Topic, TopicIdentifier } from "../model";
+import { DeliveryEvidence } from "../model/delivery_evidence";
 
 
 export abstract class MessageBus extends FInitableBase {
@@ -25,6 +26,11 @@ export abstract class MessageBus extends FInitableBase {
 		topicId: TopicIdentifier,
 		egressId: EgressIdentifier
 	): Promise<MessageBus.Channel>;
+
+	public abstract getDeliveryEvidences(
+		executionContext: FExecutionContext,
+		message: Message.Id
+	): Promise<DeliveryEvidence[]>;
 }
 
 export namespace MessageBus {
@@ -62,6 +68,7 @@ export namespace MessageBus {
 
 	export interface Channel extends FDisposable, FChannelEvent<Message.Id & Message.Data, Channel.Event> {
 		readonly topicName: Topic["topicName"];
+		readonly topicKind: Topic["topicKind"];
 		// wakeUp(): void;
 	}
 	export namespace Channel {

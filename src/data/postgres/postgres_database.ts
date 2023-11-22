@@ -1,4 +1,4 @@
-import { FExceptionInvalidOperation, FExecutionContext, FSqlResultRecord, FSqlStatementParam } from "@freemework/common";
+import { FEnsure, FException, FExceptionInvalidOperation, FExecutionContext, FSqlResultRecord, FSqlStatementParam } from "@freemework/common";
 import { FSqlConnectionFactoryPostgres } from "@freemework/sql.postgres";
 
 import * as _ from "lodash";
@@ -20,7 +20,10 @@ import { Database } from "../database";
 import { Label } from "../../model/label";
 import { LabelHandler, ensureLabelHandlerKind } from "../../model/label_handler";
 import { ensureEgressFilterLabelPolicy } from "../../model/egress";
+import { ensureTopicKind } from "../../model/topic";
+import { DeliveryEvidence } from "../../model/delivery_evidence";
 
+const ensure: FEnsure = FEnsure.create();
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
 		super(sqlConnectionFactory);
@@ -457,9 +460,9 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecord: FSqlResultRecord = await this.sqlConnection
 			.statement(`
-					INSERT INTO "tb_topic"("api_uuid", "domain", "name", "description", "media_type")
-					VALUES ($1, $2, $3, $4, $5)
-					RETURNING "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					INSERT INTO "tb_topic"("api_uuid", "domain", "name", "description", "media_type", "kind")
+					VALUES ($1, $2, $3, $4, $5, $6)
+					RETURNING "api_uuid", "domain", "name", "description", "media_type", "kind", "utc_created_date", "utc_deleted_date"
 				`)
 			.executeSingle(
 				executionContext,
@@ -468,6 +471,7 @@ export class PostgresDatabase extends SqlDatabase {
 				/* 3 */topicData.topicName,
 				/* 4 */topicData.topicDescription,
 				/* 5 */topicData.topicMediaType,
+				/* 6 */topicData.topicKind,
 			);
 
 		const topicModel: Topic = PostgresDatabase._mapTopicDbRow(sqlRecord);
@@ -764,7 +768,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
 			.statement(`
-					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					SELECT "api_uuid", "domain", "name", "description", "media_type", "kind", "utc_created_date", "utc_deleted_date"
 					FROM "tb_topic"
 					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 				`)
@@ -809,6 +813,26 @@ export class PostgresDatabase extends SqlDatabase {
 		}
 
 		return labelModel;
+	}
+
+	public async getSuccessDeliveryEvidences(executionContext: FExecutionContext, message: Message.Id): Promise<DeliveryEvidence[]> {
+		this.verifyInitializedAndNotDisposed();
+
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+			SELECT ED."success_evidence", ED."failure_evidence"
+			FROM "tb_message" AS M
+			INNER JOIN "tb_egress_delivery" AS ED ON ED."message_id" = M."id"
+			WHERE M."api_uuid" = $1
+			`)
+			.executeQuery(
+				executionContext,
+				message.messageId.uuid,
+			);
+
+		const result: DeliveryEvidence[] = sqlRecords.map((e) => PostgresDatabase._mapDeliveryEvidence(e));
+
+		return result;
 	}
 
 	public async getTopic(executionContext: FExecutionContext, opts: Topic.Id | Topic.Name | Ingress.Id): Promise<Topic> {
@@ -912,7 +936,7 @@ export class PostgresDatabase extends SqlDatabase {
 
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
 			.statement(`
-					SELECT "api_uuid", "domain", "name", "description", "media_type", "utc_created_date", "utc_deleted_date"
+					SELECT "api_uuid", "domain", "name", "description", "media_type", "kind", "utc_created_date", "utc_deleted_date"
 					FROM "tb_topic"
 					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
 				`)
@@ -1112,6 +1136,53 @@ export class PostgresDatabase extends SqlDatabase {
 
 	protected async onDispose(): Promise<void> {
 		await super.onDispose();
+	}
+
+
+	private static _mapDeliveryEvidence(
+		sqlRecord: FSqlResultRecord
+	): DeliveryEvidence {
+		const successEvidence = sqlRecord.get("success_evidence").asObjectNullable;
+		const failureEvidence = sqlRecord.get("failure_evidence").asStringNullable;
+
+		if (successEvidence) {
+			const kind = ensure.string(successEvidence.kind);
+			ensureEgressKind(kind);
+
+			switch (kind) {
+				case Egress.Kind.Webhook:
+					return {
+						type: DeliveryEvidence.Type.Success,
+						data: {
+							kind: Egress.Kind.Webhook,
+							headers: successEvidence.headers,
+							body: ensure.string(successEvidence.body),
+							bodyJson: successEvidence.bodyJson,
+							statusCode: ensure.number(successEvidence.statusCode),
+							statusDescription: ensure.string(successEvidence.statusDescription),
+						}
+					}
+				case Egress.Kind.Telegram:
+				case Egress.Kind.WebSocketHost:
+					return {
+						type: DeliveryEvidence.Type.Success,
+						data: {
+							kind
+						}
+					}
+				default:
+					throw new FException(`Unexpected egress kind in success delivery evidence`);
+			}
+		}
+
+		if (failureEvidence) {
+			return {
+				type: DeliveryEvidence.Type.Failed,
+				data: failureEvidence
+			}
+		}
+
+		throw new FException("Unexpected delivery evidence");
 	}
 
 	private static _mapEgressDbRow(
@@ -1327,8 +1398,11 @@ export class PostgresDatabase extends SqlDatabase {
 		const topicName: string = sqlRow.get("name").asString;
 		const topicDescription: string = sqlRow.get("description").asString;
 		const topicMediaType: string = sqlRow.get("media_type").asString;
+		const topicKind: string = sqlRow.get("kind").asString;
 		const topicCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
 		const topicDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
+
+		ensureTopicKind(topicKind);
 
 		const topic: Topic = {
 			topicId: TopicIdentifier.fromUuid(topicUuid),
@@ -1336,6 +1410,7 @@ export class PostgresDatabase extends SqlDatabase {
 			topicDomain,
 			topicDescription,
 			topicMediaType,
+			topicKind,
 			topicCreatedAt,
 			topicDeletedAt
 		};

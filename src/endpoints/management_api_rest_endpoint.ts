@@ -7,7 +7,7 @@ import * as bodyParser from "body-parser";
 
 import { ManagementApi } from "../api/management_api";
 import { endpointHandledException } from "./errors";
-import { Topic } from "../model/topic";
+import { Topic, ensureTopicKind } from "../model/topic";
 import { Bind } from "../utils/bind";
 import { ManagementApiProvider } from "../provider/management_api_provider";
 
@@ -74,12 +74,16 @@ export class ManagementApiRestEndpoint extends FServersBindEndpoint {
 			const topicName = ensure.string(req.body.name, "Create topic, 'name' should be a string");
 			const topicDescription = ensure.string(req.body.description, "Create topic, 'description' should be a string");
 			const topicMediaType = ensure.string(req.body.mediaType, "Create topic, 'mediaType' should be a string");
+			const topicKind = ensure.string(req.body.kind, "Create topic, 'kind' should be a string");
+
+			ensureTopicKind(topicKind);
 
 			const topicData: Topic.Name & Topic.Data = {
 				topicDomain,
 				topicName,
 				topicDescription,
-				topicMediaType
+				topicMediaType,
+				topicKind
 			};
 
 			const topic: Topic = await this._managementApiProvider.using(
