@@ -68,7 +68,7 @@ class _ActionScreen extends State<TopicDetailsScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("BBBB"),
+              child: const Text("BBBB"),
             ),
             DataTable(
               columns: const <DataColumn>[
@@ -139,63 +139,5 @@ class _ActionScreen extends State<TopicDetailsScreen> {
         ),
       ),
     );
-    // return PortalMasterLayout(
-    //   body: ListView(
-    //     padding: const EdgeInsets.only(top: 20.0),
-    //     children: <Widget>[
-    //       Row(
-    //         children: [
-    //           Container(
-    //             width: 150,
-    //             height: 50,
-    //             color: Colors.grey[400],
-    //             child: const Center(
-    //               child: Text("Create topic",
-    //                   style: TextStyle(fontSize: 22, color: Colors.black)),
-    //             ),
-    //           ),
-    //           const SizedBox(
-    //             width: 20,
-    //           ),
-    //           ElevatedButton(
-    //             child: const Icon(
-    //               Icons.create_new_folder_sharp,
-    //             ),
-    //             onPressed: () {
-    //               print("Create!");
-    //             },
-    //           ),
-    //           const SizedBox(
-    //             width: 20,
-    //           ),
-    //           Row(
-    //             children: [
-    //               Container(
-    //                 width: 150,
-    //                 height: 50,
-    //                 color: Colors.grey[400],
-    //                 child: const Center(
-    //                   child: Text("Delete topic",
-    //                       style: TextStyle(fontSize: 22, color: Colors.black)),
-    //                 ),
-    //               ),
-    //               const SizedBox(
-    //                 width: 20,
-    //               ),
-    //               ElevatedButton(
-    //                 child: const Icon(
-    //                   Icons.delete,
-    //                 ),
-    //                 onPressed: () {
-    //                   print("Delete!");
-    //                 },
-    //               ),
-    //             ],
-    //           )
-    //         ],
-    //       ),
-    //     ],
-    //   ),
-    // );
   }
 }
