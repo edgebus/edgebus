@@ -28,7 +28,6 @@ class TopicDetailsScreen extends StatefulWidget {
 }
 
 class _ActionScreen extends State<TopicDetailsScreen> {
-
   // final TopicDetailsScreen editTopic = TopicDetailsScreen();
   // final _formKey = GlobalKey<FormBuilderState>();
 
@@ -44,6 +43,21 @@ class _ActionScreen extends State<TopicDetailsScreen> {
   //   await Future.delayed(const Duration(seconds: 6), () {});
   //   return messages;
   // }
+  final TextEditingController _descriptionController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    final TopicDetailsScreenOpts? opts = this.widget.opts;
+    if (opts != null) {
+      this._descriptionController.text = opts.topic.description;
+    }
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   Future<String> getTopicAction() async {
     const String messages = "Action";
@@ -125,7 +139,7 @@ class _ActionScreen extends State<TopicDetailsScreen> {
                     ),
                   ],
                 ),
-                 TableRow(
+                TableRow(
                   children: <Widget>[
                     const TableCell(
                       verticalAlignment: TableCellVerticalAlignment.middle,
@@ -133,7 +147,7 @@ class _ActionScreen extends State<TopicDetailsScreen> {
                         height: 50,
                         width: 100,
                         child: Center(
-                          child: Text("descrition"),
+                          child: Text("description"),
                         ),
                       ),
                     ),
@@ -143,10 +157,13 @@ class _ActionScreen extends State<TopicDetailsScreen> {
                         height: 50,
                         width: 300,
                         child: Center(
-                          child: Text(this.widget.opts!.topic.description
-                          ),
-                          // Text(this.widget.opts!.topic.description),
-                        ),
+                            child: TextFormField(
+                          // minLines: 3,
+                          controller: _descriptionController,
+                        )
+
+                            // Text(this.widget.opts!.topic.description),
+                            ),
                       ),
                     ),
                   ],
