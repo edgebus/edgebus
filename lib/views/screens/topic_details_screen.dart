@@ -28,6 +28,7 @@ class TopicDetailsScreen extends StatefulWidget {
 }
 
 class _ActionScreen extends State<TopicDetailsScreen> {
+
   // final TopicDetailsScreen editTopic = TopicDetailsScreen();
   // final _formKey = GlobalKey<FormBuilderState>();
 
@@ -61,83 +62,194 @@ class _ActionScreen extends State<TopicDetailsScreen> {
     return PortalMasterLayout(
       body: Padding(
         padding: const EdgeInsets.only(
-            top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
-        child: Row(
+          top: 30.0,
+          left: 10.0,
+          right: 10.0,
+        ),
+        child: Column(
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
+            Table(
+              border: TableBorder.all(),
+              columnWidths: const <int, TableColumnWidth>{
+                0: IntrinsicColumnWidth(),
+                1: FlexColumnWidth(),
+                // 2: FixedColumnWidth(64),
               },
-              child: const Text("BBBB"),
-            ),
-            DataTable(
-              columns: const <DataColumn>[
-                DataColumn(
-                  label: Expanded(
-                    child: Text(
-                      'id',
-                      style: TextStyle(
-                          color: Colors.grey, fontStyle: FontStyle.italic),
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: <TableRow>[
+                TableRow(
+                  children: <Widget>[
+                    const TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 100,
+                        child: Center(
+                          child: Text("id"),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-              rows: <DataRow>[
-                if (currentTopic != null)
-                  DataRow(
-                    cells: <DataCell>[
-                      DataCell(Text(currentTopic.id)),
-                    ],
-                  ),
-                const DataRow(
-                  cells: <DataCell>[
-                    DataCell(
-                      Text(
-                        'topic',
-                        style: TextStyle(
-                            color: Colors.grey, fontStyle: FontStyle.italic),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 300,
+                        child: Center(
+                          child: Text(this.widget.opts!.topic.id),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const DataRow(
-                  cells: <DataCell>[
-                    DataCell(Text('topic-1')),
-                  ],
-                ),
-                const DataRow(
-                  cells: <DataCell>[
-                    DataCell(
-                      Text(
-                        'description',
-                        style: TextStyle(
-                            color: Colors.grey, fontStyle: FontStyle.italic),
+                TableRow(
+                  children: <Widget>[
+                    const TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 100,
+                        child: Center(
+                          child: Text("topic"),
+                        ),
+                      ),
+                    ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 300,
+                        child: Center(
+                          child: Text(this.widget.opts!.topic.name),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                DataRow(
-                  cells: <DataCell>[
-                    DataCell(
-                      TextFormField(
-                          // initialValue:
-                          // 'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
-                          // // keyboardType: textType,
-                          // onFieldSubmitted: (val) {},
-                          // ),
+                 TableRow(
+                  children: <Widget>[
+                    const TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 100,
+                        child: Center(
+                          child: Text("descrition"),
+                        ),
+                      ),
+                    ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 300,
+                        child: Center(
+                          child: Text(this.widget.opts!.topic.description
                           ),
-
-                      // Text(
-                      //   'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
-                      // ),
+                          // Text(this.widget.opts!.topic.description),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ],
+
+              // ElevatedButton(
+              //   onPressed: () {
+              //     Navigator.pop(context);
+              //   },
+              //   child: const Icon(Icons.arrow_back),
+              // ),
+              //   DataTable(
+              //     columns: const <DataColumn>[
+              //       DataColumn(
+              //         label: Expanded(
+              //           child: Text(
+              //             'id',
+              //             style: TextStyle(
+              //                 color: Colors.grey, fontStyle: FontStyle.italic),
+              //           ),
+              //         ),
+              //       ),
+              //     ],
+              //     rows: <DataRow>[
+              //       if (currentTopic != null)
+              //         DataRow(
+              //           cells: <DataCell>[
+              //             DataCell(Text(currentTopic.id)),
+              //           ],
+              //         ),
+              //       const DataRow(
+              //         cells: <DataCell>[
+              //           DataCell(
+              //             Text(
+              //               'topic',
+              //               style: TextStyle(
+              //                   color: Colors.grey, fontStyle: FontStyle.italic),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       const DataRow(
+              //         cells: <DataCell>[
+              //           DataCell(Text('topic-1')),
+              //         ],
+              //       ),
+              //       const DataRow(
+              //         cells: <DataCell>[
+              //           DataCell(
+              //             Text(
+              //               'description',
+              //               style: TextStyle(
+              //                   color: Colors.grey, fontStyle: FontStyle.italic),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       DataRow(
+              //         cells: <DataCell>[
+              //           DataCell(
+              //             TextFormField(
+              //                 // initialValue:
+              //                 // 'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
+              //                 // // keyboardType: textType,
+              //                 // onFieldSubmitted: (val) {},
+              //                 // ),
+              //                 ),
+
+              //             // Text(
+              //             //   'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
+              //             // ),
+              //           ),
+              //         ],
+              //       ),
+              //     ],
+              //   ),
+              // ],
             ),
+
+            // ElevatedButton(
+            //   onPressed: () {
+            //     // Navigator.pop(context);
+            //   },
+            //   child: const Icon(Icons.save_alt_rounded),
+            // ),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // setState(() {
+          //   // index = (index + 1) % customizations.length;
+          // });
+        },
+
+        // foregroundColor: customizations[index].$1,
+        // backgroundColor: customizations[index].$2,
+        // shape: customizations[index].$3,
+        child: const Icon(Icons.save_alt_rounded),
+      ),
     );
   }
+  // );
 }
+// }

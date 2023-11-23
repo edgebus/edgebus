@@ -441,14 +441,14 @@ class Lang {
   }
 
   /// `Description`
-  String get description {
-    return Intl.message(
-      'Description',
-      name: 'description',
-      desc: '',
-      args: [],
-    );
-  }
+  // String get description {
+  //   return Intl.message(
+  //     'Description',
+  //     name: 'description',
+  //     desc: '',
+  //     args: [],
+  //   );
+  // }
 
   /// `This field requires a valid integer.`
   String get integerErrorText {
