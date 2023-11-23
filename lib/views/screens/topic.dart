@@ -3,7 +3,8 @@
 import 'package:edgebus_console/api/api_client.dart' show ApiClient;
 import 'package:edgebus_console/api/api_client_mock.dart' show ApiClientMock;
 import 'package:edgebus_console/model/topic.dart' show Topic;
-import 'package:edgebus_console/views/screens/action.dart' show ActionScreen;
+import 'package:edgebus_console/views/screens/topic_details_screen.dart'
+    show TopicDetailsScreen, TopicDetailsScreenOpts;
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
     show PortalMasterLayout;
 import 'package:flutter/material.dart';
@@ -11,15 +12,11 @@ import 'package:freemework/execution_context/f_execution_context.dart'
     show FExecutionContext;
 import 'package:adaptive_scrollbar/adaptive_scrollbar.dart'
     show AdaptiveScrollbar, ScrollbarPosition;
-// import 'package:freemework/freemework.dart';
-
-// import 'package:data_table_2/data_table_2.dart' show DataTable2;
-// import 'package:flutter/rendering.dart';
 
 class TopicScreen extends StatefulWidget {
-  final ApiClient apiClient = ApiClientMock();
+  final ApiClient apiClient;
 
-  TopicScreen({Key? key}) : super(key: key);
+  const TopicScreen(this.apiClient, {Key? key}) : super(key: key);
 
   @override
   State<TopicScreen> createState() => _TopicScreenState();
@@ -45,7 +42,6 @@ class _TopicScreenState extends State<TopicScreen> {
         .widget
         .apiClient
         .listTopics(FExecutionContext.defaultExecutionContext);
-    await Future.delayed(const Duration(seconds: 6), () {});
     return topics;
   }
 
@@ -65,7 +61,6 @@ class _TopicScreenState extends State<TopicScreen> {
     // final lang = Lang.of(context);
     // final themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
-    // final List<int> colorCodes = <int>[600, 400, 200];
 
     return PortalMasterLayout(
       body: FutureBuilder(
@@ -94,14 +89,11 @@ class _TopicScreenState extends State<TopicScreen> {
             final List<Topic> topics = snapshot.data!;
             final verticalScrollController = ScrollController();
             final horizontalScrollController = ScrollController();
-            const List<String> list = <String>[
-              'Create',
-              'Edit',
-              'Delete',
-            ];
+            const List<String> list = <String>['Edit', 'Show', 'Create'];
 
             return Padding(
-                padding: const EdgeInsets.only(top: 5.0 ,left: 2.0, right: 10.0, bottom: 10.0),
+                padding: const EdgeInsets.only(
+                    top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
                 // ConstrainedBox(
                 //   constraints: const BoxConstraints(
                 //     minWidth: 200,
@@ -162,26 +154,41 @@ class _TopicScreenState extends State<TopicScreen> {
                                           color: Colors.black,
                                         ),
                                         elevation: 16,
-                                        style:
-                                            const TextStyle(color: Colors.black),
+                                        style: const TextStyle(
+                                            color: Colors.black),
                                         // underline: Container(
                                         //   height: 2,
                                         //   color: Colors.deepPurpleAccent,
                                         // ),
                                         onChanged: (String? value) {
+                                          TopicDetailsScreenOpts? opts = null;
+
                                           if (value == 'Edit') {
-                                            // This is called when the user selects an item.
-                                            setState(
-                                              () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ActionScreen()),
-                                                );
-                                              },
+                                            opts = TopicDetailsScreenOpts(
+                                              topic,
+                                              true,
+                                            );
+                                          } else if (value == 'Show') {
+                                            opts = TopicDetailsScreenOpts(
+                                              topic,
+                                              false,
                                             );
                                           }
+
+                                          setState(
+                                            () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      TopicDetailsScreen(
+                                                    this.widget.apiClient,
+                                                    opts: opts,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
                                         },
                                         items: list
                                             .map<DropdownMenuItem<String>>(

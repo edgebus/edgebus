@@ -1,21 +1,34 @@
 // ignore_for_file: unnecessary_this
 
 import 'package:edgebus_console/api/api_client.dart' show ApiClient;
-import 'package:edgebus_console/api/api_client_mock.dart' show ApiClientMock;
+import 'package:edgebus_console/model/topic.dart' show Topic;
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
     show PortalMasterLayout;
 import 'package:flutter/material.dart';
 
-class ActionScreen extends StatefulWidget {
-  final ApiClient apiClient = ApiClientMock();
+class TopicDetailsScreenOpts {
+  final Topic topic;
+  final bool isEdit;
 
-  ActionScreen({Key? key}) : super(key: key);
-
-  @override
-  State<ActionScreen> createState() => _ActionScreen();
+  const TopicDetailsScreenOpts(this.topic, this.isEdit);
 }
 
-class _ActionScreen extends State<ActionScreen> {
+class TopicDetailsScreen extends StatefulWidget {
+  final ApiClient apiClient;
+  final TopicDetailsScreenOpts? opts;
+
+  const TopicDetailsScreen(
+    this.apiClient, {
+    this.opts,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<TopicDetailsScreen> createState() => _ActionScreen();
+}
+
+class _ActionScreen extends State<TopicDetailsScreen> {
+  // final TopicDetailsScreen editTopic = TopicDetailsScreen();
   // final _formKey = GlobalKey<FormBuilderState>();
 
   // this.widget.apiClient.listTopics(FExecutionContext.defaultExecutionContext);
@@ -33,7 +46,6 @@ class _ActionScreen extends State<ActionScreen> {
 
   Future<String> getTopicAction() async {
     const String messages = "Action";
-    await Future.delayed(const Duration(seconds: 6), () {});
     return messages;
   }
 
@@ -44,61 +56,82 @@ class _ActionScreen extends State<ActionScreen> {
     // final ThemeData themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
 
+    final Topic? currentTopic = null; //  this.widget.topic;
+
     return PortalMasterLayout(
       body: Padding(
         padding: const EdgeInsets.only(
             top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
-        child: DataTable(
-          columns: const <DataColumn>[
-            DataColumn(
-              label: Expanded(
-                child: Text(
-                  'id',
-                  style: TextStyle(
-                      color: Colors.grey, fontStyle: FontStyle.italic),
-                ),
-              ),
+        child: Row(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("BBBB"),
             ),
-          ],
-          rows: const <DataRow>[
-            DataRow(
-              cells: <DataCell>[
-                DataCell(Text('19-id')),
-              ],
-            ),
-            DataRow(
-              cells: <DataCell>[
-                DataCell(
-                  Text(
-                    'topic',
-                    style: TextStyle(
-                        color: Colors.grey, fontStyle: FontStyle.italic),
+            DataTable(
+              columns: const <DataColumn>[
+                DataColumn(
+                  label: Expanded(
+                    child: Text(
+                      'id',
+                      style: TextStyle(
+                          color: Colors.grey, fontStyle: FontStyle.italic),
+                    ),
                   ),
                 ),
               ],
-            ),
-            DataRow(
-              cells: <DataCell>[
-                DataCell(Text('topic-1')),
-              ],
-            ),
-            DataRow(
-              cells: <DataCell>[
-                DataCell(
-                  Text(
-                    'description',
-                    style: TextStyle(
-                        color: Colors.grey, fontStyle: FontStyle.italic),
+              rows: <DataRow>[
+                if (currentTopic != null)
+                  DataRow(
+                    cells: <DataCell>[
+                      DataCell(Text(currentTopic.id)),
+                    ],
                   ),
+                const DataRow(
+                  cells: <DataCell>[
+                    DataCell(
+                      Text(
+                        'topic',
+                        style: TextStyle(
+                            color: Colors.grey, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            DataRow(
-              cells: <DataCell>[
-                DataCell(
-                  Text(
-                    'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
-                  ),
+                const DataRow(
+                  cells: <DataCell>[
+                    DataCell(Text('topic-1')),
+                  ],
+                ),
+                const DataRow(
+                  cells: <DataCell>[
+                    DataCell(
+                      Text(
+                        'description',
+                        style: TextStyle(
+                            color: Colors.grey, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                ),
+                DataRow(
+                  cells: <DataCell>[
+                    DataCell(
+                      TextFormField(
+                          // initialValue:
+                          // 'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
+                          // // keyboardType: textType,
+                          // onFieldSubmitted: (val) {},
+                          // ),
+                          ),
+
+                      // Text(
+                      //   'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
+                      // ),
+                    ),
+                  ],
                 ),
               ],
             ),

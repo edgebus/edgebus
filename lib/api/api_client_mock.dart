@@ -65,7 +65,7 @@ class ApiClientMock extends ApiClient {
   Future<List<Topic>> listTopics(
     FExecutionContext executionContext,
   ) async {
-    await Future.delayed(const Duration(seconds: 3));
+    // await Future.delayed(const Duration(seconds: 3));
 
     return this._topics.values.toList(growable: false);
   }

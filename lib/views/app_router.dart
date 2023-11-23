@@ -1,3 +1,4 @@
+import 'package:edgebus_console/api/api_client_mock.dart';
 import 'package:edgebus_console/views/screens/description.dart';
 import 'package:edgebus_console/views/screens/topic.dart';
 import 'package:go_router/go_router.dart';
@@ -95,7 +96,7 @@ GoRouter appRouter(UserDataProvider userDataProvider) {
         path: RouteUri.topic,
         pageBuilder: (context, state) => NoTransitionPage<void>(
           key: state.pageKey,
-          child: TopicScreen(),
+          child: TopicScreen(ApiClientMock()),
         ),
       ),
       GoRoute(

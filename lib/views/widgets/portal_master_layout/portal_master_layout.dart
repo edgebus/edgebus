@@ -1,4 +1,4 @@
-import 'package:edgebus_console/views/screens/action.dart';
+import 'package:edgebus_console/views/screens/topic_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +10,9 @@ import 'package:edgebus_console/providers/app_preferences_provider.dart';
 import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
 import 'package:edgebus_console/theme/theme_extensions/app_sidebar_theme.dart';
 import 'package:edgebus_console/views/widgets/portal_master_layout/sidebar.dart';
+import 'package:edgebus_console/views/screens/topic_details_screen.dart'
+    show TopicDetailsScreen;
+import 'package:edgebus_console/model/topic.dart' show Topic;
 
 class LocaleMenuConfig {
   final String languageCode;
@@ -60,7 +63,7 @@ class PortalMasterLayout extends StatelessWidget {
           onAppBarTitlePressed: () => GoRouter.of(context).go(RouteUri.home),
         ),
         actions: [
-          _createTopicButton(context),
+          // _createTopicButton(context),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: VerticalDivider(
@@ -182,21 +185,23 @@ class PortalMasterLayout extends StatelessWidget {
     );
   }
 
-  Widget _createTopicButton(BuildContext context) {
-    return ElevatedButton(
-      // style: actionBottonStyle,
-      child: const Icon(
-        Icons.add,
-        color: Colors.white,
-      ),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ActionScreen()),
-        );
-      },
-    );
-  }
+  // Widget _createTopicButton(BuildContext context) {
+
+  //   return ElevatedButton(
+  //     // style: actionBottonStyle,
+  //     child: const Icon(
+  //       Icons.add,
+  //       color: Colors.white,
+  //     ),
+  //     onPressed: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //             builder: (context) => const TopicDetailsScreen()),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _changeLanguageButton(BuildContext context) {
     return PopupMenuButton(
