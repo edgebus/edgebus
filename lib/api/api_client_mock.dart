@@ -42,6 +42,10 @@ class ApiClientMock extends ApiClient {
 
     this._topics[id] = topic;
 
+    // Sure what name, description changes
+    print(topic.name);
+    print(topic.description);
+
     return topic;
   }
 
@@ -83,6 +87,9 @@ class ApiClientMock extends ApiClient {
       final Topic oldTopic = this._topics[topicId]!;
       final Topic newTopic = Topic(oldTopic.id, oldTopic.name, newDescription);
       this._topics[topicId] = newTopic;
+
+// Sure what description change
+      print(newTopic.description);
 
       return oldTopic.description;
     }

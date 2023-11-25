@@ -2,9 +2,12 @@
 
 import 'package:edgebus_console/api/api_client.dart' show ApiClient;
 import 'package:edgebus_console/model/topic.dart' show Topic;
+import 'package:edgebus_console/model/topic_id.dart';
+import 'package:edgebus_console/views/screens/topic.dart';
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
     show PortalMasterLayout;
 import 'package:flutter/material.dart';
+import 'package:freemework/freemework.dart';
 
 class TopicDetailsScreenOpts {
   final Topic topic;
@@ -43,19 +46,25 @@ class _ActionScreen extends State<TopicDetailsScreen> {
   //   await Future.delayed(const Duration(seconds: 6), () {});
   //   return messages;
   // }
+
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     final TopicDetailsScreenOpts? opts = this.widget.opts;
-    if (opts != null) {
+
+    if (opts != null && opts.isEdit) {
+      // this._nameController.text = opts.topic.name;
       this._descriptionController.text = opts.topic.description;
     }
   }
 
   @override
   void dispose() {
-    _descriptionController.dispose();
+    this._nameController.dispose();
+    this._descriptionController.dispose();
     super.dispose();
   }
 
@@ -71,7 +80,7 @@ class _ActionScreen extends State<TopicDetailsScreen> {
     // final ThemeData themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
 
-    final Topic? currentTopic = null; //  this.widget.topic;
+    final TopicDetailsScreenOpts? opts = this.widget.opts;
 
     return PortalMasterLayout(
       body: Padding(
@@ -87,186 +96,144 @@ class _ActionScreen extends State<TopicDetailsScreen> {
               columnWidths: const <int, TableColumnWidth>{
                 0: IntrinsicColumnWidth(),
                 1: FlexColumnWidth(),
-                // 2: FixedColumnWidth(64),
               },
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: <TableRow>[
-                TableRow(
-                  children: <Widget>[
-                    const TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: SizedBox(
-                        height: 50,
-                        width: 100,
-                        child: Center(
-                          child: Text("id"),
+                if (opts != null)
+                  TableRow(
+                    children: <Widget>[
+                      const TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: SizedBox(
+                          height: 50,
+                          width: 100,
+                          child: Center(
+                            child: Text("id"),
+                          ),
                         ),
                       ),
-                    ),
-                    TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: SizedBox(
-                        height: 50,
-                        width: 300,
-                        child: Center(
-                          child: Text(this.widget.opts!.topic.id),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                TableRow(
-                  children: <Widget>[
-                    const TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: SizedBox(
-                        height: 50,
-                        width: 100,
-                        child: Center(
-                          child: Text("topic"),
-                        ),
-                      ),
-                    ),
-                    TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: SizedBox(
-                        height: 50,
-                        width: 300,
-                        child: Center(
-                          child: Text(this.widget.opts!.topic.name),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                TableRow(
-                  children: <Widget>[
-                    const TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: SizedBox(
-                        height: 50,
-                        width: 100,
-                        child: Center(
-                          child: Text("description"),
-                        ),
-                      ),
-                    ),
-                    TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: SizedBox(
-                        height: 50,
-                        width: 300,
-                        child: Center(
-                            child: TextFormField(
-                          // minLines: 3,
-                          controller: _descriptionController,
-                        )
-
-                            // Text(this.widget.opts!.topic.description),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: SizedBox(
+                          height: 50,
+                          width: 300,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 10.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                opts.topic.id,
+                              ),
                             ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                TableRow(
+                  children: <Widget>[
+                    const TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 100,
+                        child: Center(
+                          child: Text("Name"),
+                        ),
+                      ),
+                    ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 300,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10.0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: opts != null
+                                ? Text(
+                                    opts.topic.name,
+                                    // textAlign: TextAlign.center,
+                                  )
+                                : TextField(
+                                    minLines: 1,
+                                    maxLines: 1,
+                                    controller: this._nameController,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                TableRow(
+                  children: <Widget>[
+                    const TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 100,
+                        child: Center(
+                          child: Text("Description"),
+                        ),
+                      ),
+                    ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: SizedBox(
+                        height: 50,
+                        width: 300,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10.0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: opts != null && opts.isEdit == false
+                                ? Text(
+                                    opts.topic.description,
+                                  )
+                                : TextField(
+                                    minLines: 1,
+                                    maxLines: 5,
+                                    controller: this._descriptionController,
+                                  ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ],
-
-              // ElevatedButton(
-              //   onPressed: () {
-              //     Navigator.pop(context);
-              //   },
-              //   child: const Icon(Icons.arrow_back),
-              // ),
-              //   DataTable(
-              //     columns: const <DataColumn>[
-              //       DataColumn(
-              //         label: Expanded(
-              //           child: Text(
-              //             'id',
-              //             style: TextStyle(
-              //                 color: Colors.grey, fontStyle: FontStyle.italic),
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //     rows: <DataRow>[
-              //       if (currentTopic != null)
-              //         DataRow(
-              //           cells: <DataCell>[
-              //             DataCell(Text(currentTopic.id)),
-              //           ],
-              //         ),
-              //       const DataRow(
-              //         cells: <DataCell>[
-              //           DataCell(
-              //             Text(
-              //               'topic',
-              //               style: TextStyle(
-              //                   color: Colors.grey, fontStyle: FontStyle.italic),
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //       const DataRow(
-              //         cells: <DataCell>[
-              //           DataCell(Text('topic-1')),
-              //         ],
-              //       ),
-              //       const DataRow(
-              //         cells: <DataCell>[
-              //           DataCell(
-              //             Text(
-              //               'description',
-              //               style: TextStyle(
-              //                   color: Colors.grey, fontStyle: FontStyle.italic),
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //       DataRow(
-              //         cells: <DataCell>[
-              //           DataCell(
-              //             TextFormField(
-              //                 // initialValue:
-              //                 // 'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
-              //                 // // keyboardType: textType,
-              //                 // onFieldSubmitted: (val) {},
-              //                 // ),
-              //                 ),
-
-              //             // Text(
-              //             //   'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available.',
-              //             // ),
-              //           ),
-              //         ],
-              //       ),
-              //     ],
-              //   ),
-              // ],
             ),
-
-            // ElevatedButton(
-            //   onPressed: () {
-            //     // Navigator.pop(context);
-            //   },
-            //   child: const Icon(Icons.save_alt_rounded),
-            // ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // setState(() {
-          //   // index = (index + 1) % customizations.length;
-          // });
+          setState(() async {
+            final String description = this._descriptionController.text;
+            final ApiClient apiClient = this.widget.apiClient;
+            if (opts == null) {
+            final String name = this._nameController.text;
+              await apiClient.createTopic(
+                  FExecutionContext.defaultExecutionContext,
+                  name: name,
+                  description: description,);
+            } else {
+            final String id =opts.topic.id;
+                await apiClient.updateTopicDescription(
+                  FExecutionContext.defaultExecutionContext,
+                  id,
+                   description,);
+            }
+            // ignore: use_build_context_synchronously
+            Navigator.pop(
+              context,
+            );
+          });
         },
-
-        // foregroundColor: customizations[index].$1,
-        // backgroundColor: customizations[index].$2,
-        // shape: customizations[index].$3,
         child: const Icon(Icons.save_alt_rounded),
       ),
     );
   }
-  // );
 }
-// }
