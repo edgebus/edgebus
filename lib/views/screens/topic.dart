@@ -1,7 +1,6 @@
 // ignore_for_file: unnecessary_this
 
 import 'package:edgebus_console/api/api_client.dart' show ApiClient;
-import 'package:edgebus_console/api/api_client_mock.dart' show ApiClientMock;
 import 'package:edgebus_console/model/topic.dart' show Topic;
 import 'package:edgebus_console/views/screens/topic_details_screen.dart'
     show TopicDetailsScreen, TopicDetailsScreenOpts;
@@ -37,6 +36,7 @@ class _TopicScreenState extends State<TopicScreen> {
   //   // print(topics);
   // }
 
+// This function call list of topics
   Future<List<Topic>> getList() async {
     final Future<List<Topic>> topics = this
         .widget
@@ -47,17 +47,6 @@ class _TopicScreenState extends State<TopicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle actionBottonStyle = ButtonStyle(
-      backgroundColor: MaterialStateProperty.all(Colors.grey.shade200),
-      // padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
-      // minimumSize: MaterialStateProperty.all(const Size(30, 50)),
-      // shape: MaterialStateProperty.all(RoundedRectangleBorder(
-      //   borderRadius: BorderRadius.circular(50.0),
-      //   side: const BorderSide(color: Colors.black),
-      // )),
-    );
-
-    // final String usersStr = topics.toString();
     // final lang = Lang.of(context);
     // final themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
@@ -65,7 +54,6 @@ class _TopicScreenState extends State<TopicScreen> {
     return PortalMasterLayout(
       body: FutureBuilder(
         future: this.getList(),
-        // initialData: "Code sample",
         builder: (BuildContext context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             if (snapshot.hasError) {
@@ -78,7 +66,7 @@ class _TopicScreenState extends State<TopicScreen> {
             }
             return const Center(
               child: CircularProgressIndicator(
-                strokeWidth: 2, // вказує товщину CircularProgressIndicator
+                strokeWidth: 2, // indicates thickness CircularProgressIndicator
                 backgroundColor: Colors.grey,
                 valueColor: AlwaysStoppedAnimation(Colors.blue),
               ),
@@ -89,92 +77,104 @@ class _TopicScreenState extends State<TopicScreen> {
             final List<Topic> topics = snapshot.data!;
             final verticalScrollController = ScrollController();
             final horizontalScrollController = ScrollController();
-            const List<String> list = <String>['Edit', 'Show', 'Create'];
+            const List<String> list = <String>[
+              'Edit',
+              'Show',
+              'Delete',
+            ];
 
             return Padding(
-                padding: const EdgeInsets.only(
-                    top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
-                // ConstrainedBox(
-                //   constraints: const BoxConstraints(
-                //     minWidth: 200,
-                //     maxWidth: double.infinity,
-                //   ),
+              padding: const EdgeInsets.only(
+                  top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
+              // ConstrainedBox(
+              //   constraints: const BoxConstraints(
+              //     minWidth: 200,
+              //     maxWidth: double.infinity,
+              //   ),
+              child: AdaptiveScrollbar(
+                underColor: Colors.blueGrey.withOpacity(0.3),
+                sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                sliderActiveColor: Colors.grey,
+                controller: verticalScrollController,
                 child: AdaptiveScrollbar(
+                  controller: horizontalScrollController,
+                  position: ScrollbarPosition.bottom,
                   underColor: Colors.blueGrey.withOpacity(0.3),
                   sliderDefaultColor: Colors.grey.withOpacity(0.7),
                   sliderActiveColor: Colors.grey,
-                  controller: verticalScrollController,
-                  child: AdaptiveScrollbar(
-                    controller: horizontalScrollController,
-                    position: ScrollbarPosition.bottom,
-                    underColor: Colors.blueGrey.withOpacity(0.3),
-                    sliderDefaultColor: Colors.grey.withOpacity(0.7),
-                    sliderActiveColor: Colors.grey,
+                  child: SingleChildScrollView(
+                    controller: verticalScrollController,
+                    scrollDirection: Axis.vertical,
                     child: SingleChildScrollView(
-                      controller: verticalScrollController,
-                      scrollDirection: Axis.vertical,
-                      child: SingleChildScrollView(
-                        controller: horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: DataTable(
-                            showCheckboxColumn: false,
-                            columnSpacing: 12,
-                            horizontalMargin: 12,
-                            headingRowColor: MaterialStateColor.resolveWith(
-                                (states) => Colors.grey.shade400),
-                            columns: const [
-                              DataColumn(
-                                label: Text('actions'),
-                              ),
-                              DataColumn(
-                                label: Text('id'),
-                                // numeric: true,
-                              ),
-                              DataColumn(
-                                label: Text('topics'),
-                              ),
-                              DataColumn(
-                                label: Text('description'),
-                              ),
-                            ],
-                            rows: List<DataRow>.generate(
-                              topics.length,
-                              (index) {
-                                final Topic topic = topics[index];
-                                return DataRow(
-                                  cells: [
-                                    DataCell(
-                                      DropdownButton<String>(
-                                        // value: dropdownValue,
-                                        focusColor: Colors.transparent,
-                                        icon: const Icon(
-                                          Icons.more_horiz,
-                                          color: Colors.black,
-                                        ),
-                                        elevation: 16,
-                                        style: const TextStyle(
-                                            color: Colors.black),
-                                        // underline: Container(
-                                        //   height: 2,
-                                        //   color: Colors.deepPurpleAccent,
-                                        // ),
-                                        onChanged: (String? value) {
+                      controller: horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: DataTable(
+                          showCheckboxColumn: false,
+                          columnSpacing: 12,
+                          horizontalMargin: 12,
+                          headingRowColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.grey.shade400),
+                          columns: const [
+                            DataColumn(
+                              label: Text('actions'),
+                            ),
+                            DataColumn(
+                              label: Text('id'),
+                              // numeric: true,
+                            ),
+                            DataColumn(
+                              label: Text('topics'),
+                            ),
+                            DataColumn(
+                              label: Text('description'),
+                            ),
+                          ],
+                          rows: List<DataRow>.generate(
+                            topics.length,
+                            (index) {
+                              final Topic topic = topics[index];
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    DropdownButton<String>(
+                                      // alignment: Alignment.centerLeft,
+                                      focusColor: Colors.transparent,
+                                      icon: const Icon(
+                                        Icons.more_horiz,
+                                        color: Colors.black,
+                                      ),
+                                      elevation: 16,
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                      ),
+                                      onChanged: (String? value) async {
+                                        if (value == 'Delete') {
+                                          await this
+                                              .widget
+                                              .apiClient
+                                              .deleteTopic(
+                                                FExecutionContext
+                                                    .defaultExecutionContext,
+                                                topic.id,
+                                              );
+                                        } else {
+                                          // If opts (is not pass) == null, we create a new topic
                                           TopicDetailsScreenOpts? opts = null;
-
+                                          // If opts (pass topic and flag isEdit == true), we can edit topic
                                           if (value == 'Edit') {
                                             opts = TopicDetailsScreenOpts(
                                               topic,
                                               true,
                                             );
+                                            // If opts (pass topic and flag isEdit == false), we can show topic
                                           } else if (value == 'Show') {
                                             opts = TopicDetailsScreenOpts(
                                               topic,
                                               false,
                                             );
                                           }
-
                                           setState(
                                             () {
                                               Navigator.push(
@@ -189,73 +189,73 @@ class _TopicScreenState extends State<TopicScreen> {
                                               );
                                             },
                                           );
-                                        },
-                                        items: list
-                                            .map<DropdownMenuItem<String>>(
-                                                (String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          );
-                                        }).toList(),
-                                      ),
-
-                                      // ElevatedButton(
-                                      //   style: actionBottonStyle,
-                                      //   child: const Icon(
-                                      //     Icons.more_horiz,
-                                      //     color: Colors.black,
-                                      //   ),
-                                      //   onPressed: () {
-                                      //     Navigator.push(
-                                      //       context,
-                                      //       MaterialPageRoute(
-                                      //           builder: (context) =>
-                                      //               ActionScreen()),
-                                      //     );
-                                      //   },
-                                      // ),
+                                        }
+                                      },
+                                      items: list.map<DropdownMenuItem<String>>(
+                                          (String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
                                     ),
-                                    DataCell(
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                            maxWidth: 400, minWidth: 50),
-                                        child: Text(topic.id),
-                                      ),
+                                    // ElevatedButton(
+                                    //   style: actionBottonStyle,
+                                    //   child: const Icon(
+                                    //     Icons.more_horiz,
+                                    //     color: Colors.black,
+                                    //   ),
+                                    //   onPressed: () {
+                                    //     Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //           builder: (context) =>
+                                    //               ActionScreen()),
+                                    //     );
+                                    //   },
+                                    // ),
+                                  ),
+                                  DataCell(
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                          maxWidth: 400, minWidth: 50),
+                                      child: Text(topic.id),
                                     ),
-                                    DataCell(
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                            maxWidth: 100, minWidth: 50),
-                                        child: Text(topic.name),
-                                      ),
+                                  ),
+                                  DataCell(
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                          maxWidth: 100, minWidth: 50),
+                                      child: Text(topic.name),
                                     ),
-                                    DataCell(
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                            maxWidth: 600, minWidth: 100),
-                                        child: Text(topic.description),
-                                      ),
+                                  ),
+                                  DataCell(
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                          maxWidth: 600, minWidth: 100),
+                                      child: Text(topic.description),
                                     ),
-                                  ],
-                                  onSelectChanged: (bool? value) {
-                                    // setState(() {
-                                    // });
-                                  },
-                                );
-                              },
-                            ),
+                                  ),
+                                ],
+                                onSelectChanged: (bool? value) {
+                                  // setState(() {
+                                  // });
+                                },
+                              );
+                            },
                           ),
                         ),
                       ),
                     ),
-                    // ),
                   ),
-                ));
+                  // ),
+                ),
+              ),
+            );
           }
           return const Center(
             child: CircularProgressIndicator(
-              // strokeWidth: 2, // вказує товщину CircularProgressIndicator
+              strokeWidth: 2,
               backgroundColor: Colors.grey,
               valueColor: AlwaysStoppedAnimation(Colors.green),
             ),

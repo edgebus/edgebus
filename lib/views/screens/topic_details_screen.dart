@@ -2,13 +2,12 @@
 
 import 'package:edgebus_console/api/api_client.dart' show ApiClient;
 import 'package:edgebus_console/model/topic.dart' show Topic;
-import 'package:edgebus_console/model/topic_id.dart';
-import 'package:edgebus_console/views/screens/topic.dart';
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
     show PortalMasterLayout;
 import 'package:flutter/material.dart';
 import 'package:freemework/freemework.dart';
 
+// This class transmits data
 class TopicDetailsScreenOpts {
   final Topic topic;
   final bool isEdit;
@@ -16,6 +15,7 @@ class TopicDetailsScreenOpts {
   const TopicDetailsScreenOpts(this.topic, this.isEdit);
 }
 
+// This widget interacts with ApiClient when the flags in position true -> we can edit, create topic and position false -> we can show topic
 class TopicDetailsScreen extends StatefulWidget {
   final ApiClient apiClient;
   final TopicDetailsScreenOpts? opts;
@@ -31,22 +31,7 @@ class TopicDetailsScreen extends StatefulWidget {
 }
 
 class _ActionScreen extends State<TopicDetailsScreen> {
-  // final TopicDetailsScreen editTopic = TopicDetailsScreen();
-  // final _formKey = GlobalKey<FormBuilderState>();
-
-  // this.widget.apiClient.listTopics(FExecutionContext.defaultExecutionContext);
-
-  // Future<String> getTopicAction() async {
-  //   final Future<String> messages =
-  //       this.widget.apiClient.updateTopicDescription(
-  //             FExecutionContext.defaultExecutionContext,
-  //             topicId,
-  //             newDescription,
-  //           );
-  //   await Future.delayed(const Duration(seconds: 6), () {});
-  //   return messages;
-  // }
-
+// Create controllers for edit and create name and description fields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -75,7 +60,6 @@ class _ActionScreen extends State<TopicDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final String usersStr = topics.toString();
     // final lang = Lang.of(context);
     // final ThemeData themeData = Theme.of(context);
     // final appColorScheme = themeData.extension<AppColorScheme>()!;
@@ -194,7 +178,7 @@ class _ActionScreen extends State<TopicDetailsScreen> {
                                   )
                                 : TextField(
                                     minLines: 1,
-                                    maxLines: 5,
+                                    maxLines: 10,
                                     controller: this._descriptionController,
                                   ),
                           ),
@@ -212,19 +196,22 @@ class _ActionScreen extends State<TopicDetailsScreen> {
         onPressed: () {
           setState(() async {
             final String description = this._descriptionController.text;
-            final ApiClient apiClient = this.widget.apiClient;
+            // Data topic (not forwarded) == null create new topic
             if (opts == null) {
-            final String name = this._nameController.text;
-              await apiClient.createTopic(
-                  FExecutionContext.defaultExecutionContext,
-                  name: name,
-                  description: description,);
+              final String name = this._nameController.text;
+              await this.widget.apiClient.createTopic(
+                    FExecutionContext.defaultExecutionContext,
+                    name: name,
+                    description: description,
+                  );
+              // Edit topic
             } else {
-            final String id =opts.topic.id;
-                await apiClient.updateTopicDescription(
-                  FExecutionContext.defaultExecutionContext,
-                  id,
-                   description,);
+              final String id = opts.topic.id;
+              await this.widget.apiClient.updateTopicDescription(
+                    FExecutionContext.defaultExecutionContext,
+                    id,
+                    description,
+                  );
             }
             // ignore: use_build_context_synchronously
             Navigator.pop(

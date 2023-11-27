@@ -1,3 +1,7 @@
+// ignore_for_file: unnecessary_this
+
+import 'package:edgebus_console/api/api_client.dart';
+import 'package:edgebus_console/views/screens/topic_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,9 +13,6 @@ import 'package:edgebus_console/providers/app_preferences_provider.dart';
 import 'package:edgebus_console/theme/theme_extensions/app_color_scheme.dart';
 import 'package:edgebus_console/theme/theme_extensions/app_sidebar_theme.dart';
 import 'package:edgebus_console/views/widgets/portal_master_layout/sidebar.dart';
-// import 'package:edgebus_console/views/screens/topic_details_screen.dart'
-// show TopicDetailsScreen;
-// import 'package:edgebus_console/model/topic.dart' show Topic;
 
 class LocaleMenuConfig {
   final String languageCode;
@@ -186,16 +187,24 @@ class PortalMasterLayout extends StatelessWidget {
 
   Widget _createTopicButton(BuildContext context) {
     return ElevatedButton(
-      // style: actionBottonStyle,
       child: const Icon(
         Icons.add,
         color: Colors.white,
       ),
       onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Consumer<ApiClient>(
+              builder: (context, apiClient, child) => TopicDetailsScreen(
+                apiClient,
+              ),
+            ),
+          ),
+        );
       },
     );
   }
-  // );,
 }
 
 Widget _changeLanguageButton(BuildContext context) {

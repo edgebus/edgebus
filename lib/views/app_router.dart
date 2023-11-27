@@ -1,3 +1,4 @@
+import 'package:edgebus_console/api/api_client.dart';
 import 'package:edgebus_console/api/api_client_mock.dart';
 import 'package:edgebus_console/views/screens/description.dart';
 import 'package:edgebus_console/views/screens/topic.dart';
@@ -18,6 +19,7 @@ import 'package:edgebus_console/views/screens/logout_screen.dart';
 import 'package:edgebus_console/views/screens/my_profile_screen.dart';
 import 'package:edgebus_console/views/screens/register_screen.dart';
 import 'package:edgebus_console/views/screens/text_screen.dart';
+import 'package:provider/provider.dart';
 
 class RouteUri {
   static const String home = '/';
@@ -96,7 +98,9 @@ GoRouter appRouter(UserDataProvider userDataProvider) {
         path: RouteUri.topic,
         pageBuilder: (context, state) => NoTransitionPage<void>(
           key: state.pageKey,
-          child: TopicScreen(ApiClientMock()),
+          child: Consumer<ApiClient>(
+            builder: (context, apiClient, child) => TopicScreen(apiClient),
+          ),
         ),
       ),
       GoRoute(

@@ -37,15 +37,16 @@ class ApiClientMock extends ApiClient {
   }) async {
     await Future.delayed(const Duration(seconds: 3));
 
-    final TopicId id = const Uuid().toString();
+    final TopicId id = const Uuid().v4();
     final Topic topic = Topic(id, name, description);
 
     this._topics[id] = topic;
 
-    // Sure what name, description changes
-    print(topic.name);
-    print(topic.description);
-
+    // Sure what name, description
+    print("*****");
+    print(
+        "Call method ApiClientMock.createTopic with name: '${topic.name}' and description: '${topic.description}'. Topic was generated with id: '$id'.");
+    print("*****");
     return topic;
   }
 
@@ -55,7 +56,7 @@ class ApiClientMock extends ApiClient {
     FExecutionContext executionContext,
     TopicId topicId,
   ) async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 1));
 
     if (this._topics.containsKey(topicId)) {
       this._topics.remove(topicId);
@@ -69,7 +70,7 @@ class ApiClientMock extends ApiClient {
   Future<List<Topic>> listTopics(
     FExecutionContext executionContext,
   ) async {
-    // await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 1));
 
     return this._topics.values.toList(growable: false);
   }
@@ -89,7 +90,10 @@ class ApiClientMock extends ApiClient {
       this._topics[topicId] = newTopic;
 
 // Sure what description change
-      print(newTopic.description);
+      print("*****");
+      print(
+          "Call method ApiClientMock.createTopic with new description: '${newTopic.description}'.");
+      print("*****");
 
       return oldTopic.description;
     }

@@ -1,3 +1,7 @@
+// ignore_for_file: unnecessary_this
+
+import 'package:edgebus_console/api/api_client.dart';
+import 'package:edgebus_console/api/api_client_mock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:form_builder_validators/localization/l10n.dart';
@@ -18,6 +22,7 @@ class RootApp extends StatefulWidget {
 }
 
 class _RootAppState extends State<RootApp> {
+  ApiClient? _apiClient;
   GoRouter? _appRouter;
 
   Future<bool>? _future;
@@ -32,11 +37,21 @@ class _RootAppState extends State<RootApp> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    this._apiClient = ApiClientMock();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AppPreferencesProvider()),
         ChangeNotifierProvider(create: (context) => UserDataProvider()),
+        Provider<ApiClient>(
+          create: (_) => ApiClientMock(),
+        )
       ],
       child: Builder(
         builder: (context) {
