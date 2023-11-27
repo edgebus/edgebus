@@ -86,169 +86,168 @@ class _TopicScreenState extends State<TopicScreen> {
             return Padding(
               padding: const EdgeInsets.only(
                   top: 5.0, left: 2.0, right: 10.0, bottom: 10.0),
-              // ConstrainedBox(
-              //   constraints: const BoxConstraints(
-              //     minWidth: 200,
-              //     maxWidth: double.infinity,
-              //   ),
-              child: AdaptiveScrollbar(
-                underColor: Colors.blueGrey.withOpacity(0.3),
-                sliderDefaultColor: Colors.grey.withOpacity(0.7),
-                sliderActiveColor: Colors.grey,
-                controller: verticalScrollController,
+              child: FractionallySizedBox(
+                widthFactor: 1.0,
+                heightFactor: 1.0,
                 child: AdaptiveScrollbar(
-                  controller: horizontalScrollController,
-                  position: ScrollbarPosition.bottom,
                   underColor: Colors.blueGrey.withOpacity(0.3),
                   sliderDefaultColor: Colors.grey.withOpacity(0.7),
                   sliderActiveColor: Colors.grey,
-                  child: SingleChildScrollView(
-                    controller: verticalScrollController,
-                    scrollDirection: Axis.vertical,
+                  controller: verticalScrollController,
+                  child: AdaptiveScrollbar(
+                    controller: horizontalScrollController,
+                    position: ScrollbarPosition.bottom,
+                    underColor: Colors.blueGrey.withOpacity(0.3),
+                    sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                    sliderActiveColor: Colors.grey,
                     child: SingleChildScrollView(
-                      controller: horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: DataTable(
-                          showCheckboxColumn: false,
-                          columnSpacing: 12,
-                          horizontalMargin: 12,
-                          headingRowColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.grey.shade400),
-                          columns: const [
-                            DataColumn(
-                              label: Text('actions'),
-                            ),
-                            DataColumn(
-                              label: Text('id'),
-                              // numeric: true,
-                            ),
-                            DataColumn(
-                              label: Text('topics'),
-                            ),
-                            DataColumn(
-                              label: Text('description'),
-                            ),
-                          ],
-                          rows: List<DataRow>.generate(
-                            topics.length,
-                            (index) {
-                              final Topic topic = topics[index];
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    DropdownButton<String>(
-                                      // alignment: Alignment.centerLeft,
-                                      focusColor: Colors.transparent,
-                                      icon: const Icon(
-                                        Icons.more_horiz,
-                                        color: Colors.black,
-                                      ),
-                                      elevation: 16,
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                      onChanged: (String? value) async {
-                                        if (value == 'Delete') {
-                                          await this
-                                              .widget
-                                              .apiClient
-                                              .deleteTopic(
-                                                FExecutionContext
-                                                    .defaultExecutionContext,
-                                                topic.id,
+                      controller: verticalScrollController,
+                      scrollDirection: Axis.vertical,
+                      child: SingleChildScrollView(
+                        controller: horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: DataTable(
+                            showCheckboxColumn: false,
+                            columnSpacing: 12,
+                            horizontalMargin: 12,
+                            headingRowColor: MaterialStateColor.resolveWith(
+                                (states) => Colors.grey.shade400),
+                            columns: const [
+                              DataColumn(
+                                label: Text('actions'),
+                              ),
+                              DataColumn(
+                                label: Text('id'),
+                                // numeric: true,
+                              ),
+                              DataColumn(
+                                label: Text('topics'),
+                              ),
+                              DataColumn(
+                                label: Text('description'),
+                              ),
+                            ],
+                            rows: List<DataRow>.generate(
+                              topics.length,
+                              (index) {
+                                final Topic topic = topics[index];
+                                return DataRow(
+                                  cells: [
+                                    DataCell(
+                                      DropdownButton<String>(
+                                        // alignment: Alignment.centerLeft,
+                                        focusColor: Colors.transparent,
+                                        icon: const Icon(
+                                          Icons.more_horiz,
+                                          color: Colors.black,
+                                        ),
+                                        elevation: 16,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                        onChanged: (String? value) async {
+                                          if (value == 'Delete') {
+                                            await this
+                                                .widget
+                                                .apiClient
+                                                .deleteTopic(
+                                                  FExecutionContext
+                                                      .defaultExecutionContext,
+                                                  topic.id,
+                                                );
+                                          } else {
+                                            // If opts (is not pass) == null, we create a new topic
+                                            TopicDetailsScreenOpts? opts = null;
+                                            // If opts (pass topic and flag isEdit == true), we can edit topic
+                                            if (value == 'Edit') {
+                                              opts = TopicDetailsScreenOpts(
+                                                topic,
+                                                true,
                                               );
-                                        } else {
-                                          // If opts (is not pass) == null, we create a new topic
-                                          TopicDetailsScreenOpts? opts = null;
-                                          // If opts (pass topic and flag isEdit == true), we can edit topic
-                                          if (value == 'Edit') {
-                                            opts = TopicDetailsScreenOpts(
-                                              topic,
-                                              true,
-                                            );
-                                            // If opts (pass topic and flag isEdit == false), we can show topic
-                                          } else if (value == 'Show') {
-                                            opts = TopicDetailsScreenOpts(
-                                              topic,
-                                              false,
+                                              // If opts (pass topic and flag isEdit == false), we can show topic
+                                            } else if (value == 'Show') {
+                                              opts = TopicDetailsScreenOpts(
+                                                topic,
+                                                false,
+                                              );
+                                            }
+                                            setState(
+                                              () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        TopicDetailsScreen(
+                                                      this.widget.apiClient,
+                                                      opts: opts,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             );
                                           }
-                                          setState(
-                                            () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      TopicDetailsScreen(
-                                                    this.widget.apiClient,
-                                                    opts: opts,
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                        },
+                                        items: list
+                                            .map<DropdownMenuItem<String>>(
+                                                (String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value),
                                           );
-                                        }
-                                      },
-                                      items: list.map<DropdownMenuItem<String>>(
-                                          (String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
+                                        }).toList(),
+                                      ),
+                                      // ElevatedButton(
+                                      //   style: actionBottonStyle,
+                                      //   child: const Icon(
+                                      //     Icons.more_horiz,
+                                      //     color: Colors.black,
+                                      //   ),
+                                      //   onPressed: () {
+                                      //     Navigator.push(
+                                      //       context,
+                                      //       MaterialPageRoute(
+                                      //           builder: (context) =>
+                                      //               ActionScreen()),
+                                      //     );
+                                      //   },
+                                      // ),
                                     ),
-                                    // ElevatedButton(
-                                    //   style: actionBottonStyle,
-                                    //   child: const Icon(
-                                    //     Icons.more_horiz,
-                                    //     color: Colors.black,
-                                    //   ),
-                                    //   onPressed: () {
-                                    //     Navigator.push(
-                                    //       context,
-                                    //       MaterialPageRoute(
-                                    //           builder: (context) =>
-                                    //               ActionScreen()),
-                                    //     );
-                                    //   },
-                                    // ),
-                                  ),
-                                  DataCell(
-                                    ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                          maxWidth: 400, minWidth: 50),
-                                      child: Text(topic.id),
+                                    DataCell(
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                            maxWidth: 400, minWidth: 50),
+                                        child: Text(topic.id),
+                                      ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                          maxWidth: 100, minWidth: 50),
-                                      child: Text(topic.name),
+                                    DataCell(
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                            maxWidth: 100, minWidth: 50),
+                                        child: Text(topic.name),
+                                      ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                          maxWidth: 600, minWidth: 100),
-                                      child: Text(topic.description),
+                                    DataCell(
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                            maxWidth: 600, minWidth: 100),
+                                        child: Text(topic.description),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                                onSelectChanged: (bool? value) {
-                                  // setState(() {
-                                  // });
-                                },
-                              );
-                            },
+                                  ],
+                                  onSelectChanged: (bool? value) {
+                                    // setState(() {
+                                    // });
+                                  },
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  // ),
                 ),
               ),
             );
