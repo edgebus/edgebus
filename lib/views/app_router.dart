@@ -1,5 +1,5 @@
 import 'package:edgebus_console/api/api_client.dart';
-import 'package:edgebus_console/views/screens/topic.dart';
+import 'package:edgebus_console/views/screens/topic_list.dart';
 import 'package:go_router/go_router.dart';
 import 'package:edgebus_console/providers/user_data_provider.dart';
 import 'package:edgebus_console/views/screens/buttons_screen.dart';
