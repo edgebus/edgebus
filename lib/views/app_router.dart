@@ -1,6 +1,4 @@
 import 'package:edgebus_console/api/api_client.dart';
-import 'package:edgebus_console/api/api_client_mock.dart';
-import 'package:edgebus_console/views/screens/description.dart';
 import 'package:edgebus_console/views/screens/topic.dart';
 import 'package:go_router/go_router.dart';
 import 'package:edgebus_console/providers/user_data_provider.dart';
@@ -101,13 +99,6 @@ GoRouter appRouter(UserDataProvider userDataProvider) {
           child: Consumer<ApiClient>(
             builder: (context, apiClient, child) => TopicScreen(apiClient),
           ),
-        ),
-      ),
-      GoRoute(
-        path: RouteUri.description,
-        pageBuilder: (context, state) => NoTransitionPage<void>(
-          key: state.pageKey,
-          child: DescriptionScreen(),
         ),
       ),
       GoRoute(
