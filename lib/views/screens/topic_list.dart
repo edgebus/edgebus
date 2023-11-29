@@ -1,17 +1,16 @@
 // ignore_for_file: unnecessary_this
 
-import 'dart:math';
-
-import 'package:edgebus_console/api/api_client.dart' show ApiClient;
+import 'package:flutter/material.dart';
 import 'package:edgebus_console/constants/dimens.dart';
-import 'package:edgebus_console/generated/l10n.dart';
+import 'dart:math' show Random;
+import 'package:edgebus_console/api/api_client.dart' show ApiClient;
+import 'package:edgebus_console/generated/l10n.dart' show Lang;
 import 'package:edgebus_console/model/topic.dart' show Topic;
 import 'package:edgebus_console/views/screens/topic_details_screen.dart'
     show TopicDetailsScreen, TopicDetailsScreenOpts;
-import 'package:edgebus_console/views/widgets/card_elements.dart';
+import 'package:edgebus_console/views/widgets/card_elements.dart' show CardHeader, CardBody;
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
     show PortalMasterLayout;
-import 'package:flutter/material.dart';
 import 'package:freemework/execution_context/f_execution_context.dart'
     show FExecutionContext;
 
@@ -25,19 +24,6 @@ class TopicScreen extends StatefulWidget {
 }
 
 class _TopicScreenState extends State<TopicScreen> {
-  // final _formKey = GlobalKey<FormBuilderState>();
-
-  // this.widget.apiClient.listTopics(FExecutionContext.defaultExecutionContext);
-
-  // @override
-  // Future<List<Topic>>? topics;
-  // initState() {
-  //   topics = this
-  //       .widget
-  //       .apiClient
-  //       .listTopics(FExecutionContext.defaultExecutionContext);
-  //   // print(topics);
-  // }
 
 // This function call topicAction of topics
   Future<List<Topic>> getList() async {
@@ -61,60 +47,60 @@ class _TopicScreenState extends State<TopicScreen> {
 
     return PortalMasterLayout(
       body: FutureBuilder(
-        future: this.getList(),
-        builder: (BuildContext context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2, // indicates thickness CircularProgressIndicator
-                backgroundColor: Colors.grey,
-                valueColor: AlwaysStoppedAnimation(Colors.blue),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'An ${snapshot.error} occurred',
-                style: const TextStyle(fontSize: 18, color: Colors.red),
-              ),
-            );
-          } else {
-            final List<Topic> topics = snapshot.data!;
-            const List<String> topicAction = <String>[
-              'Edit',
-              'Show',
-              'Delete',
-            ];
-            return ListView(
-              padding: const EdgeInsets.all(kDefaultPadding),
-              children: [
-                Text(
-                  lang.topic,
-                  style: themeData.textTheme.headlineMedium,
+          future: this.getList(),
+          builder: (BuildContext context, snapshot) {
+            final List<Topic>? topics = snapshot.data;
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth:
+                      2, // indicates thickness CircularProgressIndicator
+                  backgroundColor: Colors.grey,
+                  valueColor: AlwaysStoppedAnimation(Colors.blue),
                 ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: kDefaultPadding),
-                  child: Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CardHeader(
-                          title: lang.forms(1),
-                        ),
-                        CardBody(
-                          child: this._dataTable(topics, topicAction),
-                        ),
-                      ],
+              );
+            } else if (topics != null) {
+              const List<String> topicAction = <String>[
+                'Edit',
+                'Show',
+                'Delete',
+              ];
+              return ListView(
+                padding: const EdgeInsets.all(kDefaultPadding),
+                children: [
+                  Text(
+                    lang.topic,
+                    style: themeData.textTheme.headlineMedium,
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: kDefaultPadding),
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CardHeader(
+                            title: lang.forms(1),
+                          ),
+                          CardBody(
+                            child: this._dataTable(topics, topicAction),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                ],
+              );
+            }
+              return Center(
+                child: Text(
+                  'An ${snapshot.error} occurred',
+                  style: const TextStyle(fontSize: 18, color: Colors.red),
                 ),
-              ],
-            );
-          }
-        },
-      ),
+              );
+            }
+          ),
     );
   }
 
