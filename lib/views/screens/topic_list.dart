@@ -8,7 +8,8 @@ import 'package:edgebus_console/generated/l10n.dart' show Lang;
 import 'package:edgebus_console/model/topic.dart' show Topic;
 import 'package:edgebus_console/views/screens/topic_details_screen.dart'
     show TopicDetailsScreen, TopicDetailsScreenOpts;
-import 'package:edgebus_console/views/widgets/card_elements.dart' show CardHeader, CardBody;
+import 'package:edgebus_console/views/widgets/card_elements.dart'
+    show CardHeader, CardBody;
 import 'package:edgebus_console/views/widgets/portal_master_layout/portal_master_layout.dart'
     show PortalMasterLayout;
 import 'package:freemework/execution_context/f_execution_context.dart'
@@ -24,7 +25,6 @@ class TopicScreen extends StatefulWidget {
 }
 
 class _TopicScreenState extends State<TopicScreen> {
-
 // This function call topicAction of topics
   Future<List<Topic>> getList() async {
     await Future.delayed(const Duration(seconds: 3));
@@ -93,14 +93,13 @@ class _TopicScreenState extends State<TopicScreen> {
                 ],
               );
             }
-              return Center(
-                child: Text(
-                  'An ${snapshot.error} occurred',
-                  style: const TextStyle(fontSize: 18, color: Colors.red),
-                ),
-              );
-            }
-          ),
+            return Center(
+              child: Text(
+                'An ${snapshot.error} occurred',
+                style: const TextStyle(fontSize: 18, color: Colors.red),
+              ),
+            );
+          }),
     );
   }
 
