@@ -430,6 +430,16 @@ class Lang {
     );
   }
 
+  /// `Ingress`
+  String get ingress {
+    return Intl.message(
+      'Ingress',
+      name: 'ingress',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `This field requires a valid integer.`
   String get integerErrorText {
     return Intl.message(

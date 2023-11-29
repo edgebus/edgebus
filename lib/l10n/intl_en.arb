@@ -38,6 +38,7 @@
   "hi": "Hi",
   "homePage": "Home",
   "iframeDemo": "IFrame Demo",
+  "ingress": "Ingress",
   "topic": "Topic",
   "integerErrorText": "This field requires a valid integer.",
   "ipErrorText": "This field requires a valid IP.",
