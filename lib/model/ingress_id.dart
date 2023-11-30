@@ -1,0 +1,1 @@
+typedef IngressId = String;
