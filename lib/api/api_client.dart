@@ -1,5 +1,4 @@
-import 'package:edgebus_console/model/ingress_path.dart' show IngressPath;
-import 'package:edgebus_console/model/ingress_url.dart' show IngressUrl;
+import 'package:edgebus_console/model/ingress.dart';
 import 'package:freemework/freemework.dart' show FExecutionContext;
 
 import '../model/topic.dart' show Topic;
@@ -28,7 +27,7 @@ abstract class ApiClient {
     String newDescription,
   );
 
-  Future<(List<IngressPath>, List<IngressUrl>)> listIngress(
+  Future<List<Ingress>> listIngress(
     FExecutionContext executionContext,
   );
 }
