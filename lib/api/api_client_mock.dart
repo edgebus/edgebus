@@ -171,4 +171,19 @@ class ApiClientMock extends ApiClient {
 
     return this._ingresses.values.toList(growable: false);
   }
+
+  // This method delete ingress from ingress list.
+  @override
+  Future<void> deleteIngress(
+    FExecutionContext executionContext,
+    IngressId ingressId,
+  ) async {
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (this._ingresses.containsKey(ingressId)) {
+      this._ingresses.remove(ingressId);
+    } else {
+      throw Exception("Specified ingress not found.");
+    }
+  }
 }

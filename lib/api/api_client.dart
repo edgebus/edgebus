@@ -1,4 +1,5 @@
-import 'package:edgebus_console/model/ingress.dart';
+import 'package:edgebus_console/model/ingress.dart' show Ingress;
+import 'package:edgebus_console/model/ingress_id.dart' show IngressId;
 import 'package:freemework/freemework.dart' show FExecutionContext;
 
 import '../model/topic.dart' show Topic;
@@ -29,5 +30,10 @@ abstract class ApiClient {
 
   Future<List<Ingress>> listIngress(
     FExecutionContext executionContext,
+  );
+
+  Future<void> deleteIngress(
+    FExecutionContext executionContext,
+    IngressId ingressId,
   );
 }

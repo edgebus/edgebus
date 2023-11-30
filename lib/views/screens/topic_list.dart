@@ -28,16 +28,17 @@ class _TopicScreenState extends State<TopicScreen> {
 // This function call topicAction of topics
   Future<List<Topic>> getList() async {
     await Future.delayed(const Duration(seconds: 3));
-    final int number = Random().nextInt(5);
-    if (number % 2 == 0) {
+    // Check Exception or listTopic
+    // final int number = Random().nextInt(5);
+    // if (number % 2 == 0) {
       final Future<List<Topic>> topics = this
           .widget
           .apiClient
           .listTopics(FExecutionContext.defaultExecutionContext);
       return topics;
-    } else {
-      throw Exception();
-    }
+    // } else {
+    //   throw Exception();
+    // }
   }
 
   @override
@@ -64,6 +65,7 @@ class _TopicScreenState extends State<TopicScreen> {
                 'Edit',
                 'Show',
                 'Delete',
+                'Ingress',
               ];
               return ListView(
                 padding: const EdgeInsets.all(kDefaultPadding),
