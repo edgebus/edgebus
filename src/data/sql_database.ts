@@ -13,14 +13,7 @@ export abstract class SqlDatabase extends Database {
 
 	public transactionCommit(executionContext: FExecutionContext): Promise<void> {
 		this._transactionIO = this._transactionIO.then(async () => {
-			//
-			// We have not to cancel this operation, so pass noncancellableExecutionContext
-			//
-			const noncancellableExecutionContext: FExecutionContext = new FCancellationExecutionContext(
-				executionContext,
-				FCancellationToken.Dummy
-			);
-			await this.sqlConnection.statement("COMMIT TRANSACTION").execute(noncancellableExecutionContext);
+			await SqlDatabase._commit(executionContext, this.sqlConnection);
 			await this.sqlConnection.statement("BEGIN TRANSACTION").execute(executionContext);
 		});
 
@@ -31,16 +24,8 @@ export abstract class SqlDatabase extends Database {
 		this._transactionIO = this._transactionIO.then(async () => {
 			const sqlConnection: FSqlConnection | null = this._sqlConnection;
 			if (sqlConnection !== null) {
-				//
-				// We have not to cancel this operation, so pass noncancellableExecutionContext
-				//
-				const noncancellableExecutionContext: FExecutionContext = new FCancellationExecutionContext(
-					executionContext,
-					FCancellationToken.Dummy
-				);
-				await sqlConnection.statement("ROLLBACK TRANSACTION").execute(noncancellableExecutionContext);
+				await SqlDatabase._rollback(executionContext, sqlConnection);
 				await sqlConnection.statement("BEGIN TRANSACTION").execute(executionContext);
-
 			}
 		});
 
@@ -71,16 +56,33 @@ export abstract class SqlDatabase extends Database {
 	}
 
 	protected async onDispose(): Promise<void> {
+		const sqlConnection: FSqlConnection = this._sqlConnection!;
+		this._sqlConnection = null;
+
 		try {
-			await this.transactionRollback(this.initExecutionContext);
+			await SqlDatabase._rollback(this.initExecutionContext, sqlConnection!);
 		} catch (e) {
 			const ex: FException = FException.wrapIfNeeded(e);
 			this.log.warn(this.initExecutionContext, () => `Failure to rollback SQL transaction. Error: ${ex.message}`);
 			this.log.debug(this.initExecutionContext, "Failure to rollback SQL transaction.", ex);
 		}
 
-		await this._sqlConnection!.dispose();
-		this._sqlConnection = null;
+		await sqlConnection.dispose();
+	}
+
+	private static async _commit(executionContext: FExecutionContext, sqlConnection: FSqlConnection): Promise<void> {
+		await sqlConnection.statement("COMMIT TRANSACTION").execute(executionContext);
+	}
+
+	private static async _rollback(executionContext: FExecutionContext, sqlConnection: FSqlConnection): Promise<void> {
+		//
+		// We have not to cancel this operation, so pass noncancellableExecutionContext
+		//
+		const noncancellableExecutionContext: FExecutionContext = new FCancellationExecutionContext(
+			executionContext,
+			FCancellationToken.Dummy
+		);
+		await sqlConnection.statement("ROLLBACK TRANSACTION").execute(noncancellableExecutionContext);
 	}
 
 	private readonly _sqlConnectionFactory: FSqlConnectionFactory;
