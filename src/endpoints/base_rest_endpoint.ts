@@ -1,6 +1,6 @@
-import { FCancellationToken, FException, FExceptionInvalidOperation, FExecutionContext, FCancellationExecutionContext, FLoggerLabelsExecutionContext, FLogger } from "@freemework/common";
+import { FException, FExceptionInvalidOperation, FExecutionContext, FLogger } from "@freemework/common";
 
-import { FAbstractWebServer, FHostingConfiguration, FServersBindEndpoint, FWebServer } from "@freemework/hosting";
+import { FServersBindEndpoint, FWebServer } from "@freemework/hosting";
 
 import * as express from "express";
 import { PathParams } from "express-serve-static-core";
@@ -9,7 +9,6 @@ import * as _ from "lodash";
 import { Settings } from "../settings";
 import { Bind } from "../utils/bind";
 import { MIME_APPLICATION_JSON } from "../utils/mime";
-import { createExecutionContextMiddleware } from "../misc/express";
 
 export class BaseRestEndpoint extends FServersBindEndpoint {
 	protected readonly _router: express.Router;
@@ -55,7 +54,6 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 		// this.setupCors();
 		// this.setupBodyRawParser();
 		// this.setupBodyObjectParser();
-		this.setupExecutionContextMiddleware();
 
 		const classHttpMeta: ClassHttpMeta = __getClassHttpMeta(this.constructor);
 		for (const [jsMethod, httpMeta] of classHttpMeta) {
@@ -112,7 +110,6 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 	protected onDispose(): void {
 		// NOP
 	}
-
 
 	protected errorRenderer(executionContext: FExecutionContext, e: FException, res: express.Response): void {
 		// this._monitoring.handleError(e);
@@ -185,10 +182,6 @@ export class BaseRestEndpoint extends FServersBindEndpoint {
 			}
 		};
 		return handler;
-	}
-
-	protected setupExecutionContextMiddleware(): void {
-		this._router.use(createExecutionContextMiddleware(this._logger, this.initExecutionContext));
 	}
 }
 

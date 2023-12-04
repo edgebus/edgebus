@@ -5,9 +5,11 @@ import * as hosting from "@freemework/hosting";
 import * as express from "express";
 import * as _ from "lodash";
 
-import { SettingsProvider } from "./settings_provider";
 import { ProviderLocator } from "../provider_locator";
-import { createExecutionContextMiddleware } from "../misc/express";
+import { executionContextMiddleware } from "../misc/express";
+import { Bind } from "../utils/bind";
+
+import { SettingsProvider } from "./settings_provider";
 
 @Singleton
 export abstract class HostingProvider extends FInitableBase {
@@ -65,6 +67,8 @@ class HostingProviderImpl extends HostingProvider {
 				expressApplication.set("json spaces", 4);
 			}
 
+			expressApplication.use(this._activateExecutionContext);
+
 			this.log.debug(FExecutionContext.Empty, () => `Created own Web server '${ownServerInstance.name}' ...`);
 
 			return Object.freeze({ name: ownServerInstance.name, server: ownServerInstance, isOwnInstance: true });
@@ -75,7 +79,6 @@ class HostingProviderImpl extends HostingProvider {
 	public get serverInstances(): ReadonlyArray<HostingProvider.ServerInstance> {
 		return Object.freeze(this._serverInstances);
 	}
-
 
 	protected async onInit(): Promise<void> {
 		this.log.info(this.initExecutionContext, "Initializing Web servers...");
@@ -88,10 +91,8 @@ class HostingProviderImpl extends HostingProvider {
 				if (this.log.isInfoEnabled) {
 					this.log.info(this.initExecutionContext, `Start server: ${serverInfo.server.name}`);
 				}
-
-				serverInfo.server.rootExpressApplication.use(createExecutionContextMiddleware(this.log, this.initExecutionContext));
-
 				if (serverInfo.isOwnInstance === true) {
+					// serverInfo.server.rootExpressApplication.use(createExecutionContextMiddleware(this.log, this.initExecutionContext));
 					setupExpressErrorHandles(serverInfo.server.rootExpressApplication, this.log);
 				}
 				await serverInfo.server.init(this.initExecutionContext);
@@ -104,7 +105,6 @@ class HostingProviderImpl extends HostingProvider {
 			}
 			throw e;
 		}
-
 	}
 
 	protected async onDispose(): Promise<void> {
@@ -113,6 +113,11 @@ class HostingProviderImpl extends HostingProvider {
 		while ((destroyHandler = this._destroyHandlers.pop()) !== undefined) {
 			await destroyHandler();
 		}
+	}
+
+	@Bind
+	private _activateExecutionContext(req: express.Request, res: express.Response, next: express.NextFunction) {
+		executionContextMiddleware(this.initExecutionContext, this.log, req, res, next);
 	}
 }
 

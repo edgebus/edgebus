@@ -1,7 +1,7 @@
-import { FExecutionContext, FInitable, FInitableBase, FLogger } from "@freemework/common";
+import { FExceptionInvalidOperation, FExecutionContext, FInitable, FInitableBase, FLogger } from "@freemework/common";
 import { FWebServer } from "@freemework/hosting";
 
-import { Container, Provides, Singleton } from "typescript-ioc";
+import { Provides, Singleton } from "typescript-ioc";
 
 import * as _ from "lodash";
 
@@ -14,10 +14,9 @@ import { HostingProvider } from "./hosting_provider";
 
 // Endpoints
 import { InfoRestEndpoint } from "../endpoints/info_rest_endpoint";
+import { IngressEndpoint } from "../endpoints/ingress_endpoint";
 import { ManagementApiRestEndpoint } from "../endpoints/management_api_rest_endpoint";
-// import { IngressApiRestEndpoint } from "../endpoints/ingress_api_rest_endpoint";
 import { EgressApiRestEndpoint } from "../endpoints/egress_api_rest_endpoint";
-import { WebSocketHostEgressEndpoint } from "../endpoints/websocket_host_egress_endpoint";
 import { ProviderLocator } from "../provider_locator";
 import { ManagementApiProvider } from "./management_api_provider";
 
@@ -35,6 +34,8 @@ export abstract class EndpointsProvider extends FInitableBase {
 
 	// public abstract get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint>;
 	public abstract get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint>;
+
+	public abstract registerIngressApiRestEndpoint(endpoint: IngressEndpoint): void;
 }
 
 @Provides(EndpointsProvider)
@@ -62,7 +63,6 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._endpointInstances = [];
 
-		// const ingressApiRestEndpoints: Array<IngressApiRestEndpoint> = [];
 		const egressApiRestEndpoints: Array<EgressApiRestEndpoint> = [];
 
 		for (const endpoint of this._configProvider.endpoints) {
@@ -129,16 +129,20 @@ class EndpointsProviderImpl extends EndpointsProvider {
 
 		this._destroyHandlers = [];
 
-		// this._ingressApiRestEndpoints = Object.freeze(ingressApiRestEndpoints);
 		this._egressApiRestEndpoints = Object.freeze(egressApiRestEndpoints);
 	}
 
-	// public get ingressApiRestEndpoints(): ReadonlyArray<IngressApiRestEndpoint> {
-	// 	return this._ingressApiRestEndpoints;
-	// }
-
 	public get egressApiRestEndpoints(): ReadonlyArray<EgressApiRestEndpoint> {
 		return this._egressApiRestEndpoints;
+	}
+
+	public registerIngressApiRestEndpoint(endpoint: IngressEndpoint): void {
+		if(this.initializing || this.initialized) {
+			throw new FExceptionInvalidOperation("Unable to register IngressApiRestEndpoint after init().");
+		}
+
+		this._endpointInstances.push(endpoint);
+
 	}
 
 	protected async onInit(): Promise<void> {

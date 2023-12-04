@@ -14,7 +14,6 @@ import { StorageProvider } from "./provider/storage_provider";
 import { EndpointsProvider } from "./provider/endpoints_provider";
 import { HostingProvider } from "./provider/hosting_provider";
 import { MessageBusProvider } from "./provider/message_bus_provider";
-import { HttpHostIngress } from "./ingress/http_host.ingress";
 import { WebSocketHostEgress, WebhookEgress } from "./egress";
 import { MessageBus } from "./messaging/message_bus";
 import { Container } from "typescript-ioc";
@@ -26,6 +25,7 @@ import { SetupServiceProvider } from "./provider/setup_service_provider";
 import { ApiProvider } from "./provider/api_provider";
 import { Egress } from "./model/egress";
 import { Ingress } from "./model/ingress";
+import { IngressEndpoint } from "./endpoints/ingress_endpoint";
 import { MessageBusBull } from "./messaging/message_bus_bull";
 import { WebSocketClientIngress } from "./ingress/web_socket_client.ingress";
 import { ResponseHandlerDynamicExternalProcess } from "./ingress/response_handler/response_handler_dynamic_external_process";
@@ -89,7 +89,6 @@ export default async function (executionContext: FExecutionContext, settings: Se
 		await FInitable.initAll(executionContext,
 			ProviderLocator.default.get(MessageBusProvider),
 			ProviderLocator.default.get(ApiProvider),
-			ProviderLocator.default.get(EndpointsProvider),
 		);
 
 		try {
@@ -113,6 +112,9 @@ export default async function (executionContext: FExecutionContext, settings: Se
 				}
 			}
 
+			const endpointsProvider: EndpointsProvider = ProviderLocator.default.get(EndpointsProvider);
+			const hostingProvider: HostingProvider = ProviderLocator.default.get(HostingProvider);
+
 			/* ---------HARDCODED INITIALIZATION--------------- */
 			{
 				const hardcodedPublisherConfigurations: Array<{
@@ -120,16 +122,12 @@ export default async function (executionContext: FExecutionContext, settings: Se
 					readonly topicName: string;
 					readonly topicDescription: string;
 					readonly topicMediaType: string;
-					// readonly ingressId: string;
-					// readonly publisherPath: string;
 					readonly ingressConfiguration: Settings.Setup.Ingress;
 				}> = [];
 				const hardcodedSubscriberConfigurations: Array<{
 					readonly topicIds: ReadonlyArray<string>;
 					readonly topicNames: ReadonlyArray<string>;
 					readonly egress: Settings.Setup.Egress;
-					// readonly deliveryHttpMethod: string;
-					// readonly deliveryUrl: URL;
 				}> = [];
 
 				const { setup } = settings;
@@ -156,16 +154,11 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							topicIds: egress.sourceTopicIds,
 							topicNames: egress.sourceTopicIds.map(s => topicsByIdMap.get(s)!.name),
 							egress,
-							// deliveryHttpMethod: e.deliveryHttpMethod
-							// deliveryUrl: e.deliveryUrl,
 						});
 					}
 				}
 
-				const hostingProvider: HostingProvider = ProviderLocator.default.get(HostingProvider);
-				const endpointsProvider: EndpointsProvider = ProviderLocator.default.get(EndpointsProvider);
 				const messageBusProvider: MessageBusProvider = ProviderLocator.default.get(MessageBusProvider);
-				const storageProvider: StorageProvider = ProviderLocator.default.get(StorageProvider);
 
 				const serverInstancesMap: Map<string, HostingProvider.ServerInstance> = hostingProvider.serverInstances.reduce(
 					(acc, element) => {
@@ -203,54 +196,54 @@ export default async function (executionContext: FExecutionContext, settings: Se
 							throw new FExceptionInvalidOperation(`Not supported yet: ${ingressConfiguration.kind}`);
 						}
 
-						const httpHostIngressInstance: HttpHostIngress = new HttpHostIngress(
-							{
-								topicId: hardcodedPublisherConfiguration.topicId,
-								topicName: hardcodedPublisherConfiguration.topicName,
-								topicDomain: null,
-								topicDescription: hardcodedPublisherConfiguration.topicDescription,
-								topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
-							},
-							ingressId,
-							messageBusProvider.wrap,
-							{
-								transformers: [],
-								servers: ingressConfiguration.servers.map((serverIndex) => {
-									const serverInstance: HostingProvider.ServerInstance | undefined = serverInstancesMap.get(serverIndex);
-									if (serverInstance === undefined) {
-										throw new FException(
-											`Non-existing server index '${serverIndex}' defined in ingress '${ingressConfiguration.ingressId}'`
-										);
-									}
-									return serverInstance.server;
-								}),
-								bindPath: ingressConfiguration.path,
-								successResponseHandler: (function () {
-									switch (ingressConfiguration.httpResponseKind) {
-										case Ingress.HttpResponseKind.DYNAMIC: {
-											return new ResponseHandlerDynamicExternalProcess(
-												ingressConfiguration.responseHandlerPath
-											);
-										}
-										case Ingress.HttpResponseKind.STATIC: {
-											return new ResponseHandlerStatic(
-												ingressConfiguration.responseStatusCode,
-												ingressConfiguration.responseStatusMessage,
-												ingressConfiguration.responseHeaders,
-												ingressConfiguration.responseBody,
-											);
-										}
-									}
-								})(),
+						const servers = ingressConfiguration.servers.map((serverIndex) => {
+							const serverInstance: HostingProvider.ServerInstance | undefined = serverInstancesMap.get(serverIndex);
+							if (serverInstance === undefined) {
+								throw new FException(
+									`Non-existing server index '${serverIndex}' defined in ingress '${ingressConfiguration.ingressId}'`
+								);
 							}
+							return serverInstance.server;
+						});
+
+						const ingressEndpoint: IngressEndpoint = new IngressEndpoint(
+							servers,
+							{
+								bindPath: ingressConfiguration.path,
+							},
+							{
+								topic: {
+									topicId: hardcodedPublisherConfiguration.topicId,
+									topicName: hardcodedPublisherConfiguration.topicName,
+									topicDomain: null,
+									topicDescription: hardcodedPublisherConfiguration.topicDescription,
+									topicMediaType: hardcodedPublisherConfiguration.topicMediaType,
+								},
+								ingressId,
+								messageBus: messageBusProvider.wrap,
+								opts: {
+									transformers: [],
+									successResponseHandler: (function () {
+										switch (ingressConfiguration.httpResponseKind) {
+											case Ingress.HttpResponseKind.DYNAMIC: {
+												return new ResponseHandlerDynamicExternalProcess(
+													ingressConfiguration.responseHandlerPath
+												);
+											}
+											case Ingress.HttpResponseKind.STATIC: {
+												return new ResponseHandlerStatic(
+													ingressConfiguration.responseStatusCode,
+													ingressConfiguration.responseStatusMessage,
+													ingressConfiguration.responseHeaders,
+													ingressConfiguration.responseBody,
+												);
+											}
+										}
+									})(),
+								}
+							},
 						);
-						//hardcodedItemsToDispose.push(httpPublisherInstance);
-						// httpHostIngressInstance.bindPath
-						// for (const publisherApiRestEndpoint of endpointsProvider.ingressApiRestEndpoints) {
-						// 	publisherApiRestEndpoint.addHttpPublisher(executionContext, httpHostIngressInstance);
-						// }
-						await httpHostIngressInstance.init(executionContext);
-						itemsToDispose.push(httpHostIngressInstance);
+						endpointsProvider.registerIngressApiRestEndpoint(ingressEndpoint);
 					}
 				}
 
@@ -301,12 +294,14 @@ export default async function (executionContext: FExecutionContext, settings: Se
 				}
 			}
 
-			await ProviderLocator.default.get(HostingProvider).init(executionContext);
+			await FInitable.initAll(executionContext,
+				endpointsProvider,
+				hostingProvider
+			);
 		} catch (e) {
 			for (const hardcodedItem of itemsToDispose) { await hardcodedItem.dispose(); }
 
 			await FDisposable.disposeAll(
-				ProviderLocator.default.get(EndpointsProvider),
 				ProviderLocator.default.get(ApiProvider),
 				ProviderLocator.default.get(MessageBusProvider)
 			);
