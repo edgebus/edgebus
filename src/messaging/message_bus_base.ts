@@ -206,14 +206,22 @@ export abstract class MessageBusBase extends MessageBus {
 			case Egress.FilterLabelPolicy.LAX: {
 				if (egressLabels === undefined) { return true; }
 				for (const messageLabel of messageLabelValues) {
-					if (egressLabels.includes(messageLabel)) { return true; }
+					for (const egressLabel of egressLabels) {
+						if (MessageBusBase.wildcardMatch(messageLabel, egressLabel)) {
+							return true;
+						}
+					}
 				}
 				return false;
 			}
 			case Egress.FilterLabelPolicy.STRICT: {
 				if (egressLabels === undefined) { return true; }
 				for (const egressLabel of egressLabels) {
-					if (!messageLabelValues.includes(egressLabel)) { return false; }
+					for (const messageLabel of messageLabelValues) {
+						if (!MessageBusBase.wildcardMatch(messageLabel, egressLabel)) {
+							return false;
+						}
+					}
 				}
 				return true;
 			}
@@ -245,4 +253,9 @@ export abstract class MessageBusBase extends MessageBus {
 		topic: Topic,
 		egress: Egress
 	): Promise<MessageBus.Channel>;
+
+	private static wildcardMatch(text: string, pattern: string) {
+		const regexPattern: RegExp = new RegExp('^' + pattern.replace(/\?/g, '.').replace(/\*/g, '.*') + '$');
+		return regexPattern.test(text);
+	}
 }

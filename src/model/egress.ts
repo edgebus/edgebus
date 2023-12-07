@@ -19,14 +19,12 @@ export namespace Egress {
 
 	export const enum FilterLabelPolicy {
 		/**
-		 * Deliver a message if ALL labels presented
-		 * Required "labels" list
+		 * Deliver a message if ALL message labels presented in Egress labels list
 		 */
 		STRICT = "strict",
 
 		/**
-		 * Deliver a message if ANY label presented
-		 * Required "labels" list
+		 * Deliver a message if ANY message label presented in Egress labels list
 		 */
 		LAX = "lax",
 
