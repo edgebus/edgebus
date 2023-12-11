@@ -1,68 +1,63 @@
 {
-	"name": "@zxteam/notifier.service",
-	"version": "0.0.4",
-	"description": "ZXTeam's Notifier Service. Main responsibility is to deliver callback messages via WebHooks, AMQP, JMS, Slack, Telegram and other messaging solutions.",
-	"main": "./src/index.js",
-	"types": "./src/index.d.ts",
-	"author": {
-		"name": "ZXTeam",
-		"email": "pub@zxteam.org",
-		"url": "http://www.zxteam.org"
-	},
+	"name": "@edgebus/service",
+	"version": "0.4.24",
+	"title": "EdgeBus Service",
+	"description": "EdgeBus is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.",
+	"author": "ZXTeam <pub@zxteam.org> (http://www.zxteam.org)",
 	"contributors": [
-		{
-			"name": "Maxim Anurin",
-			"email": "maxim.anurin@zxteam.org",
-			"url": "http://www.anurin.name"
-		},
-		{
-			"name": "Serhii Zghama",
-			"email": "serhii.zghama@zxteam.org"
-		}
+		"Maxim Anurin <maxim.anurin@zxteam.org> (http://www.anurin.name)",
+		"Serhii Zghama <serhii.zghama@zxteam.org>"
 	],
 	"license": "MIT",
 	"devDependencies": {
-		"@types/lodash": "^4.14.155",
-		"@types/node": "^11.15.15",
-		"@types/uuid": "^3.4.6",
-		"@zxnode/build": "^0.0.38"
+		"@types/chai": "^4.3.11",
+		"@types/content-type": "^1.1.8",
+		"@types/lodash": "^4.14.202",
+		"@types/mocha": "^10.0.6",
+		"@types/node": "^18.19.2",
+		"@types/redis-info": "^3.0.3",
+		"@types/uuid": "^9.0.7",
+		"chai": "^4.3.10",
+		"dotenv": "^16.3.1",
+		"mocha": "^10.2.0",
+		"nyc": "^15.1.0",
+		"source-map-support": "^0.5.21",
+		"typescript": "^5.3.2"
 	},
 	"dependencies": {
-		"@zxteam/cancellation": "^6.0.40",
-		"@zxteam/channels": "^6.0.53",
-		"@zxteam/configuration": "^6.0.56",
-		"@zxteam/contract": "^6.0.56",
-		"@zxteam/disposable": "^6.0.56",
-		"@zxteam/ensure": "^6.0.41",
-		"@zxteam/errors": "^6.0.41",
-		"@zxteam/hosting": "^6.0.42",
-		"@zxteam/launcher": "^6.0.26",
-		"@zxteam/logger": "^6.0.40",
-		"@zxteam/sql-postgres": "^6.0.53",
-		"lodash": "^4.17.15",
-		"moment": "^2.26.0",
-		"uuid": "^8.1.0"
+		"@bull-board/express": "^5.10.1",
+		"@freemework/common": "^0.10.15",
+		"@freemework/hosting": "^0.10.15",
+		"@freemework/sql.postgres": "^0.10.15",
+		"bull": "^4.11.5",
+		"content-type": "^1.0.5",
+		"lodash": "^4.17.21",
+		"typescript-ioc": "^1.2.6",
+		"uuid": "^9.0.1 "
 	},
 	"engines": {
-		"node": ">=11"
+		"node": ">=16.0.0 <19"
 	},
 	"keywords": [],
 	"repository": {
 		"type": "git",
-		"url": "git@github.com:zxteamorg/node.notifier.service.git"
+		"url": "git@github.com:edgebus/edgebus.git"
 	},
 	"bugs": {
-		"url": "https://github.com/zxteamorg/node.notifier.service/issues"
+		"url": "https://github.com/edgebus/edgebus/issues"
 	},
-	"homepage": "https://github.com/zxteamorg/node.notifier.service",
+	"homepage": "https://github.com/edgebus/edgebus",
+	"main": "./src/index.js",
+	"types": "./src/index.d.ts",
 	"scripts": {
-		"clean": "zxbuild clean",
-		"build": "zxbuild clean && zxbuild dist && cp README.md package-lock.json .dist/ && cp -a bin .dist/ && cp -a database .dist/",
-		"start": "node bin/notifier-service.js --config=notifier-service.config",
+		"clean": "find src \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\; ; find src-devel \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\; ; find test \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) -exec rm {} \\;",
+		"build": "tsc",
+		"build:application": "rm -rf lib && tsc --project tsconfig-application.json && cp -a bin .dist/bin && jq '{ name: .name, version: .version, description: .description, title: .title, author: .author, contributors: .contributors, license: .license, keywords: .keywords, repository: .repository, bugs: .bugs, engines: .engines, homepage: .homepage, main: \"lib/index.js\", types: \"lib/index.d.ts\", dependencies: .dependencies, build: .build }' package.json > .dist/package.json",
+		"build:package": "rm -rf lib && tsc --project tsconfig-package.json && cp PACKAGE.md .dist/README.md && jq '{ name: .name, version: .version, description: .description, title: .title, author: .author, contributors: .contributors, license: .license, keywords: .keywords, repository: .repository, bugs: .bugs, engines: .engines, homepage: .homepage, main: \"lib/index.js\", types: \"lib/index.d.ts\", dependencies: .dependencies, build: .build }' package.json > .dist/package.json",
+		"start": "node --require=dotenv/config bin/edgebus.js --config-file=edgebus.config --config-env",
 		"test": "true",
-		"test:next": "nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha \"test/**/*.test.js\" --recursive mocha --timeout 10000",
-		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\"",
-		"migrate-database:local": "env persistentStorageMigration.url=\"postgres://postgres:@127.0.0.1:5432/emptytestdb?schema=notifier\" node bin/migrate-database.js"
+		"test:unit": "tsc && nyc --exclude submodules --exclude test --extension=\".ts\" --reporter=lcov --reporter=text --reporter=text-summary mocha --require source-map-support/register --recursive --timeout 10000 \"test/unit/**/*.test.js\"",
+		"test:local": "env TEST_DB_URL=\"postgres://\" mocha --require source-map-support/register --recursive \"test/**/*.test.js\""
 	},
 	"private": true
 }

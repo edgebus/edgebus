@@ -17,14 +17,13 @@ xunit.xml
 src/**/*.d.ts
 src/**/*.js
 src/**/*.map
+src-devel/**/*.d.ts
+src-devel/**/*.js
+src-devel/**/*.map
 test/**/*.d.ts
 test/**/*.js
 test/**/*.map
 
 # Dev files
-temp/
-tmp/
+*.local*
 .env
-config-dev.json
-*.log
-res/

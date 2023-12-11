@@ -1,0 +1,232 @@
+# Enable (turn on) specific topics ONLY
+#"edgebus.setup.topic.indexes" = "..."
+
+# Enable (turn on) specific ingresses ONLY
+#"edgebus.setup.ingress.indexes" = "..."
+
+# Enable (turn on) specific egresses ONLY
+#"edgebus.setup.egress.indexes" = "..."
+
+
+[[edgebus.setup.topic]]
+	# Topic for Clear Junction messages
+	index = "TOPC23c8ec29beb1420b8010a721c0ae0d85"
+	name = "clear-junction"
+	description = "Clear Junction's callbacks"
+	mediaType = "application/json"
+	# [[edgebus.setup.topic.labelHandler]]
+	# 	index = "LBHD"
+	# 	kind = "EXTERNAL_PROCESS"
+	# 	path="misc/label_handlers/clear_junction_label_handler.py"
+
+[[edgebus.setup.topic]]
+	# Topic for Fireblocks Production messages
+	index = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	name = "fireblocks-production"
+	description = "Fireblock's callbacks"
+	mediaType = "application/json"
+	[[edgebus.setup.topic.labelHandler]]
+		index = "LBHDc3190fcbf16c4c41ac7e846daefc8d2c"
+		kind = "EXTERNAL_PROCESS"
+		path="misc/label_handlers/fireblocks_label_handler.py"
+
+[[edgebus.setup.topic]]
+	# Topic for Fireblocks Development messages
+	index = "TOPCa5edf602c7824c26bb52f3f76ca865fe"
+	name = "fireblocks-development"
+	description = "Fireblock's callbacks"
+	mediaType = "application/json"
+	[[edgebus.setup.topic.labelHandler]]
+		index = "LBHD499253286c7647d9a8aa2c03f8a38b2b"
+		kind = "EXTERNAL_PROCESS"
+		path="misc/label_handlers/fireblocks_label_handler.py"
+
+[[edgebus.setup.topic]]
+	# Topic for Sumsub messages
+	index = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+	name = "sumsub"
+	description = "Sumsub's callbacks"
+	mediaType = "application/json"
+	# [[edgebus.setup.topic.labelHandler]]
+	# 	index = "LBHD551765cce2e84f82bf4393a1c267fdfe"
+	# 	kind = "EXTERNAL_PROCESS"
+	# 	path="misc/label_handlers/sumsub_label_handler.py"
+
+
+[[edgebus.setup.ingress]]
+	# HTTP Host ingress for Clear Junction
+	index = "IGRSe4d52adb99454c4cbb808ac3d7e06db5"
+	kind = "HTTP_HOST"
+	servers = "ingress0"
+	path = "/webhooks/psp/sepa/cj"
+	target_topic_id = "TOPC23c8ec29beb1420b8010a721c0ae0d85"
+	[edgebus.setup.ingress.response]
+		kind = "dynamic"
+		[edgebus.setup.ingress.response.dynamic]
+			kind = "EXTERNAL_PROCESS"
+			path="misc/response_handlers/clear-junction-response-handler.py"
+
+[[edgebus.setup.ingress]]
+	# Web Socket Client ingress for Fireblocks messages
+	# to receive(copy) messages from parent EdgeBus
+	index = "IGRS2647fd452e5646d9b504e472447e399d"
+	kind = "WEB_SOCKET_CLIENT"
+	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	url = "wss://edgebus.in.cwtest.online/egress/websocket_host/EGRS7b009275b6ab40aea230b898fc56a07a"
+
+[[edgebus.setup.ingress]]
+	# HTTP Host ingress for Fireblocks Production messages
+	index = "IGRSafb0ff9b217d4a5c8b33d76291bb7d81"
+	kind = "HTTP_HOST"
+	servers = "ingress0"
+	path = "/webhooks/fireblocks"
+	target_topic_id = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	[edgebus.setup.ingress.response]
+		kind = "static"
+		[edgebus.setup.ingress.response.static]
+			status_code = 200
+			status_message = "OK"
+			body = '{ "ok": "ok" }'
+			[edgebus.setup.ingress.response.static.header]
+				"Content-Type" = "application/json"
+				"X-EdgeBus-Token" = "abc"
+
+[[edgebus.setup.ingress]]
+	# HTTP Host ingress for Fireblocks Development messages
+	index = "IGRS6b8cf89a77874b2981b6cc2e4cc4e0ab"
+	kind = "HTTP_HOST"
+	servers = "ingress1"
+	path = "/webhooks/fireblocks"
+	target_topic_id = "TOPCa5edf602c7824c26bb52f3f76ca865fe"
+	[edgebus.setup.ingress.response]
+		kind = "static"
+		[edgebus.setup.ingress.response.static]
+			status_code = 200
+			status_message = "OK"
+			body = '{ "ok": "ok" }'
+			[edgebus.setup.ingress.response.static.header]
+				"Content-Type" = "application/json"
+				"X-EdgeBus-Token" = "abc"
+
+
+# [[edgebus.setup.ingress]]
+# 	# Web Socket Client ingress for Sumsub messages
+# 	# to receive(copy) messages from parent EdgeBus
+# 	index = "IGRSe0460a33668543af91ddd48a5d57eeb4"
+# 	kind = "WEB_SOCKET_CLIENT"
+# 	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+# 	url = "wss://edgebus.in.cwtest.online/egress/websocket_host/EGRS????"
+
+[[edgebus.setup.ingress]]
+	# HTTP Host ingress for Sumsub
+	index = "IGRS9028c57498b641988fc71355e9ac622e"
+	kind = "HTTP_HOST"
+	servers = "ingress0"
+	path = "/webhooks/sumsub"
+	target_topic_id = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+	[edgebus.setup.ingress.response]
+		kind = "static"
+		[edgebus.setup.ingress.response.static]
+			status_code = 201
+			status_message = "Accepted"
+			body = '{ "success": true }'
+			[edgebus.setup.ingress.response.static.header]
+				"Content-Type" = "application/json"
+
+
+[[edgebus.setup.egress]]
+	# Deliver messages from ALL topics
+	index = "EGRSa8037358602e4b918c581464ed9aa58a"
+	kind = "WEB_SOCKET_HOST"
+	source_topic_ids = "TOPC23c8ec29beb1420b8010a721c0ae0d85 TOPC44e5b80b06f1447ebf38b6ab2c84c84a TOPCa5edf602c7824c26bb52f3f76ca865fe TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+
+[[edgebus.setup.egress]]
+	# Deliver messages from Clear Junction topics
+	index = "EGRS633e2f72363c495cb8c82a3e6576af59"
+	kind = "WEB_SOCKET_HOST"
+	source_topic_ids = "TOPC23c8ec29beb1420b8010a721c0ae0d85"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+
+[[edgebus.setup.egress]]
+	# Deliver Clear Junction messages to local API service
+	index = "EGRSb43178864feb413fa4a4a3329f5ff5b4"
+	source_topic_ids = "TOPC23c8ec29beb1420b8010a721c0ae0d85"
+#	filter_label_policy = "strict" # Deliver a message if ALL labels presented
+ 	filter_label_policy = "lax" # Deliver a message if ANY label presented
+# 	filter_label_policy = "skip" # Skip a message if any labels presented
+	filter_labels = "local clear_junction_label_handler_test"
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:3000/webhooks/psp/sepa/cj"
+
+[[edgebus.setup.egress]]
+	# Deliver Clear Junction messages to local HTTP Dump service
+	index = "EGRS91fd638cb2b646229fff5fe4a8b5fa71"
+	source_topic_ids = "TOPC23c8ec29beb1420b8010a721c0ae0d85"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:52003/webhooks/psp/sepa/cj"
+
+[[edgebus.setup.egress]]
+	# Deliver messages from Fireblocks Production topics
+	index = "EGRS707ef6997dc64f79b7449d599a36c5fd"
+	kind = "WEB_SOCKET_HOST"
+	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+
+[[edgebus.setup.egress]]
+	# Deliver messages from Fireblocks Development topics
+	index = "EGRS11290cd66e8b45a892b3347665d2054a"
+	kind = "WEB_SOCKET_HOST"
+	source_topic_ids = "TOPCa5edf602c7824c26bb52f3f76ca865fe"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+
+[[edgebus.setup.egress]]
+	# Deliver Fireblocks Production messages to local API service
+	index = "EGRSb35aadb61da8449d899876b7060ff9fb"
+	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+#	filter_label_policy = "strict" # Deliver a message if ALL labels presented
+ 	filter_label_policy = "lax" # Deliver a message if ANY label presented
+# 	filter_label_policy = "skip" # Skip a message if any labels presented
+	filter_labels = "local fireblocks_label_handler_test"
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:3000/webhooks/fireblocks"
+
+[[edgebus.setup.egress]]
+	# Deliver Fireblocks Production messages to local HTTP Dump service
+	index = "EGRS331be6d9417f49e8921cba61f1857bd7"
+	source_topic_ids = "TOPC44e5b80b06f1447ebf38b6ab2c84c84a"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:52003/webhooks/fireblocks"
+
+[[edgebus.setup.egress]]
+	# Deliver messages from Sumsub topics
+	index = "EGRS319ef1447b054a5292acecf40345b89b"
+	kind = "WEB_SOCKET_HOST"
+	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+
+[[edgebus.setup.egress]]
+	# Deliver Sumsub messages to local API service
+	index = "EGRS3a56eefd94dc415f8c37510e4da9e575"
+	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+#	filter_label_policy = "strict" # Deliver a message if ALL labels presented
+ 	filter_label_policy = "lax" # Deliver a message if ANY label presented
+# 	filter_label_policy = "skip" # Skip a message if any labels presented
+	filter_labels = "local sumsub_label_handler_test"
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:3000/webhooks/sumsub"
+
+[[edgebus.setup.egress]]
+	# Deliver Sumsub messages to local HTTP Dump service
+	index = "EGRSf412c79a99ad40bfb31da8a0fa18223e"
+	source_topic_ids = "TOPCcdaa9b7d6c16484bb2a5a6d58c78c2c6"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)
+	kind = "WEBHOOK"
+	method="POST"
+	url="http://127.0.0.1:52003/webhooks/sumsub"

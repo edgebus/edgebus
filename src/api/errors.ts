@@ -1,11 +1,11 @@
-import { InnerError } from "@zxteam/errors";
+import { FException } from "@freemework/common";
 import {
 	ConnectionPersistentStorageError,
 	UnknownPersistentStorageError,
 	NoRecordPersistentStorageError
 } from "../data/errors";
 
-export abstract class ApiError extends InnerError { }
+export abstract class ApiError extends FException { }
 
 export class ServiceUnavailableApiError extends ApiError { }
 

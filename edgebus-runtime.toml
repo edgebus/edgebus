@@ -1,0 +1,92 @@
+# Enable (turn on) specific servers ONLY
+#"edgebus.runtime.server.indexes" = "management ingress egress"
+
+# Enable (turn on) specific endpoints ONLY
+#"edgebus.runtime.endpoint.indexes" = "info management ingress0 ingress1 egress"
+
+
+# Configure web server "management"
+[[edgebus.runtime.server]]
+	index = "management"
+	listenHost = "0.0.0.0"
+	listenPort = "8443"
+	type = "https"
+# /Configure web server "management"
+
+# Configure web servers for ingresses
+[[edgebus.runtime.server]]
+	index = "ingress0"
+	listenHost = "0.0.0.0"
+	listenPort = "8450"
+	type = "https"
+[[edgebus.runtime.server]]
+	index = "ingress1"
+	listenHost = "0.0.0.0"
+	listenPort = "8451"
+	type = "https"
+# Configure web servers for ingresses
+
+# Configure web server "egress"
+[[edgebus.runtime.server]]
+	index = "egress"
+	listenHost = "0.0.0.0"
+	listenPort = "8445"
+	type = "https"
+# /Configure web server "egress"
+
+
+# Configure endpoint "info"
+[[edgebus.runtime.endpoint]]
+	index = "info"
+	type = "rest-info"
+	servers = "management ingress0 ingress1 egress"
+	bindPath = "/info"
+	[edgebus.runtime.endpoint.info.cors]
+		methods = "GET"
+		whiteList = "*"
+		allowedHeaders = "*"
+# /Configure endpoint "info"
+
+# Configure endpoint "management"
+[[edgebus.runtime.endpoint]]
+	index = "management"
+	type = "rest-management"
+	servers = "management"
+	bindPath = "/management"
+# /Configure endpoint "management"
+
+# Configure endpoint "egress"
+[[edgebus.runtime.endpoint]]
+	index = "egress"
+	type = "rest-egress"
+	servers = "egress"
+	bindPath = "/egress"
+# /Configure endpoint "egress"
+
+
+# Message Bus implementation
+[edgebus.runtime.messagebus]
+	# kind = "bull"
+	kind = "local"
+	[edgebus.runtime.messagebus.bull]
+		redisUrl = "redis://your.redis.server:6379/0"
+	[edgebus.runtime.messagebus.local]
+		[edgebus.runtime.messagebus.local.delivery]
+			policy = "SEQUENCE"
+# /Message Bus implementation
+
+
+# Persistent storage URL (Postgres only at the moment)
+[edgebus.runtime.persistent]
+	url = "postgres://your.postgres.server:5432/notifier"
+# /Persistent storage URL (Postgres only at the moment)
+
+
+# =======================
+# Database Migration only
+# =======================
+
+# Persistent storage URL (Postgres only at the moment)
+[edgebus.initialize.database]
+	url = "postgres://your.postgres.server:5432/notifier"
+# /Persistent storage URL (Postgres only at the moment)

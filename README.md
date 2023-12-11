@@ -1,52 +1,31 @@
-# ZXTeam's Notification Service
+# EdgeBus
+
+[EdgeBus](https://docs.edgebus.io) is an application level network edge bus that adds connectivity, auditability, and observability to your apps with no code changes.
+
+# TypeScript of EdgeBus Service
+
 [![npm version badge](https://img.shields.io/npm/v/@zxteam/identity.service.svg)](https://www.npmjs.com/package/@zxteam/notification.service)
 [![downloads badge](https://img.shields.io/npm/dm/@zxteam/identity.service.svg)](https://www.npmjs.org/package/@zxteam/notification.service)
 [![commit activity badge](https://img.shields.io/github/commit-activity/m/zxteamorg/node.notification.service)](https://github.com/zxteamorg/node.notification.service/pulse)
 [![last commit badge](https://img.shields.io/github/last-commit/zxteamorg/node.notification.service)](https://github.com/zxteamorg/node.notification.service/graphs/commit-activity)
 [![twitter badge](https://img.shields.io/twitter/follow/zxteamorg?style=social&logo=twitter)](https://twitter.com/zxteamorg)
 
-# Notifier
-`Notifier` is a Notification Server that implements [Publish–Subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) Pattern. Main responsibility is to deliver callback messages via Webhooks and other messaging providers.
+This is `src-typescript-service` branch of **EdgeBus** multi project repository based on [orphan](https://git-scm.com/docs/git-checkout#Documentation/git-checkout.txt---orphanltnew-branchgt) branches.
 
->>>
-**Recommendation:** Although notification includes real and valid data, we recommend to use notifications just as notifications and retvieve data via appropriate method of Pull API.
-In general, any notifications system by design may delay messages. Good practice for end-application is to check status via Pull API if expected message was not received in expected time frame.
->>>
+## Developer Notes
 
-## Our instances
-We are hosting sereval public instances. You can use its for dry-run, integration development, etc...
+### Start locally
 
-Currently **PRODUCTION** instance does not provide any guarantees and may be shut-down, wipe-data, etc... Use it just for testing.
+```shell
+cp .env-example .env
+nvm use 18
+npm install
+npm run build
+npm start
+```
 
-### Production
-Release from tag
+Check 
 
-| Title                                       | URL                                                     |
-|---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org/docs                        |
-| Managment API                               | https://notifier.zxteam.org/management                  |
-| Publisher API                               | https://notifier.zxteam.org/publisher                   |
-| Subscriber API                              | https://notifier.zxteam.org/subscriber                  |
-
-### Presentation
-Usually latest tag (sometimes `master` branch)
-
-| Title                                       | URL                                                     |
-|---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org:10443/docs                  |
-| Managment API                               | https://notifier.zxteam.org:10443/management            |
-| Publisher API                               | https://notifier.zxteam.org:10443/publisher             |
-| Subscriber API                              | https://notifier.zxteam.org:10443/subscriber            |
-
-### Evolution
-Usually `master` branch (sometimes `dev` branch)
-
-| Title                                       | URL                                                     |
-|---------------------------------------------|---------------------------------------------------------|
-| Self-hosted docs                            | https://notifier.zxteam.org:20443/docs                  |
-| Managment API                               | https://notifier.zxteam.org:20443/management            |
-| Publisher API                               | https://notifier.zxteam.org:20443/publisher             |
-| Subscriber API                              | https://notifier.zxteam.org:20443/subscriber            |
 
 
 ## General information
@@ -57,41 +36,41 @@ Usually `master` branch (sometimes `dev` branch)
 sequenceDiagram
 	participant Subscriber1
 	participant Subscriber2
-	participant `Notifier`
-	participant Publisher
+	participant `EdgeBus`
+	participant Ingress
 	opt Event A happend
-		Publisher->>`Notifier`: Message A for "my" topic
-		`Notifier`->>`Notifier`: Skip, just audit
+		Ingress->>`EdgeBus`: Message A for "my" topic
+		`EdgeBus`->>`EdgeBus`: Skip, just audit
 	end
-	Subscriber2->>+`Notifier`: Subscribe "my" topic
-	`Notifier`-->>-Subscriber2: OK
+	Subscriber2->>+`EdgeBus`: Subscribe "my" topic
+	`EdgeBus`-->>-Subscriber2: OK
 	opt Event B happend
-		Publisher->>`Notifier`: Message B for "my" topic
-		`Notifier`->>+Subscriber2: Message B for "my" topic
-		Subscriber2-->>-`Notifier`: OK
+		Ingress->>`EdgeBus`: Message B for "my" topic
+		`EdgeBus`->>+Subscriber2: Message B for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
 	end
-	Subscriber1->>+`Notifier`: Subscribe "my" topic
-	`Notifier`-->>-Subscriber1: OK
+	Subscriber1->>+`EdgeBus`: Subscribe "my" topic
+	`EdgeBus`-->>-Subscriber1: OK
 	opt Event C happend
-		Publisher->>`Notifier`: Message C for "my" topic
-		`Notifier`->>+Subscriber2: Message C for "my" topic
-		Subscriber2-->>-`Notifier`: OK
-		`Notifier`->>+Subscriber1: Message C for "my" topic
-		Subscriber1-->>-`Notifier`: OK
+		Ingress->>`EdgeBus`: Message C for "my" topic
+		`EdgeBus`->>+Subscriber2: Message C for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
+		`EdgeBus`->>+Subscriber1: Message C for "my" topic
+		Subscriber1-->>-`EdgeBus`: OK
 	end
-	Subscriber1->>+`Notifier`: UNsubscribe "my" topic
-	`Notifier`-->>-Subscriber1: OK
+	Subscriber1->>+`EdgeBus`: UNsubscribe "my" topic
+	`EdgeBus`-->>-Subscriber1: OK
 	opt Event D happend
-		Publisher->>`Notifier`: Message D for "my" topic
-		`Notifier`->>+Subscriber2: Message D for "my" topic
-		Subscriber2-->>-`Notifier`: OK
+		Ingress->>`EdgeBus`: Message D for "my" topic
+		`EdgeBus`->>+Subscriber2: Message D for "my" topic
+		Subscriber2-->>-`EdgeBus`: OK
 	end
 ```
 
 ### Delivery
 Messages are sent immediately after an operation was performed.
 
-`Notifier` records the fact of message delivery to your system after receiving the response from your system.
+`EdgeBus` records the fact of message delivery to your system after receiving the response from your system.
 
 If message delivery is failed the server will retry with delay between attempts according to a scale was choosen at subscription phase.
 
@@ -113,40 +92,40 @@ Using JSON-RPC in notification manner
 Using Protocol Buffers for message serialization. See definition .proto file for details.
 
 ### Message security
-`Notifier` does tranfer messages as-is. There is `Publisher`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
+`EdgeBus` does tranfer messages as-is. There is `Ingress`'s responsibility to provide desired kind of security like **encrypting**, **signing**, etc.
 
-However implementation of **subscribers** may provide additional security. For example Webhook provides a token header and SSL validation. See a subscriber documentation for details.
+However implementation of **egresses** may provide additional security. For example Webhook provides a token header and SSL validation. See a egress documentation for details.
 
 ## Administration flow
 ```mermaid
 sequenceDiagram
 	participant Admin
-	participant Publisher
-	participant Notifier
-	participant Subscriber
+	participant Ingress
+	participant EdgeBus
+	participant Egress
 	opt Setup topic
-		Admin->>Notifier: Create topic "my-topic"
-		Notifier-->>Admin: Create topic "my-topic"
+		Admin->>EdgeBus: Create topic "my-topic"
+		EdgeBus-->>Admin: Create topic "my-topic"
 	end
 	opt Security
-		Admin->>Subscriber: Subscribe Token: XXXX
-		Subscriber-->>Admin: Thanks
+		Admin->>Egress: Subscribe Token: XXXX
+		Egress-->>Admin: Thanks
 	end
 	opt Security
-		Admin->>Publisher: Publish Token: XXXX
-		Publisher-->>Admin: Thanks
+		Admin->>Ingress: Publish Token: XXXX
+		Ingress-->>Admin: Thanks
 	end
 	opt Setup
-	Subscriber->>Notifier: Setup subscriber
-	Notifier-->>Subscriber: Subscription details
+	Egress->>EdgeBus: Setup egress
+	EdgeBus-->>Egress: Subscription details
 	end
 	opt Setup
-	Publisher->>Notifier: Setup publisher
-	Notifier-->>Publisher: Publication details
+	Ingress->>EdgeBus: Setup ingress
+	EdgeBus-->>Ingress: Publication details
 	end
 	opt General use
-		Publisher->>Notifier: Publish a message
-		Notifier->>Subscriber: Deliver the message
+		Ingress->>EdgeBus: Publish a message
+		EdgeBus->>Egress: Deliver the message
 	end
 ```
 
@@ -270,9 +249,9 @@ $ curl --verbose --request DELETE --header 'Content-Type: application/json' http
 
 
 ## Publishers
-Any publisher may be deleted by following request
+Any ingress may be deleted by following request
 ```bash
-$ cat docs/publisher/delete-publisher.json
+$ cat docs/ingress/delete-ingress.json
 ```
 ```json
 {
@@ -286,7 +265,7 @@ $ cat docs/publisher/delete-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/publisher/publisher.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/publisher/delete-publisher.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/ingress/ingress.http.641f97ec-31d0-418b-a594-0e9aa3a356a5 --data @docs/ingress/delete-ingress.json
 ```
 ```json
 {
@@ -295,11 +274,11 @@ $ curl --verbose --request DELETE --header 'Content-Type: application/json' http
 ```
 
 ### HTTP Endpoint
-HTTP Publisher allows to publish messages via HTTP protocol.
+HTTP Ingress allows to publish messages via HTTP protocol.
 
-#### Create publisher endpoint
+#### Create ingress endpoint
 ```bash
-$ cat docs/publisher/create-http-publisher.json
+$ cat docs/ingress/create-http-ingress.json
 ```
 ```json
 {
@@ -314,49 +293,49 @@ $ cat docs/publisher/create-http-publisher.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/management/publisher/http --data @docs/publisher/create-http-publisher.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/management/ingress/http --data @docs/ingress/create-http-ingress.json
 ```
 ```json
 {
-	"publisherId": "publisher.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "https://notifier.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"ingressId": "ingress.http.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"url": "https://notifier.zxteam.org/ingress/http/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
 #### Push message
 ```bash
-curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam.org/publisher/http/18af3285-749a-4fe8-abc0-52a42cd82cb6 --data '{"hello":"world"}'
+curl --verbose --header 'Content-Type: application/json' https://notifier.zxteam.org/ingress/http/18af3285-749a-4fe8-abc0-52a42cd82cb6 --data '{"hello":"world"}'
 ```
 
 
 ## Subscribers
-### List subscribers (GET)
+### List egresss (GET)
 ```bash
-$ curl --verbose --request GET 'https://notifier.zxteam.org/management/subscriber?security.kind=TOKEN&security.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+$ curl --verbose --request GET 'https://notifier.zxteam.org/management/egress?security.kind=TOKEN&security.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 ```json
 [
 	{
 		"kind": "webhook",
-		"subscriberId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+		"egressId": "egress.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
 		...
 	},
 	{
 		"kind": "webhook",
-		"subscriberId": "subscriber.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
+		"egressId": "egress.webhook.c3e57dd6-f5c9-4cf3-9ed5-8747bcec4372",
 		...
 	},
 	{
 		"kind": "websockethost",
-		"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+		"egressId": "egress.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
 		...
 	},
 	...
 ]
 ```
 
-### Delete subscriber (DELETE)
+### Delete egress (DELETE)
 ```bash
-$ cat docs/subscriber/delete-subscriber.json
+$ cat docs/egress/delete-egress.json
 ```
 ```json
 {
@@ -367,7 +346,7 @@ $ cat docs/subscriber/delete-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/subscriber/subscriber.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/subscriber/delete-subscriber.json
+$ curl --verbose --request DELETE --header 'Content-Type: application/json' https://notifier.zxteam.org/management/egress/egress.webhook.2733f6e9-c405-46d1-969e-2b42e4a4dc42 --data @docs/egress/delete-egress.json
 ```
 ```json
 {
@@ -379,31 +358,31 @@ $ curl --verbose --request DELETE --header 'Content-Type: application/json' http
 ### Webhook
 [Webhooks](https://en.wikipedia.org/wiki/Webhook) are "user-defined HTTP
 callbacks".
-When an event occurs, `Notifier` makes an HTTP request to the URI configured for the webhook.
+When an event occurs, `EdgeBus` makes an HTTP request to the URI configured for the webhook.
 
 >>>
-**Warning:** Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then Notifier will think the hook failed and [retry](#delivery) it.
+**Warning:** Your endpoint should ALWAYS return a valid HTTP response with HTTP status 2XX. If you do not do this then EdgeBus will think the hook failed and [retry](#delivery) it.
 >>>
 
 #### SSL verification
 SSL Verification enables automatically for URL scheme `https:`. No additional configuration required.
 
 >>>
-**Optional:** If you specify a CA Certificates in a `trustedCA` field of create subscriber request, it will be used to verify the SSL certificate of the webhook endpoint.
+**Optional:** If you specify a CA Certificates in a `trustedCA` field of create egress request, it will be used to verify the SSL certificate of the webhook endpoint.
 If `trustedCA` is omited the SSL certificate of the webhook endpoint is verified based on an internal list of Certificate Authorities.
 >>>
 
 #### Secret token
-If you specify a secret token in a `headerToken` field of create subscriber request, it will be sent along with the hook request in the **NF-TOKEN** HTTP header.
+If you specify a secret token in a `headerToken` field of create egress request, it will be sent along with the hook request in the **NF-TOKEN** HTTP header.
 
-#### Create subscriber endpoint
+#### Create egress endpoint
 ```bash
-$ cat docs/subscriber/create-webhook-subscriber.json
+$ cat docs/egress/create-webhook-egress.json
 ```
 ```json
 {
 	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
-	"subscriberSecurity": {
+	"egressSecurity": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	},
@@ -415,12 +394,12 @@ $ cat docs/subscriber/create-webhook-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/webhook --data @docs/subscriber/create-webhook-subscriber.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/egress/webhook --data @docs/egress/create-webhook-egress.json
 ```
 ```json
 {
 	"kind": "webhook",
-	"subscriberId": "subscriber.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
+	"egressId": "egress.webhook.23c3167c-910f-486d-966b-89ac59c6080a",
 	"topic": "MyGitHubEventsTopic.yourdomain.ltd",
 	"url": "https://callback.yourdomain.ltd/my-github-commits",
 	"trustedCA": "-----BEGIN CERTIFICATE-----\nMII.....\n-----END CERTIFICATE-----", // ...optional
@@ -432,16 +411,16 @@ $ curl --verbose --request POST --header 'Content-Type: application/json' https:
 
 
 ### WebSocket (Host Mode)
-This kind of subscriber allows to receive messages through WebSocket channel. `Host Mode` means that message subscriber connects to `Notifier` as client.
+This kind of egress allows to receive messages through WebSocket channel. `Host Mode` means that message egress connects to `EdgeBus` as client.
 
-#### Create subscriber endpoint
+#### Create egress endpoint
 ```bash
-$ cat docs/subscriber/create-websocket-host-subscriber.json
+$ cat docs/egress/create-websocket-host-egress.json
 ```
 ```json
 {
 	"topic": "MyGitLabPushTopic.yourdomain.ltd",
-	"subscriberSecurity": {
+	"egressSecurity": {
 		"kind": "TOKEN",
 		"token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	},
@@ -451,18 +430,18 @@ $ cat docs/subscriber/create-websocket-host-subscriber.json
 }
 ```
 ```bash
-$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/subscriber/websockethost --data @docs/subscriber/create-websocket-host-subscriber.json
+$ curl --verbose --request POST --header 'Content-Type: application/json' https://notifier.zxteam.org/egress/websockethost --data @docs/egress/create-websocket-host-egress.json
 ```
 ```json
 {
 	"kind": "websockethost",
-	"subscriberId": "subscriber.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
-	"url": "wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
+	"egressId": "egress.websockethost.18af3285-749a-4fe8-abc0-52a42cd82cb6",
+	"url": "wss://notifier.zxteam.org/egress/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6"
 }
 ```
-#### Listen subscriber endpoint
+#### Listen egress endpoint
 ```
-wscat --connect wss://notifier.zxteam.org/subscriber/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
+wscat --connect wss://notifier.zxteam.org/egress/websockethost/18af3285-749a-4fe8-abc0-52a42cd82cb6
 ```
 
 
@@ -486,7 +465,7 @@ curl -v -X POST --header "Content-Type: application/json" --data '{"chat_id":"-3
 curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/getMe
 ```
 ```json
-{"ok":true,"result":{"id":1036097604,"is_bot":true,"first_name":"ZXTeam\u2019s Notifier","username":"zxteam_notifier_bot"}}
+{"ok":true,"result":{"id":1036097604,"is_bot":true,"first_name":"ZXTeam\u2019s EdgeBus","username":"zxteam_notifier_bot"}}
 ```
 
 ```bash
@@ -508,7 +487,7 @@ curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/
 					"username":"theanurin"
 				},
 				"chat":{
-					"id":-347824729,"title":"ZXTeam\u2019s Notifier",
+					"id":-347824729,"title":"ZXTeam\u2019s EdgeBus",
 					"type":"group",
 					"all_members_are_administrators":true
 				},
@@ -521,7 +500,7 @@ curl https://api.telegram.org/bot1036097604:AAHLVqwfabEmFu4Ou4nmCYXxAo2ffjB3Mmo/
 			"message":{
 				"message_id":2,
 				"from":{"id":277364372,"is_bot":false,"first_name":"Serhii","last_name":"Zghama","username":"serhiizghama"},
-				"chat":{"id":-347824729,"title":"ZXTeam\u2019s Notifier","type":"group","all_members_are_administrators":true},
+				"chat":{"id":-347824729,"title":"ZXTeam\u2019s EdgeBus","type":"group","all_members_are_administrators":true},
 				"date":1577452697,
 				"text":"/hello",
 				"entities":[{"offset":0,"length":6,"type":"bot_command"}]
