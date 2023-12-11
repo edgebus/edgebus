@@ -217,10 +217,15 @@ export abstract class MessageBusBase extends MessageBus {
 			case Egress.FilterLabelPolicy.STRICT: {
 				if (egressLabels === undefined) { return true; }
 				for (const egressLabel of egressLabels) {
+					let missingMatch: boolean = true;
 					for (const messageLabel of messageLabelValues) {
-						if (!MessageBusBase.wildcardMatch(messageLabel, egressLabel)) {
-							return false;
+						if (MessageBusBase.wildcardMatch(messageLabel, egressLabel)) {
+							missingMatch = false;
+							break;
 						}
+					}
+					if (!missingMatch) {
+						return false;
 					}
 				}
 				return true;
@@ -254,7 +259,7 @@ export abstract class MessageBusBase extends MessageBus {
 		egress: Egress
 	): Promise<MessageBus.Channel>;
 
-	private static wildcardMatch(text: string, pattern: string) {
+	private static wildcardMatch(text: string, pattern: string): boolean {
 		const regexPattern: RegExp = new RegExp('^' + pattern.replace(/\?/g, '.').replace(/\*/g, '.*') + '$');
 		return regexPattern.test(text);
 	}
