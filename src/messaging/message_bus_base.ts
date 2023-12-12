@@ -224,7 +224,7 @@ export abstract class MessageBusBase extends MessageBus {
 							break;
 						}
 					}
-					if (!missingMatch) {
+					if (missingMatch) {
 						return false;
 					}
 				}
