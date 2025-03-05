@@ -22,6 +22,7 @@
 		"docs": true,
 		"console-*": true,
 		"handbook": true,
+		"messenger-bridge": true,
 		"sdk-*": true,
 		"service-*": true,
 	},

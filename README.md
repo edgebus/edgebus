@@ -16,6 +16,10 @@
    git clone --branch workspace git@github.com:edgebus/edgebus.git
    cd edgebus
    ```
+1. Initialize submodules
+   ```shell
+   git submodule update --init
+   ```
 1. Initialize [worktree](https://git-scm.com/docs/git-worktree) by execute following commands
    ```shell
    git worktree add console-dart          "console-dart#master"

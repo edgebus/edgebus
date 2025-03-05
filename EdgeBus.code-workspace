@@ -17,6 +17,10 @@
 			"path": "console-dart"
 		},
 		{
+			"name": "Messenger Bridge",
+			"path": "messenger-bridge"
+		},
+		{
 			"name": "SDK Dart",
 			"path": "sdk-dart"
 		},

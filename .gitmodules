@@ -1,0 +1,4 @@
+[submodule "messenger-bridge"]
+	path = messenger-bridge
+	url = git@github.com:edgebus/messenger-bridge.git
+	branch = dev
