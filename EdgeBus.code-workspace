@@ -5,6 +5,10 @@
 			"path": "docs"
 		},
 		{
+			"name": "Handbook",
+			"path": "handbook"
+		},
+		{
 			"name": "Database",
 			"path": "database"
 		},

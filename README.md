@@ -1,8 +1,8 @@
-|                  | `docs` | `service-typescript`                                                                                                   |
-| ---------------- | ------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Branch `#dev`    | TBD    | [![Badge - TypeScript Service Snapshot (#dev)][service-typescript#dev-badge]][service-typescript#dev-actions]          |
-| Branch `#master` | TBD    | [![Badge - TypeScript Service Snapshot (#master)][service-typescript#master-badge]][service-typescript#master-actions] |
-| Tag              | TBD    | [![Badge - TypeScript Service Release][service-typescript-tag-badge]][service-typescript-tag-actions]                  |
+|                  | `docs` | `handbook` | `service-typescript`                                                                                                   |
+| ---------------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Branch `#dev`    | ❓     | ❓         | [![Badge - TypeScript Service Snapshot (#dev)][service-typescript#dev-badge]][service-typescript#dev-actions]          |
+| Branch `#master` | ❓     | ❓         | [![Badge - TypeScript Service Snapshot (#master)][service-typescript#master-badge]][service-typescript#master-actions] |
+| Tag              | ❓     | ❓         | [![Badge - TypeScript Service Release][service-typescript-tag-badge]][service-typescript-tag-actions]                  |
 
 # EdgeBus
 
@@ -18,9 +18,10 @@
    ```
 1. Initialize [worktree](https://git-scm.com/docs/git-worktree) by execute following commands
    ```shell
+   git worktree add console-dart          "console-dart#master"
    git worktree add database              "database#master"
    git worktree add docs                  "docs#master"
-   git worktree add console-dart          "console-dart#master"
+   git worktree add handbook              "handbook#master"
    git worktree add sdk-dart              "sdk-dart#master"
    git worktree add service-typescript    "service-typescript#master"
    ```

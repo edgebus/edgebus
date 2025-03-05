@@ -21,6 +21,7 @@
 		"database": true,
 		"docs": true,
 		"console-*": true,
+		"handbook": true,
 		"sdk-*": true,
 		"service-*": true,
 	},
