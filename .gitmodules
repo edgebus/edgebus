@@ -2,3 +2,7 @@
 	path = messenger-bridge
 	url = git@github.com:edgebus/messenger-bridge.git
 	branch = dev
+[submodule "webconnmon"]
+	path = webconnmon
+	url = git@github.com:edgebus/webconnmon.git
+	branch = master

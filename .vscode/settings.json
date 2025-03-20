@@ -25,16 +25,16 @@
 		"messenger-bridge": true,
 		"sdk-*": true,
 		"service-*": true,
+		"webconnmon": true,
 	},
 	"git.rebaseWhenSync": true,
 	"editor.guides.indentation": true,
 	"cSpell.words": [
 		"auditability",
-		"edgebus",
-		"worktree",
 		"dbseed",
 		"devel",
 		"domainname",
+		"edgebus",
 		"EDGEBUS",
 		"HTTPDUMP",
 		"IMAGETAG",
@@ -43,6 +43,8 @@
 		"REDISCOMMANDER",
 		"theanurin",
 		"USEDATAVOLUME",
-		"USEDBSEED"
+		"USEDBSEED",
+		"webconnmon",
+		"worktree"
 	]
 }
